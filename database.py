@@ -338,14 +338,15 @@ def log_evaluation(mint_address, token_name, token_symbol, narrative_id,
     return row_id
 
 
-def log_trade(evaluation_id, mint_address, token_name, token_symbol,
-              entry_price_usd, entry_sol, tx_signature, simulation=True,
-              trade_mode="paper", narrative_age=None, category=None,
-              strategy_version=None, strategy_params=None,
-              twitter_signal_data=None):
+def log_trade(mint_address, token_name, token_symbol,
+              entry_price_sol=0, entry_sol=0, trade_mode="control",
+              decision_reason=None, category=None, narrative_keyword=None,
+              narrative_age=None, strategy_version=None, strategy_params=None,
+              twitter_signal_data=None, evaluation_id=None, tx_signature=None,
+              simulation=True):
     conn = get_conn()
     c = conn.cursor()
-    twitter_json = json.dumps(twitter_signal_data) if twitter_signal_data else None
+    twitter_json = json.dumps(twitter_signal_data) if isinstance(twitter_signal_data, dict) else twitter_signal_data
     c.execute("""
         INSERT INTO trades
         (evaluation_id, mint_address, token_name, token_symbol,
@@ -353,7 +354,7 @@ def log_trade(evaluation_id, mint_address, token_name, token_symbol,
          narrative_age, category, strategy_version, strategy_params, twitter_signal_data)
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, (evaluation_id, mint_address, token_name, token_symbol,
-          datetime.utcnow().isoformat(), entry_price_usd, entry_sol, tx_signature,
+          datetime.utcnow().isoformat(), entry_price_sol, entry_sol, tx_signature,
           1 if simulation else 0, trade_mode, narrative_age, category,
           strategy_version, strategy_params, twitter_json))
     conn.commit()
@@ -362,15 +363,19 @@ def log_trade(evaluation_id, mint_address, token_name, token_symbol,
     return row_id
 
 
-def close_trade(trade_id, status, exit_price_usd, exit_sol, pnl_sol, pnl_pct,
-                hold_minutes, exit_reason=""):
+def close_trade(trade_id, exit_price_sol=0, exit_reason="",
+                pnl_sol=0, pnl_pct=0, hold_time_sec=0,
+                status="closed", exit_sol=None, hold_minutes=None):
     conn = get_conn()
     c = conn.cursor()
+    # Support both hold_time_sec (from paper_trader) and hold_minutes (legacy)
+    if hold_minutes is None:
+        hold_minutes = hold_time_sec / 60.0
     c.execute("""
         UPDATE trades SET status=?, exit_at=?, exit_price_usd=?, exit_sol=?,
         pnl_sol=?, pnl_pct=?, hold_minutes=?, exit_reason=?
         WHERE id=?
-    """, (status, datetime.utcnow().isoformat(), exit_price_usd, exit_sol,
+    """, (status, datetime.utcnow().isoformat(), exit_price_sol, exit_sol,
           pnl_sol, pnl_pct, hold_minutes, exit_reason, trade_id))
     conn.commit()
     conn.close()

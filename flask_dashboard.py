@@ -122,7 +122,7 @@ DASHBOARD_HTML = """
         </tr>
         {% for t in recent_trades %}
         <tr>
-            <td class="timestamp">{{ t.entry_time[:16] if t.entry_time else '?' }}</td>
+            <td class="timestamp">{{ t.entered_at[:16] if t.entered_at else '?' }}</td>
             <td>{{ t.token_name[:20] }} ({{ t.token_symbol }})</td>
             <td><span class="badge badge-{{ t.trade_mode or 'control' }}">{{ (t.trade_mode or '?').upper() }}</span></td>
             <td>{{ t.category or '?' }}</td>
@@ -131,7 +131,7 @@ DASHBOARD_HTML = """
             </td>
             <td>{{ "%.1f"|format((t.pnl_pct or 0) * 100) }}%</td>
             <td>{{ t.exit_reason or 'OPEN' }}</td>
-            <td>{{ "%.0f"|format(t.hold_time_sec or 0) }}s</td>
+            <td>{{ "%.1f"|format(t.hold_minutes or 0) }}m</td>
             <td>{{ t.tw_tweets or '-' }}</td>
         </tr>
         {% endfor %}
@@ -195,7 +195,7 @@ def dashboard():
 
     recent = safe_query("""
         SELECT token_name, token_symbol, trade_mode, category,
-               pnl_sol, pnl_pct, exit_reason, hold_time_sec, entry_time,
+               pnl_sol, pnl_pct, exit_reason, hold_minutes, entered_at,
                twitter_signal_data
         FROM trades ORDER BY id DESC LIMIT 30
     """)

@@ -226,3 +226,15 @@ Consistent profitability WITHOUT relying on outlier moonshots. The base case (no
 - Exit convergence confirmed -- all 7 strategies converge to ~33 SOL
 - Recommendation: Keep collecting data. Do not implement any changes.
 - Data gaps: price_snapshots empty, narrative_detected_at not stored in trades
+
+
+### Session 5b (Feb 22, 17:30-18:00 UTC) -- ChatGPT Suggestion Evaluation
+- Evaluated 7 ChatGPT suggestions against live data
+- SLIPPAGE SENSITIVITY: Breakeven haircut is only 5.4% -- system is robust to severe execution haircuts
+- OVERSHOOT FINDING: 99.3% of TP profit comes from overshoots (>50% return), not the 30% threshold
+- TIMEOUT ANALYSIS: Timeouts cost only -1.32 SOL total -- NOT worth filtering (ChatGPT wrong)
+- PARTIAL EXITS: Would halve PnL from 52.80 to 24.84 SOL -- destructive in power-law system (ChatGPT wrong)
+- EXECUTION REALISM: Valid concern but 5.4% breakeven gives enormous margin of safety
+- SCAN LATENCY: Plausible but untestable -- same as Grok freshness evaluation
+- KEY INSIGHT: TP threshold is a minimum-viability filter, not a profit driver. Focus on entry quality.
+- Combined Grok+ChatGPT: 13 suggestions evaluated, 4 disproven, 0 implemented, 2 insights retained

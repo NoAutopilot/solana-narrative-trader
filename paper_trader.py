@@ -205,6 +205,12 @@ def enter_trade(token_data, decision, details, narratives):
     mint = token_data.get("mint", "")
     name = token_data.get("name", "Unknown")
     symbol = token_data.get("symbol", "???")
+
+    # Dedup: don't trade the same mint twice
+    if mint in open_trades or mint in {t.get("mint") for t in open_trades.values()}:
+        logger.debug(f"Already trading {name}, skipping")
+        return None
+
     entry_price_sol = estimate_entry_price(token_data)
 
     if entry_price_sol <= 0:

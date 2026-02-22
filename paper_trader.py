@@ -44,17 +44,20 @@ from proactive_narratives import (
 )
 from twitter_signal import check_twitter_signal
 
-# ── Logging ──────────────────────────────────────────────────────────────────
+# ── Logging (explicit handlers — basicConfig is stolen by narrative_monitor import) ──
 os.makedirs(LOGS_DIR, exist_ok=True)
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
-    handlers=[
-        logging.FileHandler(os.path.join(LOGS_DIR, "paper_trader.log")),
-        logging.StreamHandler(),
-    ]
-)
 logger = logging.getLogger("paper_trader")
+logger.setLevel(logging.INFO)
+if not logger.handlers:
+    fmt = logging.Formatter("%(asctime)s [%(name)s] %(levelname)s: %(message)s")
+    fh = logging.FileHandler(os.path.join(LOGS_DIR, "paper_trader.log"))
+    fh.setLevel(logging.INFO)
+    fh.setFormatter(fmt)
+    sh = logging.StreamHandler()
+    sh.setLevel(logging.INFO)
+    sh.setFormatter(fmt)
+    logger.addHandler(fh)
+    logger.addHandler(sh)
 
 # ── State ────────────────────────────────────────────────────────────────────
 open_trades = {}
@@ -584,6 +587,40 @@ def main():
 
     signal.signal(signal.SIGTERM, graceful_shutdown)
     signal.signal(signal.SIGINT, graceful_shutdown)
+
+    # ── Load orphaned open trades from DB (survive restarts) ──
+    orphaned = db.get_open_trades()
+    loaded = 0
+    for row in orphaned:
+        tid = row["id"]
+        entered_at_str = row.get("entered_at", "")
+        try:
+            entry_time = datetime.fromisoformat(entered_at_str)
+        except Exception:
+            entry_time = datetime.utcnow()
+        open_trades[tid] = {
+            "mint": row["mint_address"],
+            "name": row.get("token_name", "?"),
+            "symbol": row.get("token_symbol", "?"),
+            "entry_price_sol": row.get("entry_price_usd", 0),  # stored in entry_price_usd col
+            "entry_sol": row.get("entry_sol", TRADE_SIZE_SOL),
+            "entry_time": entry_time,
+            "decision": row.get("trade_mode", "control"),
+            "category": row.get("category", "default"),
+            "peak_price_sol": row.get("entry_price_usd", 0),
+            "trailing_active": False,
+        }
+        # Also initialize virtual strategies for loaded trades
+        virtual_positions[tid] = {}
+        for strat_name in VIRTUAL_STRATEGIES:
+            virtual_positions[tid][strat_name] = {
+                "active": True,
+                "peak_price": row.get("entry_price_usd", 0),
+                "trailing_active": False,
+            }
+        loaded += 1
+    if loaded:
+        logger.info(f"Loaded {loaded} orphaned open trades from DB")
 
     def on_narratives_scanned(narratives):
         feed_narratives_to_engine(proactive_engine, narratives)

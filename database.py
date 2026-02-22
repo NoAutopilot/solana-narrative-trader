@@ -193,6 +193,21 @@ def init_db():
         )
     """)
 
+    # Virtual strategy exits (parallel A/B testing)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS virtual_exits (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            trade_id        INTEGER REFERENCES trades(id),
+            strategy_name   TEXT    NOT NULL,
+            exit_reason     TEXT,
+            exit_price_sol  REAL,
+            pnl_sol         REAL,
+            pnl_pct         REAL,
+            hold_time_sec   REAL,
+            exited_at       TEXT    NOT NULL
+        )
+    """)
+
     # ── Safe column migrations (add columns if they don't exist) ──
     _safe_add_column(c, 'trades', 'trade_mode', 'TEXT')
     _safe_add_column(c, 'trades', 'narrative_age', 'REAL')
@@ -379,6 +394,22 @@ def close_trade(trade_id, exit_price_sol=0, exit_reason="",
         WHERE id=?
     """, (status, datetime.utcnow().isoformat(), exit_price_sol, exit_sol,
           pnl_sol, pnl_pct, hold_minutes, exit_reason, trade_id))
+    conn.commit()
+    conn.close()
+
+
+def log_virtual_exit(trade_id, strategy_name, exit_reason, exit_price_sol,
+                     pnl_sol, pnl_pct, hold_time_sec):
+    """Log a virtual strategy exit for parallel A/B testing."""
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("""
+        INSERT INTO virtual_exits
+        (trade_id, strategy_name, exit_reason, exit_price_sol,
+         pnl_sol, pnl_pct, hold_time_sec, exited_at)
+        VALUES (?,?,?,?,?,?,?,?)
+    """, (trade_id, strategy_name, exit_reason, exit_price_sol,
+          pnl_sol, pnl_pct, hold_time_sec, datetime.utcnow().isoformat()))
     conn.commit()
     conn.close()
 

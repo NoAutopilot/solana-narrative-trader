@@ -1,5 +1,5 @@
 # Solana Narrative Trader — Research Tracker
-> Last updated: 2026-02-22 23:30 UTC
+> Last updated: 2026-02-22 14:16 UTC
 > Status: DATA COLLECTION PHASE — NOT READY FOR REAL FUNDS
 
 ---
@@ -129,11 +129,12 @@ Consistent profitability WITHOUT relying on outlier moonshots. The base case (no
 
 | Component | Status | Last Verified |
 |-----------|--------|---------------|
-| paper_trader.py | NEEDS RESTART with twitter_signal | 2026-02-22 05:35 UTC |
+| paper_trader.py | RUNNING (v4_rebuilt_twitter) | 2026-02-22 14:13 UTC |
+| flask_dashboard.py | RUNNING (port 5050) | 2026-02-22 14:13 UTC |
 | Matching logic | v2 (fixed) | 2026-02-22 23:14 UTC |
-| Twitter signal | Module ready, needs integration into paper_trader.py | 2026-02-22 05:35 UTC |
+| Twitter signal | INTEGRATED & LOGGING (all trades have twitter data) | 2026-02-22 14:13 UTC |
 | Kill switch | OFF | 2026-02-22 23:14 UTC |
-| DB size | ~4 MB | 2026-02-22 23:14 UTC |
+| DB size | Fresh DB (old data not migrated — clean start) | 2026-02-22 14:13 UTC |
 
 ---
 
@@ -238,3 +239,15 @@ Consistent profitability WITHOUT relying on outlier moonshots. The base case (no
 - SCAN LATENCY: Plausible but untestable -- same as Grok freshness evaluation
 - KEY INSIGHT: TP threshold is a minimum-viability filter, not a profit driver. Focus on entry quality.
 - Combined Grok+ChatGPT: 13 suggestions evaluated, 4 disproven, 0 implemented, 2 insights retained
+
+### Session 6 (Feb 22, 14:13 UTC) — System Restart & Health Check
+- **System was DOWN**: paper_trader.py and flask_dashboard.py were not running
+- **Root cause**: Sandbox hibernation cleared running processes; DB was fresh (0 trades from prior sessions — old DB not in repo)
+- **Fixed**: Installed missing `python-dotenv` dependency, restarted both processes
+- **Twitter signal patch (PATCH_TWITTER_SIGNAL.md)**: Already integrated in codebase — no patch needed
+- **Verified**: paper_trader v4_rebuilt_twitter running, WebSocket connected, RSS feeds scanning (118 narratives), Twitter signal logging on every trade
+- **Current state**: 8 trades entered in ~2 min (5 control, 3 proactive, 0 narrative), all with Twitter data. Fresh clean data collection underway.
+- **NOTE**: Old DB with 880+ trades from Sessions 1-5 was NOT in the git repo. All prior statistical findings are from that data. This is a clean restart — need to re-accumulate trades.
+- **No significance tests possible**: n=8, all open, zero closed trades. Need 100+ closed trades per group before any analysis.
+- **GitHub**: Repo up to date, no local changes needed
+- **Action**: Let system run for 24-48 hours to accumulate clean data before next analysis session

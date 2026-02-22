@@ -129,11 +129,12 @@ Consistent profitability WITHOUT relying on outlier moonshots. The base case (no
 
 | Component | Status | Last Verified |
 |-----------|--------|---------------|
-| paper_trader.py | NEEDS RESTART with twitter_signal | 2026-02-22 05:35 UTC |
-| Matching logic | v2 (fixed) | 2026-02-22 23:14 UTC |
-| Twitter signal | Module ready, needs integration into paper_trader.py | 2026-02-22 05:35 UTC |
-| Kill switch | OFF | 2026-02-22 23:14 UTC |
-| DB size | ~4 MB | 2026-02-22 23:14 UTC |
+| paper_trader.py | RUNNING (v4_rebuilt_twitter) | 2026-02-22 12:13 UTC |
+| flask_dashboard.py | RUNNING (port 5050) | 2026-02-22 12:13 UTC |
+| Matching logic | v2 (fixed, whole-word + stop words) | 2026-02-22 12:13 UTC |
+| Twitter signal | ACTIVE — integrated into paper_trader.py, logging 100% of trades | 2026-02-22 12:13 UTC |
+| Kill switch | OFF | 2026-02-22 12:13 UTC |
+| DB | Fresh (clean data only, matching v2), collecting since 12:13 UTC | 2026-02-22 12:13 UTC |
 
 ---
 
@@ -181,3 +182,18 @@ Consistent profitability WITHOUT relying on outlier moonshots. The base case (no
   - Safe migration via `_safe_add_column` — won't break existing DB
   - `log_trade()` now accepts optional `twitter_signal_data` dict
 - **NEXT**: Integrate twitter_signal into paper_trader.py's entry flow, restart system
+
+### Session 5 (Feb 22, 12:10-12:20 UTC) — Automated Health Check
+- **System restart**: paper_trader.py was not running (sandbox hibernated). Cloned repo, installed deps, started fresh.
+- **Twitter signal patch**: Already applied in codebase (paper_trader.py imports twitter_signal, passes data to log_trade). No manual patching needed.
+- **Fresh DB**: Previous DB was in .gitignore (not persisted). Initialized new DB. All data from this point forward is clean (matching v2 + Twitter signal).
+- **Verification**: System processing tokens within 30 seconds of start. WebSocket connected. RSS scanning 119 narratives. Twitter signal logging at 100% coverage.
+- **Early data (n=10 closed, ~5 min of collection)**:
+  - Proactive: n=6, WR=50%, avg_pnl=+0.6200 SOL
+  - Control: n=4, WR=50%, avg_pnl=+1.2337 SOL
+  - ⚠️ Control outperforming narrative (but n is tiny — pure noise)
+  - Outlier test: Remove top 3 trades → total PnL goes from +8.65 to -0.04 SOL (power law confirmed)
+  - Twitter correlation: engagement vs pnl r=0.53 (p=0.11) — suggestive but not significant at n=10
+- **Adversarial assessment**: ALL findings are noise at n=10. No conclusions possible. System is healthy and collecting.
+- **GitHub**: No local changes to push (repo was freshly cloned).
+- **NEXT**: Let system run for 24-48 hours to accumulate 200+ clean trades. Re-run session5_analysis.py for significance tests.

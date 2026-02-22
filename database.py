@@ -200,6 +200,7 @@ def init_db():
     _safe_add_column(c, 'trades', 'strategy_version', 'TEXT')
     _safe_add_column(c, 'trades', 'strategy_params', 'TEXT')
     _safe_add_column(c, 'trades', 'twitter_signal_data', 'TEXT')  # JSON blob from twitter_signal.py
+    _safe_add_column(c, 'trades', 'narrative_keyword', 'TEXT')  # Which narrative this matched
     _safe_add_column(c, 'token_evaluations', 'social_score', 'REAL')
     _safe_add_column(c, 'token_evaluations', 'social_data', 'TEXT')
 
@@ -351,12 +352,13 @@ def log_trade(mint_address, token_name, token_symbol,
         INSERT INTO trades
         (evaluation_id, mint_address, token_name, token_symbol,
          entered_at, entry_price_usd, entry_sol, tx_signature, simulation, trade_mode,
-         narrative_age, category, strategy_version, strategy_params, twitter_signal_data)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         narrative_age, category, strategy_version, strategy_params, twitter_signal_data,
+         narrative_keyword)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, (evaluation_id, mint_address, token_name, token_symbol,
           datetime.utcnow().isoformat(), entry_price_sol, entry_sol, tx_signature,
           1 if simulation else 0, trade_mode, narrative_age, category,
-          strategy_version, strategy_params, twitter_json))
+          strategy_version, strategy_params, twitter_json, narrative_keyword))
     conn.commit()
     row_id = c.lastrowid
     conn.close()

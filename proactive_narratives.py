@@ -261,15 +261,18 @@ class ProactiveNarrativeEngine:
                 elif not is_short_trigger and trigger_kw in name_lower:
                     score = 90
                 # Trigger keyword contains token name (token is abbreviation)
-                elif name_lower in trigger_kw and len(name_lower) >= 3:
+                # Require 5+ chars to avoid 'ing' matching 'mentioning', 'test' matching 'protest'
+                elif name_lower in trigger_kw and len(name_lower) >= 5:
                     score = 80
-                # Symbol match
-                elif trigger_kw in sym_lower:
+                # Symbol match (only for symbols 3+ chars to avoid 'ST' matching everything)
+                elif len(trigger_kw) >= 3 and trigger_kw in sym_lower:
                     score = 85
-                # Partial overlap (at least 4 chars)
-                elif len(trigger_kw) >= 4 and len(name_lower) >= 4:
-                    # Check if significant portion overlaps
-                    if trigger_kw[:4] in name_lower or name_lower[:4] in trigger_kw:
+                # Partial overlap — only match if one starts with the other
+                # (prefix match, not arbitrary substring)
+                # e.g. "trump" starts with "trump" in "trumpcoin" = yes
+                #      "test" found inside "greatest" = no
+                elif len(trigger_kw) >= 5 and len(name_lower) >= 5:
+                    if name_lower.startswith(trigger_kw[:5]) or trigger_kw.startswith(name_lower[:5]):
                         score = 65
 
                 if score > best_score:

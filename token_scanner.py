@@ -109,8 +109,13 @@ def keyword_match_score(token_name: str, token_symbol: str,
     if narrative_lc in name_lower or narrative_lc in symbol_lower:
         return 100.0
     # Full token name found in narrative (token is a key entity)
-    if len(name_lower) >= 4 and name_lower in narrative_lc:
-        return 95.0
+    # Must be a whole word in the narrative, not a substring of another word
+    # e.g. "trump" in "trump tariffs" = yes, "test" in "protest" = no
+    if len(name_lower) >= 5 and name_lower in narrative_lc:
+        # Verify whole-word boundary
+        import re as _re2
+        if _re2.search(r'\b' + _re2.escape(name_lower) + r'\b', narrative_lc):
+            return 95.0
 
     # 2-3. Whole-word matching: narrative word must appear as a standalone
     #      word in the token name, not as a substring of another word

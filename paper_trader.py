@@ -60,6 +60,7 @@ logger = logging.getLogger("paper_trader")
 open_trades = {}
 virtual_positions = {}
 seen_mints = set()
+seen_names = set()  # Dedup by token name too — multiple people create same-name tokens
 stats = {
     "tokens_seen": 0,
     "tokens_passed_rug": 0,
@@ -208,8 +209,15 @@ def enter_trade(token_data, decision, details, narratives):
 
     # Dedup: don't trade the same mint twice
     if mint in open_trades or mint in {t.get("mint") for t in open_trades.values()}:
-        logger.debug(f"Already trading {name}, skipping")
+        logger.debug(f"Already trading {name} (same mint), skipping")
         return None
+
+    # Dedup: don't trade the same token name twice (people create duplicates)
+    name_key = name.strip().lower()
+    if name_key in seen_names:
+        logger.debug(f"Already traded token named '{name}', skipping duplicate")
+        return None
+    seen_names.add(name_key)
 
     entry_price_sol = estimate_entry_price(token_data)
 

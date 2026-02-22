@@ -43,6 +43,7 @@ from proactive_narratives import (
     feed_narratives_to_engine,
 )
 from twitter_signal import check_twitter_signal
+from live_executor import execute_buy, execute_sell, can_execute_live, get_live_stats
 
 # ── Logging (explicit handlers — basicConfig is stolen by narrative_monitor import) ──
 os.makedirs(LOGS_DIR, exist_ok=True)
@@ -78,6 +79,9 @@ shutdown_flag = threading.Event()
 
 proactive_engine = get_proactive_engine()
 STRATEGY_VERSION = "v4_rebuilt_twitter"
+
+# Live execution tracking: maps paper_trade_id -> live buy result
+live_trade_map = {}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -322,6 +326,35 @@ def enter_trade(token_data, decision, details, narratives):
         f"tw={twitter_signal['tweet_count'] if twitter_signal else '?'} | "
         f"open={len(open_trades)}"
     )
+
+    # ── LIVE EXECUTION (parallel, non-blocking) ──
+    try:
+        can_trade, reason = can_execute_live()
+        if can_trade:
+            live_result = execute_buy(mint_address=mint, token_name=name)
+            db.log_live_trade(
+                paper_trade_id=trade_id,
+                mint_address=mint,
+                token_name=name,
+                token_symbol=symbol,
+                action="buy",
+                amount_sol=live_result.get("amount_sol", 0),
+                tx_signature=live_result.get("tx_signature"),
+                success=live_result.get("success", False),
+                error=live_result.get("error"),
+                paper_price_sol=entry_price_sol,
+            )
+            if live_result.get("success"):
+                live_trade_map[trade_id] = live_result
+                trade_info["live_buy"] = live_result
+                logger.info(f"[LIVE BUY] {name}: tx={live_result.get('tx_signature')}")
+            else:
+                logger.warning(f"[LIVE BUY FAILED] {name}: {live_result.get('error')}")
+        else:
+            logger.debug(f"[LIVE SKIP] {name}: {reason}")
+    except Exception as e:
+        logger.error(f"[LIVE BUY ERROR] {name}: {e}")
+
     return trade_id
 
 
@@ -385,6 +418,37 @@ def close_trade(trade_id, trade_info, exit_reason, pnl_pct, current_price_sol):
         f"pnl={pnl_sol:+.4f} SOL ({pnl_pct:+.1%}) | "
         f"hold={hold_time_sec:.0f}s | total={stats['total_pnl_sol']:+.4f}"
     )
+
+    # ── LIVE SELL (if we have a live position) ──
+    try:
+        if trade_id in live_trade_map:
+            live_buy = live_trade_map[trade_id]
+            sell_result = execute_sell(
+                mint_address=trade_info["mint"],
+                token_name=trade_info["name"],
+                sell_pct=100
+            )
+            db.log_live_trade(
+                paper_trade_id=trade_id,
+                mint_address=trade_info["mint"],
+                token_name=trade_info["name"],
+                token_symbol=trade_info["symbol"],
+                action="sell",
+                amount_sol=0,  # selling tokens, not SOL
+                tx_signature=sell_result.get("tx_signature"),
+                success=sell_result.get("success", False),
+                error=sell_result.get("error"),
+                paper_price_sol=current_price_sol,
+                pnl_pct=pnl_pct,
+                hold_time_sec=hold_time_sec,
+            )
+            if sell_result.get("success"):
+                logger.info(f"[LIVE SELL] {trade_info['name']}: tx={sell_result.get('tx_signature')}")
+            else:
+                logger.warning(f"[LIVE SELL FAILED] {trade_info['name']}: {sell_result.get('error')}")
+            del live_trade_map[trade_id]
+    except Exception as e:
+        logger.error(f"[LIVE SELL ERROR] {trade_info['name']}: {e}")
 
     del open_trades[trade_id]
     if trade_id in virtual_positions:
@@ -558,6 +622,8 @@ def print_status():
             break
         active_narratives = get_active_narratives()
         ps = proactive_engine.get_stats()
+        live = get_live_stats()
+        live_bal = live.get('wallet_balance_sol') or 0
         logger.info(
             f"[STATUS] seen={stats['tokens_seen']} | "
             f"rug_pass={stats['tokens_passed_rug']} | "
@@ -567,7 +633,8 @@ def print_status():
             f"closed={stats['trades_closed']} | "
             f"pnl={stats['total_pnl_sol']:+.4f} | "
             f"narratives={len(active_narratives)} | "
-            f"triggers={ps.get('active_triggers', 0)}"
+            f"triggers={ps.get('active_triggers', 0)} | "
+            f"LIVE: {live['total_live_trades']} trades, bal={live_bal:.4f} SOL"
         )
 
 
@@ -583,6 +650,14 @@ def main():
     logger.info(f"Trade size: {TRADE_SIZE_SOL} SOL | Max concurrent: {MAX_CONCURRENT_TRADES}")
     logger.info(f"TP: {TAKE_PROFIT_PCT:.0%} | SL: {STOP_LOSS_PCT:.0%} | Timeout: {TIMEOUT_MINUTES}min")
     logger.info(f"Control rate: {CONTROL_SAMPLE_RATE:.0%} | Fees: {FEE_BUY_PCT+FEE_SELL_PCT:.0%} RT")
+    live = get_live_stats()
+    if live["enabled"]:
+        logger.info(f"LIVE TRADING ENABLED | wallet={live['wallet_address'][:8]}... | "
+                    f"balance={live['wallet_balance_sol']:.4f} SOL | "
+                    f"size={live['trade_size_sol']} SOL/trade | "
+                    f"slippage={live['slippage_pct']}%")
+    else:
+        logger.info("LIVE TRADING DISABLED (paper only)")
     logger.info("=" * 60)
 
     signal.signal(signal.SIGTERM, graceful_shutdown)

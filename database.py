@@ -208,6 +208,31 @@ def init_db():
         )
     """)
 
+    # Live trade execution log
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS live_trades (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            paper_trade_id  INTEGER REFERENCES trades(id),
+            mint_address    TEXT    NOT NULL,
+            token_name      TEXT,
+            token_symbol    TEXT,
+            action          TEXT    NOT NULL,  -- 'buy' or 'sell'
+            amount_sol      REAL,
+            tx_signature    TEXT,
+            success         INTEGER DEFAULT 0,
+            error           TEXT,
+            executed_at     TEXT    NOT NULL,
+            -- Fill comparison (paper vs live)
+            paper_price_sol REAL,
+            live_fill_price_sol REAL,
+            slippage_pct    REAL,
+            -- For sells
+            pnl_sol         REAL,
+            pnl_pct         REAL,
+            hold_time_sec   REAL
+        )
+    """)
+
     # ── Safe column migrations (add columns if they don't exist) ──
     _safe_add_column(c, 'trades', 'trade_mode', 'TEXT')
     _safe_add_column(c, 'trades', 'narrative_age', 'REAL')
@@ -396,6 +421,32 @@ def close_trade(trade_id, exit_price_sol=0, exit_reason="",
           pnl_sol, pnl_pct, hold_minutes, exit_reason, trade_id))
     conn.commit()
     conn.close()
+
+
+def log_live_trade(paper_trade_id, mint_address, token_name, token_symbol,
+                   action, amount_sol, tx_signature, success, error=None,
+                   paper_price_sol=None, live_fill_price_sol=None,
+                   slippage_pct=None, pnl_sol=None, pnl_pct=None,
+                   hold_time_sec=None):
+    """Log a live trade execution for paper vs live comparison."""
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("""
+        INSERT INTO live_trades
+        (paper_trade_id, mint_address, token_name, token_symbol,
+         action, amount_sol, tx_signature, success, error, executed_at,
+         paper_price_sol, live_fill_price_sol, slippage_pct,
+         pnl_sol, pnl_pct, hold_time_sec)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    """, (paper_trade_id, mint_address, token_name, token_symbol,
+          action, amount_sol, tx_signature, 1 if success else 0, error,
+          datetime.utcnow().isoformat(),
+          paper_price_sol, live_fill_price_sol, slippage_pct,
+          pnl_sol, pnl_pct, hold_time_sec))
+    conn.commit()
+    row_id = c.lastrowid
+    conn.close()
+    return row_id
 
 
 def log_virtual_exit(trade_id, strategy_name, exit_reason, exit_price_sol,

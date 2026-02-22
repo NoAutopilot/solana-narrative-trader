@@ -68,7 +68,7 @@
 
 - **Paper PnL is not real PnL.** It is a hypothesis, not evidence. Never present paper results as proof of profitability.
 - **If we can't execute it on-chain, it doesn't count.** A 1900x paper gain that fails at the sell TX is worth exactly 0 SOL.
-- **The bonding curve is a wall.** Pump.fun tokens graduate from the bonding curve at ~2.5-2.8x. After that, they migrate to Raydium/PumpSwap. Paper trading tracks price seamlessly through migration; on-chain selling does not. Until post-migration sells are PROVEN with 5+ successful on-chain transactions, cap all projections at bonding curve max.
+- **The bonding curve is no longer a wall.** [PROVEN ON-CHAIN — Feb 22, 2026] Post-migration selling works via PumpPortal `pool=auto`. 5/5 successful buy+sell round-trips on graduated PumpSwap tokens (Wilde Lil Bro, GameStop Coin, Trenches Game, maxxing). Routing: `pool=auto` handles both bonding curve and PumpSwap; `pool=raydium` fails for PumpSwap tokens. Slippage 25-50% needed. Buy TX needs ~20s to confirm before sell. This unlocks the post-migration gains that represent 101% of paper PnL.
 - **Separate what's proven from what's projected.** Every claim must be tagged: [PROVEN ON-CHAIN], [PROVEN IN PAPER], or [PROJECTED]. Never blur the lines.
 - **The simulation-reality gap is the #1 metric.** If paper says +336 SOL and live says -0.10 SOL, the system is not "almost profitable" — it's broken. Close the gap before scaling.
 - **Profitability means NET of everything**: TX fees, failed sells, slippage, stuck tokens, unrecoverable rent. If you have to exclude costs to show a profit, you don't have a profit.
@@ -89,7 +89,7 @@ Before marking ANY finding as "proven" or presenting results:
 - [ ] **Multi-test agreement**: Do parametric, non-parametric, AND bootstrap tests all agree?
 - [ ] **Simulation-reality gap**: Is virtual/simulated PnL within 2x of actual realized PnL?
 - [ ] **On-chain verification**: Can every claimed profit be traced to an actual Solscan TX with confirmed SOL received?
-- [ ] **Bonding curve cap test**: Does the result hold when capping all gains at 2.8x (bonding curve max)? If not, profitability depends on unproven post-migration selling.
+- [x] **Bonding curve cap test**: Post-migration selling PROVEN on-chain (5/5 sells, Feb 22 2026). No longer need to cap at 2.8x. Monitor live production sells for continued reliability.
 - [ ] **Falsification condition**: Can you state what data would DISPROVE this finding?
 - [ ] **Base rate comparison**: Is the result meaningfully better than buying random tokens?
 
@@ -128,7 +128,7 @@ Before marking ANY finding as "proven" or presenting results:
 8. **Labeling partial-coverage metrics as proven** — If a metric only covers 56% of trades, it's a biased sample. Say so explicitly.
 9. **Treating p=0.09 as "suggestive"** — It's not significant. Period. Don't soften the language to keep hope alive.
 10. **Building dashboards before proving the thesis** — Infrastructure for an unproven system is wasted effort. Prove first, build second.
-11. **Presenting bonding-curve-blind projections** — Paper PnL that assumes selling through token migration is fiction until post-migration selling is proven on-chain. 101% of paper PnL came from post-migration gains in Session 4. The bonding-curve-only trades were net negative.
+11. **Presenting bonding-curve-blind projections** — [RESOLVED Feb 22, 2026] Post-migration selling now proven on-chain (5/5 sells). However, the lesson stands: never assume an execution path works until it's proven. The next unproven assumption to validate is whether the live executor can capture the same 1900x gains that paper trading shows (requires holding through migration + selling at peak).
 12. **Conflating paper scale with live feasibility** — "If we matched paper sizes we'd be profitable" is theatre unless every component of the execution chain is proven. Matching sizes doesn't fix unproven sell routing.
 
 ---

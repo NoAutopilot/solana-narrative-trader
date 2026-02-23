@@ -553,11 +553,10 @@ def execute_buy(mint_address, token_name="", amount_sol=None, paper_trade_id=Non
                     # Update DB with actual on-chain fill data
                     if paper_trade_id is not None and sol_change is not None:
                         try:
-                            from database import Database
-                            _db = Database()
+                            from database import update_live_trade_fill as _update_fill
                             actual_spent = abs(sol_change)
                             slippage = ((actual_spent - trade_amount) / trade_amount * 100) if trade_amount > 0 else 0
-                            _db.update_live_trade_fill(
+                            _update_fill(
                                 paper_trade_id=paper_trade_id,
                                 action="buy",
                                 sol_change=sol_change,
@@ -718,9 +717,8 @@ def execute_sell(mint_address, token_name="", sell_pct=100, paper_trade_id=None)
                         logger.info(f"[LIVE SELL CONFIRMED] {_tname}: tx={_sig} sol_received={sol_change} confirm={confirm_elapsed:.1f}s")
                         if _ptid is not None and sol_change is not None:
                             try:
-                                from database import Database
-                                _db = Database()
-                                _db.update_live_trade_fill(paper_trade_id=_ptid, action="sell", sol_change=sol_change, slippage_pct=0)
+                                from database import update_live_trade_fill as _update_fill
+                                _update_fill(paper_trade_id=_ptid, action="sell", sol_change=sol_change, slippage_pct=0)
                             except Exception as e:
                                 logger.warning(f"[LIVE SELL FILL UPDATE FAILED] {_tname}: {e}")
                     else:

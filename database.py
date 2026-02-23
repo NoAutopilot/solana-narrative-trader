@@ -547,3 +547,43 @@ def log_learning_cycle(cycle_start, cycle_end, sample_size, win_rate,
 
 if __name__ == "__main__":
     init_db()
+
+    def update_live_trade_fill(self, paper_trade_id, action, sol_change=None, slippage_pct=None, live_fill_price_sol=None):
+        """Update a live trade record with actual on-chain fill data (called after async verification)."""
+        try:
+            updates = []
+            params = []
+            if sol_change is not None and action == "buy":
+                # For buys, sol_change is negative (SOL spent). Store absolute value as the actual amount.
+                updates.append("amount_sol = ?")
+                params.append(round(abs(sol_change), 8))
+            if slippage_pct is not None:
+                updates.append("slippage_pct = ?")
+                params.append(round(slippage_pct, 4))
+            if live_fill_price_sol is not None:
+                updates.append("live_fill_price_sol = ?")
+                params.append(live_fill_price_sol)
+            if not updates:
+                return
+            params.extend([paper_trade_id, action.upper()])
+            sql = f"UPDATE live_trades SET {', '.join(updates)} WHERE paper_trade_id = ? AND UPPER(action) = ?"
+            self.conn.execute(sql, params)
+            self.conn.commit()
+        except Exception as e:
+            logger.error(f"Failed to update live trade fill: {e}")
+
+    def update_live_trade_sell_pnl(self, paper_trade_id, amount_sol, pnl_sol, pnl_pct, slippage_pct=None):
+        """Update a live sell record with actual on-chain PnL data."""
+        try:
+            updates = ["amount_sol = ?", "pnl_sol = ?", "pnl_pct = ?"]
+            params = [round(amount_sol, 8), round(pnl_sol, 8), round(pnl_pct, 6)]
+            if slippage_pct is not None:
+                updates.append("slippage_pct = ?")
+                params.append(round(slippage_pct, 4))
+            params.append(paper_trade_id)
+            sql = f"UPDATE live_trades SET {', '.join(updates)} WHERE paper_trade_id = ? AND UPPER(action) = 'SELL'"
+            self.conn.execute(sql, params)
+            self.conn.commit()
+        except Exception as e:
+            logger.error(f"Failed to update live sell PnL: {e}")
+

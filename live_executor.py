@@ -16,6 +16,7 @@ import json
 import logging
 import requests
 import threading
+from pnl_backfill import start_backfill_thread
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -51,8 +52,8 @@ LIVE_CONVICTION_FILTER = os.getenv("LIVE_CONVICTION_FILTER", "all")
 LIVE_BUY_POOL = os.getenv("LIVE_BUY_POOL", "pump")
 
 # On-chain validation settings
-TX_CONFIRM_WAIT_SEC = 5           # Wait before checking TX on-chain
-TX_CONFIRM_RETRIES = 3            # Number of retries for TX confirmation
+TX_CONFIRM_WAIT_SEC = 8           # Wait before checking TX on-chain
+TX_CONFIRM_RETRIES = 5            # Number of retries for TX confirmation
 TX_CONFIRM_RETRY_WAIT = 3         # Wait between retries
 
 # Pool retry order for sells when bonding curve is complete (error 6024)

@@ -77,7 +77,7 @@ CONTROL_SAMPLE_RATE  = 0.15    # 15% of non-narrative tokens enter as control
 # ── Exit Strategy (default) ──────────────────────────────────────────────────
 TAKE_PROFIT_PCT      = 0.30    # 30% take profit
 STOP_LOSS_PCT        = -0.25   # 25% stop loss
-TIMEOUT_MINUTES      = 15      # Close after 15 min if no exit triggered
+TIMEOUT_MINUTES      = 5       # Close after 5 min if no exit triggered (was 15; data shows all winners close <5 min)
 PRICE_CHECK_INTERVAL = 10      # Seconds between price checks for open trades
 
 # ── Trailing Take Profit ─────────────────────────────────────────────────────
@@ -86,13 +86,13 @@ TRAILING_TP_DISTANCE = 0.10    # Trail 10% behind peak
 
 # ── Virtual Exit Strategies ──────────────────────────────────────────────────
 VIRTUAL_STRATEGIES = {
-    "A_baseline":       {"tp": 0.30, "sl": -0.25, "timeout": 15},
-    "B_tight_stop":     {"tp": 0.30, "sl": -0.15, "timeout": 15},
-    "C_wider_profit":   {"tp": 0.50, "sl": -0.25, "timeout": 20},
-    "D_scalper":        {"tp": 0.15, "sl": -0.10, "timeout": 10},
-    "E_long_hold":      {"tp": 0.50, "sl": -0.30, "timeout": 30},
-    "F_trailing_only":  {"tp": 1.00, "sl": -0.20, "timeout": 20, "trailing": True},
-    "G_diamond_hands":  {"tp": 1.00, "sl": -0.35, "timeout": 60, "trailing": True},
+    "A_baseline":       {"tp": 0.30, "sl": -0.25, "timeout": 5},
+    "B_tight_stop":     {"tp": 0.30, "sl": -0.15, "timeout": 5},
+    "C_wider_profit":   {"tp": 0.50, "sl": -0.25, "timeout": 5},
+    "D_scalper":        {"tp": 0.15, "sl": -0.10, "timeout": 5},
+    "E_long_hold":      {"tp": 0.50, "sl": -0.30, "timeout": 10},
+    "F_trailing_only":  {"tp": 1.00, "sl": -0.20, "timeout": 5, "trailing": True},
+    "G_diamond_hands":  {"tp": 1.00, "sl": -0.35, "timeout": 10, "trailing": True},
 }
 
 # ── Rug Filter Thresholds ───────────────────────────────────────────────────

@@ -478,7 +478,7 @@ def close_trade(trade_id, trade_info, exit_reason, pnl_pct, current_price_sol):
             )
             # Estimate returned SOL from the buy amount + paper PnL %
             buy_amount = live_buy.get("amount_sol", LIVE_TRADE_SIZE_SOL)
-            returned_sol = buy_amount * (1 + pnl_pct / 100) if pnl_pct else 0
+            returned_sol = buy_amount * (1 + pnl_pct) if pnl_pct else 0  # pnl_pct is a ratio (4.41 = 441%), not percentage
             live_pnl = returned_sol - buy_amount
             db.log_live_trade(
                 paper_trade_id=trade_id,

@@ -2,6 +2,8 @@
 Live Executor — PumpPortal Lightning API Integration
 Handles real buy/sell execution alongside the paper trader.
 All trades go through PumpPortal's Lightning Transaction API.
+
+v2: Added on-chain TX validation and pool retry for migrated tokens (error 6024).
 """
 
 import os
@@ -39,11 +41,109 @@ MAX_TOTAL_LIVE_TRADES = 500       # Lifetime cap for safety
 # Conviction filter
 LIVE_CONVICTION_FILTER = os.getenv("LIVE_CONVICTION_FILTER", "all")
 
+# On-chain validation settings
+TX_CONFIRM_WAIT_SEC = 5           # Wait before checking TX on-chain
+TX_CONFIRM_RETRIES = 3            # Number of retries for TX confirmation
+TX_CONFIRM_RETRY_WAIT = 3        # Wait between retries
+
+# Pool retry order for sells when bonding curve is complete (error 6024)
+SELL_POOL_RETRY_ORDER = ["auto", "pump-amm", "raydium"]
+
 # Tracking
 _live_trade_count = 0
 _hourly_trade_times = []
 _total_sol_spent = 0.0
 _total_sol_received = 0.0
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  ON-CHAIN TX VALIDATION
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _verify_tx_on_chain(signature, wait_sec=TX_CONFIRM_WAIT_SEC, retries=TX_CONFIRM_RETRIES):
+    """
+    Verify a transaction actually succeeded on-chain.
+    PumpPortal returns a signature even when the TX fails on-chain.
+    
+    Returns:
+        (confirmed: bool, error: str|None, sol_change: float|None)
+        - confirmed: True if TX succeeded on-chain
+        - error: Error description if TX failed
+        - sol_change: Change in SOL balance for the wallet (positive = received)
+    """
+    if not HELIUS_RPC_URL or not signature:
+        return True, None, None  # Can't verify, assume success
+    
+    time.sleep(wait_sec)
+    
+    for attempt in range(retries):
+        try:
+            resp = requests.post(
+                HELIUS_RPC_URL,
+                json={
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "getTransaction",
+                    "params": [
+                        signature,
+                        {"encoding": "jsonParsed", "maxSupportedTransactionVersion": 0}
+                    ]
+                },
+                timeout=10
+            )
+            data = resp.json()
+            result = data.get("result")
+            
+            if result:
+                meta = result.get("meta", {})
+                err = meta.get("err")
+                
+                if err:
+                    # Parse specific error codes
+                    error_desc = _parse_on_chain_error(err)
+                    return False, error_desc, None
+                
+                # TX succeeded — calculate SOL change
+                pre_balances = meta.get("preBalances", [])
+                post_balances = meta.get("postBalances", [])
+                sol_change = None
+                if pre_balances and post_balances:
+                    sol_change = (post_balances[0] - pre_balances[0]) / 1e9
+                
+                return True, None, sol_change
+            
+            # TX not found yet, retry
+            if attempt < retries - 1:
+                logger.debug(f"TX {signature[:20]}... not found, retry {attempt+1}/{retries}")
+                time.sleep(TX_CONFIRM_RETRY_WAIT)
+                
+        except Exception as e:
+            logger.debug(f"TX verification error: {e}")
+            if attempt < retries - 1:
+                time.sleep(TX_CONFIRM_RETRY_WAIT)
+    
+    # Could not confirm — return uncertain
+    logger.warning(f"TX {signature[:20]}... could not be confirmed after {retries} retries")
+    return True, None, None  # Assume success if we can't verify (don't block trading)
+
+
+def _parse_on_chain_error(err):
+    """Parse on-chain error into human-readable description."""
+    if isinstance(err, dict) and "InstructionError" in err:
+        idx, detail = err["InstructionError"]
+        if isinstance(detail, dict) and "Custom" in detail:
+            code = detail["Custom"]
+            known_errors = {
+                6024: "BondingCurveComplete — token migrated to AMM",
+                6000: "NotAuthorized",
+                6001: "AlreadyInitialized",
+                6003: "TooMuchSolRequired",
+                6004: "TooLittleSolReceived",
+            }
+            desc = known_errors.get(code, f"Custom error {code}")
+            return f"InstructionError[{idx}]: {desc}"
+        return f"InstructionError[{idx}]: {detail}"
+    return str(err)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -201,9 +301,57 @@ def can_execute_live():
 #  TRADE EXECUTION
 # ═══════════════════════════════════════════════════════════════════════════════
 
+def _submit_trade(action, mint_address, pool="auto", **extra_params):
+    """
+    Submit a trade to PumpPortal Lightning API.
+    Returns (response_data, error_string).
+    """
+    params = {
+        "action": action,
+        "mint": mint_address,
+        "slippage": LIVE_SLIPPAGE_PCT,
+        "priorityFee": LIVE_PRIORITY_FEE,
+        "pool": pool,
+        **extra_params,
+    }
+    
+    resp = requests.post(
+        f"{PUMPPORTAL_TRADE_URL}?api-key={PUMPPORTAL_API_KEY}",
+        data=params,
+        timeout=30
+    )
+    
+    if resp.status_code != 200:
+        return None, f"HTTP {resp.status_code}: {resp.text[:200]}"
+    
+    data = resp.json()
+    
+    if isinstance(data, dict) and ("error" in data or "errors" in data):
+        err = data.get("error") or data.get("errors", "Unknown error")
+        # Empty errors list [] is NOT an error — PumpPortal sometimes returns this on success
+        if isinstance(err, list) and len(err) == 0:
+            pass  # Fall through to signature check
+        else:
+            return None, str(err)
+    
+    if isinstance(data, dict) and "signature" in data:
+        return data["signature"], None
+    
+    if isinstance(data, str) and len(data) > 40:
+        return data, None  # Raw signature string
+    
+    # If we get here with an empty errors list and no signature, the sell may have gone through
+    # Return a special marker so the caller can check the wallet
+    if isinstance(data, dict) and isinstance(data.get("errors"), list) and len(data["errors"]) == 0:
+        return "AMBIGUOUS_NO_SIGNATURE", None
+    
+    return None, f"Unexpected response: {data}"
+
+
 def execute_buy(mint_address, token_name="", amount_sol=None):
     """
     Execute a live BUY via PumpPortal Lightning API.
+    Validates TX on-chain after submission.
     
     Returns:
         dict with keys: success, tx_signature, error, amount_sol, timestamp
@@ -238,43 +386,32 @@ def execute_buy(mint_address, token_name="", amount_sol=None):
     try:
         logger.info(f"[LIVE BUY] Executing: {token_name} ({mint_address}) for {trade_amount} SOL")
 
-        resp = requests.post(
-            f"{PUMPPORTAL_TRADE_URL}?api-key={PUMPPORTAL_API_KEY}",
-            data={
-                "action": "buy",
-                "mint": mint_address,
-                "amount": trade_amount,
-                "denominatedInSol": "true",
-                "slippage": LIVE_SLIPPAGE_PCT,
-                "priorityFee": LIVE_PRIORITY_FEE,
-                "pool": "auto",
-            },
-            timeout=30
+        signature, api_error = _submit_trade(
+            "buy", mint_address,
+            amount=trade_amount,
+            denominatedInSol="true",
         )
 
-        data = resp.json() if resp.status_code == 200 else {"error": f"HTTP {resp.status_code}: {resp.text}"}
+        if api_error:
+            result["error"] = api_error
+            logger.error(f"[LIVE BUY FAILED] {token_name}: {api_error}")
+            return result
 
-        if isinstance(data, dict) and "error" in data:
-            result["error"] = str(data["error"])
-            logger.error(f"[LIVE BUY FAILED] {token_name}: {data['error']}")
-        elif isinstance(data, dict) and "signature" in data:
+        result["tx_signature"] = signature
+        
+        # Validate on-chain
+        confirmed, on_chain_error, sol_change = _verify_tx_on_chain(signature)
+        
+        if confirmed:
             result["success"] = True
-            result["tx_signature"] = data["signature"]
             _live_trade_count += 1
             _hourly_trade_times.append(time.time())
             _total_sol_spent += trade_amount
-            logger.info(f"[LIVE BUY SUCCESS] {token_name}: tx={data['signature']}")
-        elif isinstance(data, str):
-            # PumpPortal sometimes returns just the signature as a string
-            result["success"] = True
-            result["tx_signature"] = data
-            _live_trade_count += 1
-            _hourly_trade_times.append(time.time())
-            _total_sol_spent += trade_amount
-            logger.info(f"[LIVE BUY SUCCESS] {token_name}: tx={data}")
+            logger.info(f"[LIVE BUY SUCCESS] {token_name}: tx={signature}")
         else:
-            result["error"] = f"Unexpected response: {data}"
-            logger.error(f"[LIVE BUY UNKNOWN] {token_name}: {data}")
+            result["success"] = False
+            result["error"] = f"TX failed on-chain: {on_chain_error}"
+            logger.error(f"[LIVE BUY ON-CHAIN FAIL] {token_name}: {on_chain_error} tx={signature}")
 
     except requests.exceptions.Timeout:
         result["error"] = "Request timed out (30s)"
@@ -312,11 +449,12 @@ def _try_reclaim_rent(mint_address, token_name=""):
 def execute_sell(mint_address, token_name="", sell_pct=100):
     """
     Execute a live SELL via PumpPortal Lightning API.
-    Sells a percentage of tokens held.
+    Validates TX on-chain after submission.
+    If TX fails with error 6024 (BondingCurveComplete), retries with different pool routing.
     After a successful 100% sell, attempts to close the empty token account to reclaim rent.
     
     Returns:
-        dict with keys: success, tx_signature, error, timestamp, rent_reclaimed
+        dict with keys: success, tx_signature, error, timestamp, rent_reclaimed, sol_received
     """
     global _total_sol_received
 
@@ -329,6 +467,7 @@ def execute_sell(mint_address, token_name="", sell_pct=100):
         "mint": mint_address,
         "token_name": token_name,
         "sell_pct": sell_pct,
+        "sol_received": None,
     }
 
     if not LIVE_ENABLED:
@@ -339,46 +478,87 @@ def execute_sell(mint_address, token_name="", sell_pct=100):
         result["error"] = "No PumpPortal API key"
         return result
 
-    try:
-        logger.info(f"[LIVE SELL] Executing: {token_name} ({mint_address}) — {sell_pct}%")
+    pools_to_try = list(SELL_POOL_RETRY_ORDER)
+    last_error = None
 
-        resp = requests.post(
-            f"{PUMPPORTAL_TRADE_URL}?api-key={PUMPPORTAL_API_KEY}",
-            data={
-                "action": "sell",
-                "mint": mint_address,
-                "amount": f"{sell_pct}%",
-                "denominatedInSol": "false",
-                "slippage": LIVE_SLIPPAGE_PCT,
-                "priorityFee": LIVE_PRIORITY_FEE,
-                "pool": "auto",
-            },
-            timeout=30
-        )
+    for pool in pools_to_try:
+        try:
+            logger.info(f"[LIVE SELL] Executing: {token_name} ({mint_address}) — {sell_pct}% pool={pool}")
 
-        data = resp.json() if resp.status_code == 200 else {"error": f"HTTP {resp.status_code}: {resp.text}"}
+            signature, api_error = _submit_trade(
+                "sell", mint_address, pool=pool,
+                amount=f"{sell_pct}%",
+                denominatedInSol="false",
+            )
 
-        if isinstance(data, dict) and "error" in data:
-            result["error"] = str(data["error"])
-            logger.error(f"[LIVE SELL FAILED] {token_name}: {data['error']}")
-        elif isinstance(data, dict) and "signature" in data:
-            result["success"] = True
-            result["tx_signature"] = data["signature"]
-            logger.info(f"[LIVE SELL SUCCESS] {token_name}: tx={data['signature']}")
-        elif isinstance(data, str):
-            result["success"] = True
-            result["tx_signature"] = data
-            logger.info(f"[LIVE SELL SUCCESS] {token_name}: tx={data}")
-        else:
-            result["error"] = f"Unexpected response: {data}"
-            logger.error(f"[LIVE SELL UNKNOWN] {token_name}: {data}")
+            if api_error:
+                # API-level error (pool not found, etc.) — try next pool
+                last_error = api_error
+                logger.warning(f"[LIVE SELL] {token_name}: pool={pool} API error: {api_error}")
+                continue
 
-    except requests.exceptions.Timeout:
-        result["error"] = "Request timed out (30s)"
-        logger.error(f"[LIVE SELL TIMEOUT] {token_name}")
-    except Exception as e:
-        result["error"] = str(e)
-        logger.error(f"[LIVE SELL ERROR] {token_name}: {e}")
+            # Handle ambiguous response (empty errors list, no signature)
+            # PumpPortal sometimes returns {"errors":[]} when the sell actually succeeded
+            if signature == "AMBIGUOUS_NO_SIGNATURE":
+                logger.info(f"[LIVE SELL] {token_name}: pool={pool} returned ambiguous response, checking wallet...")
+                time.sleep(3)  # Wait for TX to finalize
+                try:
+                    from rent_reclaim import find_token_account_for_mint
+                    acc = find_token_account_for_mint(mint_address)
+                    if acc is None or acc["amount"] == 0:
+                        # Tokens are gone — the sell succeeded!
+                        result["success"] = True
+                        result["tx_signature"] = "ambiguous_but_confirmed"
+                        result["sol_received"] = None  # Unknown exact amount
+                        logger.info(f"[LIVE SELL SUCCESS] {token_name}: ambiguous response but tokens gone from wallet (pool={pool})")
+                        break
+                    else:
+                        logger.info(f"[LIVE SELL] {token_name}: tokens still in wallet ({acc['amount']}), trying next pool...")
+                        last_error = "Ambiguous response, tokens still in wallet"
+                        continue
+                except Exception as e:
+                    logger.warning(f"[LIVE SELL] {token_name}: wallet check failed: {e}, trying next pool...")
+                    last_error = f"Ambiguous response, wallet check failed: {e}"
+                    continue
+
+            # Validate on-chain
+            confirmed, on_chain_error, sol_change = _verify_tx_on_chain(signature)
+
+            if confirmed:
+                result["success"] = True
+                result["tx_signature"] = signature
+                result["sol_received"] = sol_change
+                if sol_change and sol_change > 0:
+                    _total_sol_received += sol_change
+                logger.info(f"[LIVE SELL SUCCESS] {token_name}: tx={signature} pool={pool} sol_change={sol_change}")
+                break
+            else:
+                # On-chain failure
+                last_error = on_chain_error
+                logger.warning(f"[LIVE SELL ON-CHAIN FAIL] {token_name}: {on_chain_error} pool={pool} tx={signature}")
+                
+                # If error 6024 (BondingCurveComplete), try next pool
+                if on_chain_error and "6024" in str(on_chain_error):
+                    logger.info(f"[LIVE SELL] Token migrated (6024), trying next pool...")
+                    continue
+                else:
+                    # Other on-chain error, don't retry
+                    result["error"] = f"TX failed on-chain: {on_chain_error}"
+                    result["tx_signature"] = signature
+                    break
+
+        except requests.exceptions.Timeout:
+            last_error = "Request timed out (30s)"
+            logger.error(f"[LIVE SELL TIMEOUT] {token_name} pool={pool}")
+            continue
+        except Exception as e:
+            last_error = str(e)
+            logger.error(f"[LIVE SELL ERROR] {token_name} pool={pool}: {e}")
+            continue
+
+    if not result["success"] and not result["error"]:
+        result["error"] = f"All pools failed: {last_error}"
+        logger.error(f"[LIVE SELL ALL POOLS FAILED] {token_name}: {last_error}")
 
     # Attempt rent reclaim after successful 100% sell
     result["rent_reclaimed"] = 0.0

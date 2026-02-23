@@ -4,6 +4,8 @@ Handles real buy/sell execution alongside the paper trader.
 All trades go through PumpPortal's Lightning Transaction API.
 
 v2: Added on-chain TX validation and pool retry for migrated tokens (error 6024).
+v3: Audit fixes — env-configurable rate/lifetime/concurrent limits, pool="pump" for
+    pre-bonding buys, enhanced failure/slippage/timing logging.
 """
 
 import os
@@ -32,19 +34,23 @@ LIVE_SLIPPAGE_PCT = int(os.getenv("LIVE_SLIPPAGE_PCT", "20"))
 LIVE_PRIORITY_FEE = float(os.getenv("LIVE_PRIORITY_FEE", "0.0001"))
 LIVE_ENABLED = os.getenv("LIVE_ENABLED", "false").lower() == "true"
 
-# Safety limits
-MAX_SOL_PER_TRADE = 0.05          # Hard cap: never spend more than this per trade
-MIN_WALLET_BALANCE_SOL = 0.01     # Stop trading if balance drops below this
-MAX_LIVE_TRADES_PER_HOUR = 20     # Rate limit
-MAX_TOTAL_LIVE_TRADES = 500       # Lifetime cap for safety
+# Safety limits — all env-configurable
+MAX_SOL_PER_TRADE = float(os.getenv("MAX_SOL_PER_TRADE", "0.05"))
+MIN_WALLET_BALANCE_SOL = float(os.getenv("MIN_WALLET_BALANCE_SOL", "0.01"))
+MAX_LIVE_TRADES_PER_HOUR = int(os.getenv("MAX_LIVE_TRADES_PER_HOUR", "100"))
+MAX_TOTAL_LIVE_TRADES = int(os.getenv("MAX_TOTAL_LIVE_TRADES", "5000"))
+MAX_CONCURRENT_LIVE_TRADES = int(os.getenv("MAX_CONCURRENT_LIVE_TRADES", "15"))
 
 # Conviction filter
 LIVE_CONVICTION_FILTER = os.getenv("LIVE_CONVICTION_FILTER", "all")
 
+# Buy pool routing: "pump" for pre-bonding (faster, no lookup latency)
+LIVE_BUY_POOL = os.getenv("LIVE_BUY_POOL", "pump")
+
 # On-chain validation settings
 TX_CONFIRM_WAIT_SEC = 5           # Wait before checking TX on-chain
 TX_CONFIRM_RETRIES = 3            # Number of retries for TX confirmation
-TX_CONFIRM_RETRY_WAIT = 3        # Wait between retries
+TX_CONFIRM_RETRY_WAIT = 3         # Wait between retries
 
 # Pool retry order for sells when bonding curve is complete (error 6024)
 SELL_POOL_RETRY_ORDER = ["auto", "pump-amm", "raydium"]
@@ -54,6 +60,29 @@ _live_trade_count = 0
 _hourly_trade_times = []
 _total_sol_spent = 0.0
 _total_sol_received = 0.0
+_open_live_trades = set()  # Track currently open live trade IDs for concurrent limit
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  EXECUTION METRICS — collected for slippage/failure analysis
+# ═══════════════════════════════════════════════════════════════════════════════
+
+_execution_metrics = {
+    "buy_attempts": 0,
+    "buy_successes": 0,
+    "buy_failures": 0,
+    "buy_timeouts": 0,
+    "sell_attempts": 0,
+    "sell_successes": 0,
+    "sell_failures": 0,
+    "sell_timeouts": 0,
+    "sell_pool_retries": 0,
+    "sell_all_pools_failed": 0,
+    "sell_ambiguous_confirmed": 0,
+    "sell_ambiguous_failed": 0,
+    "tx_confirm_times": [],       # List of (action, seconds) for TX confirmation
+    "slippage_observations": [],  # List of (action, expected_sol, actual_sol_change)
+    "failed_sell_details": [],    # List of {mint, token_name, error, pools_tried, timestamp}
+}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -74,6 +103,7 @@ def _verify_tx_on_chain(signature, wait_sec=TX_CONFIRM_WAIT_SEC, retries=TX_CONF
     if not HELIUS_RPC_URL or not signature:
         return True, None, None  # Can't verify, assume success
     
+    confirm_start = time.time()
     time.sleep(wait_sec)
     
     for attempt in range(retries):
@@ -95,6 +125,7 @@ def _verify_tx_on_chain(signature, wait_sec=TX_CONFIRM_WAIT_SEC, retries=TX_CONF
             result = data.get("result")
             
             if result:
+                confirm_elapsed = time.time() - confirm_start
                 meta = result.get("meta", {})
                 err = meta.get("err")
                 
@@ -212,7 +243,7 @@ def _check_rate_limit():
     now = time.time()
     _hourly_trade_times = [t for t in _hourly_trade_times if now - t < 3600]
     if len(_hourly_trade_times) >= MAX_LIVE_TRADES_PER_HOUR:
-        logger.warning(f"Rate limit hit: {len(_hourly_trade_times)} trades in last hour")
+        logger.warning(f"Rate limit hit: {len(_hourly_trade_times)} trades in last hour (limit={MAX_LIVE_TRADES_PER_HOUR})")
         return False
     return True
 
@@ -221,7 +252,15 @@ def _check_lifetime_cap():
     """Enforce lifetime trade cap."""
     global _live_trade_count
     if _live_trade_count >= MAX_TOTAL_LIVE_TRADES:
-        logger.warning(f"Lifetime cap hit: {_live_trade_count} total live trades")
+        logger.warning(f"Lifetime cap hit: {_live_trade_count} total live trades (limit={MAX_TOTAL_LIVE_TRADES})")
+        return False
+    return True
+
+
+def _check_concurrent_limit():
+    """Enforce max concurrent open live trades."""
+    if len(_open_live_trades) >= MAX_CONCURRENT_LIVE_TRADES:
+        logger.warning(f"Concurrent limit hit: {len(_open_live_trades)} open (limit={MAX_CONCURRENT_LIVE_TRADES})")
         return False
     return True
 
@@ -282,6 +321,9 @@ def can_execute_live():
 
     if not _check_lifetime_cap():
         return False, "Lifetime trade cap exceeded"
+
+    if not _check_concurrent_limit():
+        return False, "Concurrent trade limit exceeded"
 
     # Check wallet balance
     balance = get_wallet_balance_sol()
@@ -348,15 +390,19 @@ def _submit_trade(action, mint_address, pool="auto", **extra_params):
     return None, f"Unexpected response: {data}"
 
 
-def execute_buy(mint_address, token_name="", amount_sol=None):
+def execute_buy(mint_address, token_name="", amount_sol=None, paper_trade_id=None):
     """
     Execute a live BUY via PumpPortal Lightning API.
     Validates TX on-chain after submission.
     
     Returns:
-        dict with keys: success, tx_signature, error, amount_sol, timestamp
+        dict with keys: success, tx_signature, error, amount_sol, timestamp,
+                        confirm_time_sec, sol_change
     """
     global _live_trade_count, _total_sol_spent
+
+    _execution_metrics["buy_attempts"] += 1
+    buy_start = time.time()
 
     result = {
         "success": False,
@@ -367,6 +413,8 @@ def execute_buy(mint_address, token_name="", amount_sol=None):
         "type": "buy",
         "mint": mint_address,
         "token_name": token_name,
+        "confirm_time_sec": None,
+        "sol_change": None,
     }
 
     # Safety checks
@@ -384,16 +432,18 @@ def execute_buy(mint_address, token_name="", amount_sol=None):
     result["amount_sol"] = trade_amount
 
     try:
-        logger.info(f"[LIVE BUY] Executing: {token_name} ({mint_address}) for {trade_amount} SOL")
+        logger.info(f"[LIVE BUY] Executing: {token_name} ({mint_address}) for {trade_amount} SOL pool={LIVE_BUY_POOL}")
 
         signature, api_error = _submit_trade(
             "buy", mint_address,
+            pool=LIVE_BUY_POOL,
             amount=trade_amount,
             denominatedInSol="true",
         )
 
         if api_error:
             result["error"] = api_error
+            _execution_metrics["buy_failures"] += 1
             logger.error(f"[LIVE BUY FAILED] {token_name}: {api_error}")
             return result
 
@@ -401,23 +451,42 @@ def execute_buy(mint_address, token_name="", amount_sol=None):
         
         # Validate on-chain
         confirmed, on_chain_error, sol_change = _verify_tx_on_chain(signature)
+        confirm_elapsed = time.time() - buy_start
+        result["confirm_time_sec"] = round(confirm_elapsed, 2)
+        result["sol_change"] = sol_change
+        
+        # Log timing metric
+        _execution_metrics["tx_confirm_times"].append(("buy", confirm_elapsed))
+        
+        # Log slippage observation: expected to spend -trade_amount, actual sol_change
+        if sol_change is not None:
+            _execution_metrics["slippage_observations"].append(("buy", -trade_amount, sol_change))
+            slippage_pct = ((abs(sol_change) - trade_amount) / trade_amount * 100) if trade_amount > 0 else 0
+            logger.info(f"[LIVE BUY SLIPPAGE] {token_name}: expected={trade_amount:.6f} actual_change={sol_change:.6f} slippage={slippage_pct:+.1f}%")
         
         if confirmed:
             result["success"] = True
             _live_trade_count += 1
             _hourly_trade_times.append(time.time())
             _total_sol_spent += trade_amount
-            logger.info(f"[LIVE BUY SUCCESS] {token_name}: tx={signature}")
+            _execution_metrics["buy_successes"] += 1
+            # Track open live trade
+            if paper_trade_id is not None:
+                _open_live_trades.add(paper_trade_id)
+            logger.info(f"[LIVE BUY SUCCESS] {token_name}: tx={signature} confirm={confirm_elapsed:.1f}s sol_change={sol_change}")
         else:
             result["success"] = False
             result["error"] = f"TX failed on-chain: {on_chain_error}"
+            _execution_metrics["buy_failures"] += 1
             logger.error(f"[LIVE BUY ON-CHAIN FAIL] {token_name}: {on_chain_error} tx={signature}")
 
     except requests.exceptions.Timeout:
         result["error"] = "Request timed out (30s)"
+        _execution_metrics["buy_timeouts"] += 1
         logger.error(f"[LIVE BUY TIMEOUT] {token_name}")
     except Exception as e:
         result["error"] = str(e)
+        _execution_metrics["buy_failures"] += 1
         logger.error(f"[LIVE BUY ERROR] {token_name}: {e}")
 
     return result
@@ -446,7 +515,7 @@ def _try_reclaim_rent(mint_address, token_name=""):
     return 0.0
 
 
-def execute_sell(mint_address, token_name="", sell_pct=100):
+def execute_sell(mint_address, token_name="", sell_pct=100, paper_trade_id=None):
     """
     Execute a live SELL via PumpPortal Lightning API.
     Validates TX on-chain after submission.
@@ -454,9 +523,14 @@ def execute_sell(mint_address, token_name="", sell_pct=100):
     After a successful 100% sell, attempts to close the empty token account to reclaim rent.
     
     Returns:
-        dict with keys: success, tx_signature, error, timestamp, rent_reclaimed, sol_received
+        dict with keys: success, tx_signature, error, timestamp, rent_reclaimed,
+                        sol_received, confirm_time_sec, pools_tried
     """
     global _total_sol_received
+
+    _execution_metrics["sell_attempts"] += 1
+    sell_start = time.time()
+    pools_tried = []
 
     result = {
         "success": False,
@@ -468,6 +542,8 @@ def execute_sell(mint_address, token_name="", sell_pct=100):
         "token_name": token_name,
         "sell_pct": sell_pct,
         "sol_received": None,
+        "confirm_time_sec": None,
+        "pools_tried": [],
     }
 
     if not LIVE_ENABLED:
@@ -482,6 +558,7 @@ def execute_sell(mint_address, token_name="", sell_pct=100):
     last_error = None
 
     for pool in pools_to_try:
+        pools_tried.append(pool)
         try:
             logger.info(f"[LIVE SELL] Executing: {token_name} ({mint_address}) — {sell_pct}% pool={pool}")
 
@@ -494,6 +571,7 @@ def execute_sell(mint_address, token_name="", sell_pct=100):
             if api_error:
                 # API-level error (pool not found, etc.) — try next pool
                 last_error = api_error
+                _execution_metrics["sell_pool_retries"] += 1
                 logger.warning(f"[LIVE SELL] {token_name}: pool={pool} API error: {api_error}")
                 continue
 
@@ -510,19 +588,30 @@ def execute_sell(mint_address, token_name="", sell_pct=100):
                         result["success"] = True
                         result["tx_signature"] = "ambiguous_but_confirmed"
                         result["sol_received"] = None  # Unknown exact amount
+                        result["confirm_time_sec"] = round(time.time() - sell_start, 2)
+                        _execution_metrics["sell_successes"] += 1
+                        _execution_metrics["sell_ambiguous_confirmed"] += 1
                         logger.info(f"[LIVE SELL SUCCESS] {token_name}: ambiguous response but tokens gone from wallet (pool={pool})")
                         break
                     else:
                         logger.info(f"[LIVE SELL] {token_name}: tokens still in wallet ({acc['amount']}), trying next pool...")
                         last_error = "Ambiguous response, tokens still in wallet"
+                        _execution_metrics["sell_ambiguous_failed"] += 1
+                        _execution_metrics["sell_pool_retries"] += 1
                         continue
                 except Exception as e:
                     logger.warning(f"[LIVE SELL] {token_name}: wallet check failed: {e}, trying next pool...")
                     last_error = f"Ambiguous response, wallet check failed: {e}"
+                    _execution_metrics["sell_pool_retries"] += 1
                     continue
 
             # Validate on-chain
             confirmed, on_chain_error, sol_change = _verify_tx_on_chain(signature)
+            confirm_elapsed = time.time() - sell_start
+            result["confirm_time_sec"] = round(confirm_elapsed, 2)
+
+            # Log timing metric
+            _execution_metrics["tx_confirm_times"].append(("sell", confirm_elapsed))
 
             if confirmed:
                 result["success"] = True
@@ -530,7 +619,13 @@ def execute_sell(mint_address, token_name="", sell_pct=100):
                 result["sol_received"] = sol_change
                 if sol_change and sol_change > 0:
                     _total_sol_received += sol_change
-                logger.info(f"[LIVE SELL SUCCESS] {token_name}: tx={signature} pool={pool} sol_change={sol_change}")
+                _execution_metrics["sell_successes"] += 1
+                
+                # Log slippage observation for sell
+                if sol_change is not None:
+                    _execution_metrics["slippage_observations"].append(("sell", None, sol_change))
+                
+                logger.info(f"[LIVE SELL SUCCESS] {token_name}: tx={signature} pool={pool} sol_change={sol_change} confirm={confirm_elapsed:.1f}s")
                 break
             else:
                 # On-chain failure
@@ -540,25 +635,44 @@ def execute_sell(mint_address, token_name="", sell_pct=100):
                 # If error 6024 (BondingCurveComplete), try next pool
                 if on_chain_error and "6024" in str(on_chain_error):
                     logger.info(f"[LIVE SELL] Token migrated (6024), trying next pool...")
+                    _execution_metrics["sell_pool_retries"] += 1
                     continue
                 else:
                     # Other on-chain error, don't retry
                     result["error"] = f"TX failed on-chain: {on_chain_error}"
                     result["tx_signature"] = signature
+                    _execution_metrics["sell_failures"] += 1
                     break
 
         except requests.exceptions.Timeout:
             last_error = "Request timed out (30s)"
+            _execution_metrics["sell_timeouts"] += 1
             logger.error(f"[LIVE SELL TIMEOUT] {token_name} pool={pool}")
             continue
         except Exception as e:
             last_error = str(e)
+            _execution_metrics["sell_failures"] += 1
             logger.error(f"[LIVE SELL ERROR] {token_name} pool={pool}: {e}")
             continue
 
+    result["pools_tried"] = pools_tried
+
     if not result["success"] and not result["error"]:
         result["error"] = f"All pools failed: {last_error}"
-        logger.error(f"[LIVE SELL ALL POOLS FAILED] {token_name}: {last_error}")
+        _execution_metrics["sell_all_pools_failed"] += 1
+        # Log detailed failure for post-analysis
+        _execution_metrics["failed_sell_details"].append({
+            "mint": mint_address,
+            "token_name": token_name,
+            "error": last_error,
+            "pools_tried": pools_tried,
+            "timestamp": datetime.utcnow().isoformat(),
+        })
+        logger.error(f"[LIVE SELL ALL POOLS FAILED] {token_name}: {last_error} pools_tried={pools_tried}")
+
+    # Remove from open trades tracking
+    if paper_trade_id is not None:
+        _open_live_trades.discard(paper_trade_id)
 
     # Attempt rent reclaim after successful 100% sell
     result["rent_reclaimed"] = 0.0
@@ -573,8 +687,15 @@ def execute_sell(mint_address, token_name="", sell_pct=100):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def get_live_stats():
-    """Get current live trading statistics."""
+    """Get current live trading statistics including execution metrics."""
     balance = get_wallet_balance_sol()
+    
+    # Calculate average TX confirm times
+    buy_confirms = [t for a, t in _execution_metrics["tx_confirm_times"] if a == "buy"]
+    sell_confirms = [t for a, t in _execution_metrics["tx_confirm_times"] if a == "sell"]
+    avg_buy_confirm = sum(buy_confirms) / len(buy_confirms) if buy_confirms else 0
+    avg_sell_confirm = sum(sell_confirms) / len(sell_confirms) if sell_confirms else 0
+    
     return {
         "enabled": LIVE_ENABLED,
         "wallet_address": WALLET_ADDRESS,
@@ -582,12 +703,36 @@ def get_live_stats():
         "trade_size_sol": LIVE_TRADE_SIZE_SOL,
         "slippage_pct": LIVE_SLIPPAGE_PCT,
         "priority_fee": LIVE_PRIORITY_FEE,
+        "buy_pool": LIVE_BUY_POOL,
         "total_live_trades": _live_trade_count,
+        "open_live_trades": len(_open_live_trades),
         "trades_last_hour": len([t for t in _hourly_trade_times if time.time() - t < 3600]),
         "total_sol_spent": _total_sol_spent,
         "total_sol_received": _total_sol_received,
         "max_trades_per_hour": MAX_LIVE_TRADES_PER_HOUR,
         "max_total_trades": MAX_TOTAL_LIVE_TRADES,
+        "max_concurrent_trades": MAX_CONCURRENT_LIVE_TRADES,
         "min_balance": MIN_WALLET_BALANCE_SOL,
         "conviction_filter": LIVE_CONVICTION_FILTER,
+        # Execution metrics
+        "execution_metrics": {
+            "buy_attempts": _execution_metrics["buy_attempts"],
+            "buy_successes": _execution_metrics["buy_successes"],
+            "buy_failures": _execution_metrics["buy_failures"],
+            "buy_timeouts": _execution_metrics["buy_timeouts"],
+            "buy_success_rate": (_execution_metrics["buy_successes"] / _execution_metrics["buy_attempts"] * 100) if _execution_metrics["buy_attempts"] > 0 else 0,
+            "sell_attempts": _execution_metrics["sell_attempts"],
+            "sell_successes": _execution_metrics["sell_successes"],
+            "sell_failures": _execution_metrics["sell_failures"],
+            "sell_timeouts": _execution_metrics["sell_timeouts"],
+            "sell_pool_retries": _execution_metrics["sell_pool_retries"],
+            "sell_all_pools_failed": _execution_metrics["sell_all_pools_failed"],
+            "sell_ambiguous_confirmed": _execution_metrics["sell_ambiguous_confirmed"],
+            "sell_success_rate": (_execution_metrics["sell_successes"] / _execution_metrics["sell_attempts"] * 100) if _execution_metrics["sell_attempts"] > 0 else 0,
+            "avg_buy_confirm_sec": round(avg_buy_confirm, 2),
+            "avg_sell_confirm_sec": round(avg_sell_confirm, 2),
+            "failed_sell_count": len(_execution_metrics["failed_sell_details"]),
+            "recent_failed_sells": _execution_metrics["failed_sell_details"][-5:],  # Last 5 failures
+            "slippage_observations_count": len(_execution_metrics["slippage_observations"]),
+        },
     }

@@ -379,7 +379,7 @@ def enter_trade(token_data, decision, details, narratives):
         else:
             can_trade, reason = can_execute_live()
             if can_trade:
-                live_result = execute_buy(mint_address=mint, token_name=name)
+                live_result = execute_buy(mint_address=mint, token_name=name, paper_trade_id=trade_id)
                 db.log_live_trade(
                     paper_trade_id=trade_id,
                     mint_address=mint,
@@ -474,7 +474,8 @@ def close_trade(trade_id, trade_info, exit_reason, pnl_pct, current_price_sol):
             sell_result = execute_sell(
                 mint_address=trade_info["mint"],
                 token_name=trade_info["name"],
-                sell_pct=100
+                sell_pct=100,
+                paper_trade_id=trade_id
             )
             # Estimate returned SOL from the buy amount + paper PnL %
             buy_amount = live_buy.get("amount_sol", LIVE_TRADE_SIZE_SOL)

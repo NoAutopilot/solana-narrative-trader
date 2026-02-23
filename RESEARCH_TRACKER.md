@@ -251,3 +251,70 @@ Consistent profitability WITHOUT relying on outlier moonshots. The base case (no
 - **No significance tests possible**: n=8, all open, zero closed trades. Need 100+ closed trades per group before any analysis.
 - **GitHub**: Repo up to date, no local changes needed
 - **Action**: Let system run for 24-48 hours to accumulate clean data before next analysis session
+
+### Session 7 (Feb 22, 21:00-23:30 UTC) — Timeout Optimization & On-Chain Backfill
+
+**TIMEOUT ANALYSIS (5-min cutoff):**
+- All 4 moonshots in prior dataset closed within 4.72 minutes (fastest: 0.93 min)
+- 99% of paper profit came from trades closing within 5 minutes
+- Timeout trades (15 min) contributed -0.06 SOL — dead weight
+- Changed TIMEOUT_MINUTES from 15 → 5 in config.py
+- Virtual strategies A-F also updated to 5 min (E_long_hold and G_diamond_hands kept at 10 min for comparison)
+- **Pushed to GitHub, paper trader restarted with new config**
+
+**ADVERSARIAL AUDIT OF TIMEOUT CHANGE:**
+- Verified: all 4 moonshots close within 5 min ✓ (but n=4, LOW confidence)
+- Verified: concurrent positions drop from avg 46 → avg 16 ✓ (HIGH confidence)
+- Verified: capital needed drops from ~2.12 SOL (P95) → ~0.92 SOL (P95) ✓
+- Verified: system was throttling at 80+ concurrent — 5-min timeout eliminates this ✓
+- Verified: force-closing at 5 min costs +0.0006 SOL total (negligible) ✓
+- **CAUTION:** Only 4 moonshots in sample. "All moonshots close within 5 min" is LOW confidence.
+
+**ON-CHAIN BACKFILL (CRITICAL DATA CORRECTION):**
+- Pulled all 643 wallet transactions from Helius enhanced API
+- **INITIAL PARSING WAS WRONG:** Helius `sol_in` field showed 0 for 171 sells
+- **CORRECTED using actual pre/post balance changes on-chain:**
+  - 181 out of 187 sells returned SOL (97% success rate)
+  - **ZERO sells returned exactly 0 SOL**
+  - Average sell recovery: **96.8% of buy cost**
+  - Losing trades do NOT cost 100% — they recover most of the buy cost
+- **Corrected live trading PnL:**
+  - Total buys: 191, total cost: 3.341 SOL
+  - Total sell returns: 3.063 SOL
+  - **Gross PnL: -0.277 SOL** (not -3.28 SOL as initially reported)
+  - **Net PnL: -0.291 SOL** (including 0.014 SOL in TX fees)
+  - TX fees are 0.13% of avg buy — negligible
+- **Sell return distribution:**
+  - 76 sells returned > 0.02 SOL
+  - 69 sells returned 0.01-0.02 SOL
+  - 22 sells returned 0.005-0.01 SOL
+  - Only 6 sells were net negative (cost more SOL than returned)
+
+**KEY CORRECTIONS TO PRIOR CLAIMS:**
+1. ~~"91% of sells return 0 SOL"~~ → WRONG. 97% of sells return SOL. Parsing error.
+2. ~~"Net PnL: -3.28 SOL"~~ → WRONG. Net PnL: -0.291 SOL. 11x overstatement.
+3. ~~"Losing trades cost 100%"~~ → WRONG. Avg recovery is 96.8% of buy cost.
+4. ~~"Exit mechanism is fundamentally broken"~~ → WRONG. Sells work fine.
+5. The +327% PumpSwap sell is confirmed real (0.053 SOL return on 0.012 buy)
+6. 13 sells via PUMP_AMM (graduated tokens) all returned SOL — post-migration selling WORKS (confirms Principle 8)
+
+**SYSTEM INFRASTRUCTURE:**
+- Created `RECOVERY.md` — full rebuild instructions for fresh chat sessions
+- Created `backup_to_github.py` — DB backup to GitHub repo
+- Created `backfill_from_chain.py` — pull historical trades from on-chain data
+- Created `backfill_correct.py` — corrected version using actual balance changes
+- Created `vps_setup.sh` — one-command VPS deployment script
+- Wallet cleaned: 0 token accounts, all rent reclaimed
+- Dashboard rebuilt with restore-from-backup capability
+
+**CURRENT PLAN:**
+- Cycle 0.50 SOL with shorter (5-min) timeouts
+- Wait for a runner that bonds, where TP captures the upside
+- VPS deployment for 24/7 data collection (user setting up Hetzner)
+
+**LESSONS LEARNED:**
+- ALWAYS verify parsed API data against raw on-chain balance changes
+- Helius enhanced API `sol_in`/`sol_out` fields do NOT reliably capture pump.fun swap returns
+- Use `getTransaction` with pre/post balance comparison as ground truth
+- Back up DB to GitHub before every session end
+- Document everything in RESEARCH_TRACKER — context loss from sandbox resets is the #1 risk

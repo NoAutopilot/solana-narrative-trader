@@ -1,6 +1,6 @@
 # Operating Principles — Solana Narrative Trader
 > These principles govern every decision. Read this FIRST at the start of every session.
-> Updated: 2026-02-22 after Session 3 adversarial evaluation.
+> Updated: 2026-02-22 after Session 7 (timeout optimization + on-chain backfill).
 
 ---
 
@@ -62,6 +62,7 @@
 - 8% round-trip fees destroy 55% of would-be winners. This is not a rounding error — it's the dominant force.
 - **Every strategy must be evaluated NET of fees first.** Gross PnL is fiction.
 - Real slippage on pump.fun low-liquidity tokens is likely 15-25%, not 8%. Until proven otherwise with live data, assume the worst.
+- **[CORRECTED Session 7]**: On-chain backfill shows avg sell recovery is 96.8% of buy cost across 187 sells. Losing trades do NOT cost 100% — the bonding curve returns most of the SOL. Only 6 out of 187 sells were net negative. TX fees are 0.13% of avg buy — negligible.
 - A strategy that is "slightly profitable before fees" is a losing strategy in production.
 
 ## PRINCIPLE 8: NO THEATRE — ONLY PROVABLE, ON-CHAIN RESULTS
@@ -70,6 +71,7 @@
 - **If we can't execute it on-chain, it doesn't count.** A 1900x paper gain that fails at the sell TX is worth exactly 0 SOL.
 - **The bonding curve is no longer a wall.** [PROVEN ON-CHAIN — Feb 22, 2026] Post-migration selling works via PumpPortal `pool=auto`. 5/5 successful buy+sell round-trips on graduated PumpSwap tokens (Wilde Lil Bro, GameStop Coin, Trenches Game, maxxing). Routing: `pool=auto` handles both bonding curve and PumpSwap; `pool=raydium` fails for PumpSwap tokens. Slippage 25-50% needed. Buy TX needs ~20s to confirm before sell. This unlocks the post-migration gains that represent 101% of paper PnL.
 - **Separate what's proven from what's projected.** Every claim must be tagged: [PROVEN ON-CHAIN], [PROVEN IN PAPER], or [PROJECTED]. Never blur the lines.
+- **[PROVEN ON-CHAIN — Session 7]**: 181/187 sells returned SOL. Average recovery 96.8%. Helius parsed API `sol_in` field is UNRELIABLE for pump.fun swaps — always use `getTransaction` with pre/post balance comparison as ground truth.
 - **The simulation-reality gap is the #1 metric.** If paper says +336 SOL and live says -0.10 SOL, the system is not "almost profitable" — it's broken. Close the gap before scaling.
 - **Profitability means NET of everything**: TX fees, failed sells, slippage, stuck tokens, unrecoverable rent. If you have to exclude costs to show a profit, you don't have a profit.
 - **The adversarial question for every session**: "Show me the on-chain evidence. Show me the Solscan links. Show me the actual SOL that came back to the wallet." If you can't, it's theatre.
@@ -130,6 +132,8 @@ Before marking ANY finding as "proven" or presenting results:
 10. **Building dashboards before proving the thesis** — Infrastructure for an unproven system is wasted effort. Prove first, build second.
 11. **Presenting bonding-curve-blind projections** — [RESOLVED Feb 22, 2026] Post-migration selling now proven on-chain (5/5 sells). However, the lesson stands: never assume an execution path works until it's proven. The next unproven assumption to validate is whether the live executor can capture the same 1900x gains that paper trading shows (requires holding through migration + selling at peak).
 12. **Conflating paper scale with live feasibility** — "If we matched paper sizes we'd be profitable" is theatre unless every component of the execution chain is proven. Matching sizes doesn't fix unproven sell routing.
+13. **Trusting API parsing without on-chain verification** — [Session 7] Helius enhanced API showed 171 sells returning 0 SOL. Actual on-chain balance changes showed ALL 171 returned SOL (avg 96.8% recovery). ALWAYS verify parsed data against raw on-chain state. The API abstraction layer can lie.
+14. **Rediscovering known findings** — [Session 7] Wasted significant time re-deriving conclusions that were already documented in OPERATING_PRINCIPLES and RESEARCH_TRACKER. READ THE DOCS FIRST. Trust documented findings unless new data contradicts them.
 
 ---
 

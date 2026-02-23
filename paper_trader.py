@@ -477,10 +477,23 @@ def close_trade(trade_id, trade_info, exit_reason, pnl_pct, current_price_sol):
                 sell_pct=100,
                 paper_trade_id=trade_id
             )
-            # Estimate returned SOL from the buy amount + paper PnL %
+            # Use actual on-chain sell proceeds if available, fall back to paper estimate
             buy_amount = live_buy.get("amount_sol", LIVE_TRADE_SIZE_SOL)
-            returned_sol = buy_amount * (1 + pnl_pct) if pnl_pct else 0  # pnl_pct is a ratio (4.41 = 441%), not percentage
-            live_pnl = returned_sol - buy_amount
+            sol_received = sell_result.get("sol_received")  # Actual SOL from on-chain verification
+            
+            if sol_received is not None and sol_received > 0:
+                # REAL on-chain data available
+                returned_sol = sol_received
+                live_pnl = returned_sol - buy_amount
+                live_pnl_pct = live_pnl / buy_amount if buy_amount > 0 else 0
+                logger.info(f"[LIVE SELL PNL] {trade_info['name']}: REAL on-chain — received={returned_sol:.6f} buy={buy_amount:.4f} pnl={live_pnl:+.6f} SOL ({live_pnl_pct:+.1%})")
+            else:
+                # Fallback to paper estimate (sol_received unavailable)
+                returned_sol = buy_amount * (1 + pnl_pct) if pnl_pct else 0
+                live_pnl = returned_sol - buy_amount
+                live_pnl_pct = pnl_pct
+                logger.info(f"[LIVE SELL PNL] {trade_info['name']}: PAPER ESTIMATE — no on-chain data, using paper pnl={live_pnl:+.6f} SOL")
+            
             db.log_live_trade(
                 paper_trade_id=trade_id,
                 mint_address=trade_info["mint"],
@@ -493,7 +506,7 @@ def close_trade(trade_id, trade_info, exit_reason, pnl_pct, current_price_sol):
                 error=sell_result.get("error"),
                 paper_price_sol=current_price_sol,
                 pnl_sol=round(live_pnl, 6),
-                pnl_pct=pnl_pct,
+                pnl_pct=round(live_pnl_pct, 6) if live_pnl_pct else pnl_pct,
                 hold_time_sec=hold_time_sec,
             )
             if sell_result.get("success"):

@@ -298,6 +298,11 @@ def passes_conviction_filter(trade_mode, twitter_signal=None, category=None):
             return True, "Narrative mode"
         return False, f"Non-narrative trade filtered (mode={trade_mode})"
     
+    if filt == "proactive_only":
+        if trade_mode == "proactive":
+            return True, "Proactive mode"
+        return False, f"Non-proactive trade filtered (mode={trade_mode})"
+    
     if filt == "high_conviction":
         # Must be narrative or proactive
         if trade_mode not in ("narrative", "proactive"):
@@ -533,6 +538,22 @@ def execute_buy(mint_address, token_name="", amount_sol=None, paper_trade_id=Non
                     logger.error(f"[LIVE BUY ON-CHAIN FAIL] {token_name}: {on_chain_error} tx={signature} (detected async)")
                 else:
                     logger.info(f"[LIVE BUY CONFIRMED] {token_name}: tx={signature} confirm={confirm_elapsed:.1f}s sol_change={sol_change}")
+                    # Update DB with actual on-chain fill data
+                    if paper_trade_id is not None and sol_change is not None:
+                        try:
+                            from database import Database
+                            _db = Database()
+                            actual_spent = abs(sol_change)
+                            slippage = ((actual_spent - trade_amount) / trade_amount * 100) if trade_amount > 0 else 0
+                            _db.update_live_trade_fill(
+                                paper_trade_id=paper_trade_id,
+                                action="buy",
+                                sol_change=sol_change,
+                                slippage_pct=slippage,
+                            )
+                            logger.info(f"[LIVE BUY FILL UPDATED] {token_name}: actual_spent={actual_spent:.6f} slippage={slippage:+.1f}%")
+                        except Exception as e:
+                            logger.warning(f"[LIVE BUY FILL UPDATE FAILED] {token_name}: {e}")
             except Exception as e:
                 logger.warning(f"[LIVE BUY VERIFY ERROR] {token_name}: {e}")
         

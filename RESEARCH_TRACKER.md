@@ -372,3 +372,33 @@ Consistent profitability WITHOUT relying on outlier moonshots. The base case (no
 | H_time_gated vs primary | PnL comparison | H > primary | 9 exits, +5.27 SOL | 24-48 hrs |
 | Phantom sell fix | Zero phantom sells | 0 phantom sells | Just deployed | Next live test |
 | Realistic PnL tracking | Adjusted PnL stable | Consistent | Just deployed | 24 hrs |
+
+## Session 10 — MFE Oracle Logging (2026-02-24)
+
+### Change Made
+Added Max Favorable Excursion (MFE) oracle logging to paper_trader.py and database.py.
+
+**What it tracks (per trade):**
+-  — highest price seen during the trade (from existing peak_price_sol)
+-  — mfe / entry (what was theoretically available)
+-  — exit / entry (what we actually captured)
+-  — exit_multiple / mfe_multiple (efficiency of our exit)
+-  — price at T+5min after close (background thread)
+-  — oracle / entry (what was available 5 min post-exit)
+-  — exit_multiple / oracle_multiple
+
+**Question being answered:**
+Is the lottery ticket tail real in the capturable universe? If oracle EV (avg oracle_multiple) > 1.0 after slippage, the tail exists and we have an execution/exit problem. If oracle EV < 1.0, the market structure itself is the problem.
+
+**Status:** Active. 11 rows collected in first 2 minutes. Oracle prices pending (T+5min threads running).
+
+### Files Changed
+-  — added mfe_oracle table, log_mfe_oracle(), update_mfe_oracle_price()
+-  — added MFE logging block in close_trade(), background T+5min oracle check thread
+
+### Next Analysis
+Run after 500+ mfe_oracle rows with oracle prices filled in:
+- Avg mfe_multiple (what was available)
+- Avg oracle_multiple (what was available 5 min later)
+- Avg capture_ratio (what we captured vs available)
+- Distribution of mfe_multiple — are there real 50x+ tails?

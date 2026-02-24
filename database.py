@@ -244,6 +244,30 @@ def init_db():
     _safe_add_column(c, 'token_evaluations', 'social_score', 'REAL')
     _safe_add_column(c, 'token_evaluations', 'social_data', 'TEXT')
 
+
+    # MFE Oracle table — tracks max price during trade + T+5min oracle price
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS mfe_oracle (
+            id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+            trade_id             INTEGER REFERENCES trades(id),
+            mint_address         TEXT,
+            token_name           TEXT,
+            decision             TEXT,
+            entry_price_sol      REAL,
+            mfe_price_sol        REAL,
+            exit_price_sol       REAL,
+            oracle_price_sol     REAL,
+            mfe_multiple         REAL,
+            exit_multiple        REAL,
+            oracle_multiple      REAL,
+            capture_ratio        REAL,
+            oracle_capture_ratio REAL,
+            hold_time_sec        REAL,
+            exit_reason          TEXT,
+            oracle_checked_at    TEXT,
+            created_at           TEXT NOT NULL
+        )
+    """)
     conn.commit()
     conn.close()
     print(f"[DB] Initialized at {DB_PATH}")
@@ -464,6 +488,61 @@ def log_virtual_exit(trade_id, strategy_name, exit_reason, exit_price_sol,
     conn.commit()
     conn.close()
 
+
+
+def log_mfe_oracle(trade_id, mint_address, token_name, decision,
+                   entry_price_sol, mfe_price_sol, exit_price_sol,
+                   oracle_price_sol=None, hold_time_sec=0, exit_reason=""):
+    """Log MFE oracle data for a closed trade."""
+    conn = get_conn()
+    c = conn.cursor()
+    mfe_multiple    = mfe_price_sol / entry_price_sol if entry_price_sol > 0 else None
+    exit_multiple   = exit_price_sol / entry_price_sol if entry_price_sol > 0 else None
+    oracle_multiple = oracle_price_sol / entry_price_sol if oracle_price_sol and entry_price_sol > 0 else None
+    capture_ratio   = exit_multiple / mfe_multiple if mfe_multiple and mfe_multiple > 0 else None
+    oracle_capture_ratio = exit_multiple / oracle_multiple if oracle_multiple and oracle_multiple > 0 else None
+    c.execute("""
+        INSERT INTO mfe_oracle
+        (trade_id, mint_address, token_name, decision,
+         entry_price_sol, mfe_price_sol, exit_price_sol, oracle_price_sol,
+         mfe_multiple, exit_multiple, oracle_multiple,
+         capture_ratio, oracle_capture_ratio,
+         hold_time_sec, exit_reason, oracle_checked_at, created_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    """, (trade_id, mint_address, token_name, decision,
+          entry_price_sol, mfe_price_sol, exit_price_sol, oracle_price_sol,
+          mfe_multiple, exit_multiple, oracle_multiple,
+          capture_ratio, oracle_capture_ratio,
+          hold_time_sec, exit_reason,
+          datetime.utcnow().isoformat() if oracle_price_sol else None,
+          datetime.utcnow().isoformat()))
+    conn.commit()
+    conn.close()
+
+
+def update_mfe_oracle_price(trade_id, oracle_price_sol):
+    """Update the T+5min oracle price after it has been fetched."""
+    conn = get_conn()
+    c = conn.cursor()
+    row = conn.execute(
+        "SELECT entry_price_sol, exit_price_sol FROM mfe_oracle WHERE trade_id=?",
+        (trade_id,)
+    ).fetchone()
+    if row:
+        entry  = row[0]
+        exit_p = row[1]
+        oracle_multiple      = oracle_price_sol / entry if entry > 0 else None
+        exit_multiple        = exit_p / entry if entry > 0 else None
+        oracle_capture_ratio = exit_multiple / oracle_multiple if oracle_multiple and oracle_multiple > 0 else None
+        conn.execute("""
+            UPDATE mfe_oracle SET
+                oracle_price_sol=?, oracle_multiple=?,
+                oracle_capture_ratio=?, oracle_checked_at=?
+            WHERE trade_id=?
+        """, (oracle_price_sol, oracle_multiple, oracle_capture_ratio,
+              datetime.utcnow().isoformat(), trade_id))
+        conn.commit()
+    conn.close()
 
 def log_partial_exit(trade_id, exit_price_usd, exit_fraction, pnl_pct, pnl_sol, reason=""):
     conn = get_conn()

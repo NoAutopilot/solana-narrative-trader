@@ -30,7 +30,7 @@ from config.config import (
     PUMPPORTAL_WS_URL, TRADE_SIZE_SOL, MAX_CONCURRENT_TRADES,
     CONTROL_SAMPLE_RATE, TAKE_PROFIT_PCT, STOP_LOSS_PCT,
     TIMEOUT_MINUTES, PRICE_CHECK_INTERVAL, TRAILING_TP_ACTIVATE,
-    TRAILING_TP_DISTANCE, VIRTUAL_STRATEGIES, DEXSCREENER_API_URL,
+    TRAILING_TP_DISTANCE, VIRTUAL_STRATEGIES, BLOCKED_CATEGORIES, DEXSCREENER_API_URL,
 
     FEE_BUY_PCT, FEE_SELL_PCT, MIN_MATCH_SCORE,
     RUG_MIN_LIQUIDITY_SOL, RUG_MAX_DEV_HOLDING_PCT,
@@ -454,6 +454,37 @@ def close_trade(trade_id, trade_info, exit_reason, pnl_pct, current_price_sol):
         pnl_pct=pnl_pct,
         hold_time_sec=hold_time_sec,
     )
+    # ── MFE ORACLE LOGGING ──
+    _mfe_entry = trade_info.get("entry_price_sol", 0)
+    _mfe_peak  = trade_info.get("peak_price_sol", _mfe_entry)
+    _mfe_exit  = current_price_sol if current_price_sol else _mfe_entry
+    _mfe_mint  = trade_info.get("mint", "")
+    _mfe_name  = trade_info.get("name", "")
+    _mfe_dec   = trade_info.get("decision", "")
+    if _mfe_entry > 0:
+        db.log_mfe_oracle(
+            trade_id=trade_id,
+            mint_address=_mfe_mint,
+            token_name=_mfe_name,
+            decision=_mfe_dec,
+            entry_price_sol=_mfe_entry,
+            mfe_price_sol=_mfe_peak,
+            exit_price_sol=_mfe_exit,
+            hold_time_sec=hold_time_sec,
+            exit_reason=exit_reason,
+        )
+        # Schedule T+5min oracle price check in background thread
+        def _oracle_check(tid=trade_id, mint=_mfe_mint):
+            import time as _t
+            _t.sleep(300)
+            try:
+                _, _oracle_px = get_token_price(mint)
+                if _oracle_px and _oracle_px > 0:
+                    db.update_mfe_oracle_price(tid, _oracle_px)
+                    logger.info(f"[MFE ORACLE T+5] trade={tid} oracle_px={_oracle_px:.12f}")
+            except Exception as _e:
+                logger.debug(f"[MFE ORACLE T+5] check failed trade={tid}: {_e}")
+        threading.Thread(target=_oracle_check, daemon=True).start()
 
     stats["trades_closed"] += 1
     stats["total_pnl_sol"] += pnl_sol
@@ -706,6 +737,12 @@ def on_ws_message(ws, message):
         decision, details = evaluate_token(data, narratives)
 
         if decision == "skip":
+            return
+
+        # Category filter: skip blocked categories (Session 4)
+        token_category = details.get("category", "default")
+        if token_category in BLOCKED_CATEGORIES:
+            logger.debug(f"[CATEGORY FILTER] {name}: category={token_category} blocked")
             return
 
         enter_trade(data, decision, details, narratives)

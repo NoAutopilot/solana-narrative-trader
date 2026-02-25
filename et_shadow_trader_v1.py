@@ -1,16 +1,49 @@
 #!/usr/bin/env python3
 """
-et_shadow_trader_v1.py — ET v1 Paper Trading Harness
+et_shadow_trader_v1.py — ET v1 Paper Trading Harness (Playbook Edition)
 
-Spec:
-  - TRADE_SIZE_SOL = 0.01
-  - MAX_OPEN_POSITIONS_PER_STRATEGY = 1  (hard cap per strategy, not global)
-  - UNIFIED exit policy across all strategies: TP +4%, SL -2%, timeout 12min
-  - Friction gate: Jupiter quote-based RT estimate <= 1.0%; abort if no route
-  - Baseline: matched-time (fires whenever momentum OR pullback enters, on a
-    randomly chosen eligible token from the same scan cycle)
-  - Fee scenarios: fee025 / fee060 / fee100 reported at close
-  - Singleton: lockfile guard at /tmp/et_shadow_trader_v1.lock
+Spec (from ET v1 playbook):
+  A) Universe + Friction Gate:
+     - SOL/wSOL quote only
+     - Jupiter quote-based RT gate: F_rt_est <= 1.0%
+     - Abort if no Jupiter route (route risk)
+     - CPAMM LP cliff for CPAMM pools; disabled for CLMM/DLMM
+
+  B) Position Caps:
+     - research_mode: MAX_OPEN_PER_STRATEGY=1, no global cap
+     - live_sim_mode: MAX_OPEN_PER_STRATEGY=1, MAX_OPEN_GLOBAL=1
+     - Set MODE = "research_mode" or "live_sim_mode" below
+
+  C) Exit Policy (unified across all strategies):
+     - take_profit_pct  = +4.0%
+     - stop_loss_pct    = -2.0%
+     - max_hold_minutes = 12
+     - liq_cliff_exit   = True (CPAMM only)
+
+  D) Entry Conditions (v1 — calibrated to fire ~20 trades/strategy/day):
+     Momentum v1:
+       - r_m5 >= +0.8%
+       - buy_count_ratio_m5 >= 0.60
+       - vol_accel_m5_vs_h1 >= 1.5
+       - spam_flag = 0 AND avg_trade_usd_m5 >= $100
+     Pullback v1:
+       - r_h1 >= +2.0%
+       - r_m5 <= -0.6%
+       - Confirmation on next scan cycle: r_m5 >= -0.3% AND buy_count_ratio_m5 >= 0.55
+         (approximates "r_1m >= +0.2% + buy_count_ratio_1m >= 0.55" using 5m data)
+
+  E) Baselines (matched-time, per-strategy):
+     - baseline_matched_momentum: fires when momentum enters, random eligible token
+     - baseline_matched_pullback: fires when pullback enters, random eligible token
+     - "beats baseline" compares each strategy to its own matched baseline
+
+  F) Reporting:
+     - min_trades_per_strategy >= 20 before "beats baseline" evaluation
+     - Fee scenarios: fee025 / fee060 / fee100 at close
+     - Impact friction separate from DEX fee and network fee
+
+  Table: shadow_trades_v1 (new, does not overwrite shadow_trades)
+  Singleton: /tmp/et_shadow_trader_v1.lock
 """
 
 import os
@@ -52,37 +85,42 @@ if not logger.handlers:
     logger.addHandler(fh)
     logger.addHandler(sh)
 
+# ── MODE ──────────────────────────────────────────────────────────────────────
+# "research_mode": per-strategy cap=1, no global cap — for feature evaluation
+# "live_sim_mode": per-strategy cap=1, global cap=1 — approximates live bankroll
+MODE = "research_mode"
+
 # ── CONSTANTS ─────────────────────────────────────────────────────────────────
 POLL_INTERVAL_SEC           = 15
 TRADE_SIZE_SOL              = 0.01
-MAX_OPEN_PER_STRATEGY       = 1        # hard cap: 1 open trade per strategy at a time
-LP_CLIFF_THRESHOLD          = 0.05     # 5% k-drop triggers liq_cliff exit
-FRICTION_GATE_MAX_RT        = 0.010    # 1.0% max total RT friction (Jupiter-quoted)
+MAX_OPEN_PER_STRATEGY       = 1
+MAX_OPEN_GLOBAL             = 1          # only enforced in live_sim_mode
+LP_CLIFF_THRESHOLD          = 0.05       # 5% k-drop triggers liq_cliff exit
+FRICTION_GATE_MAX_RT        = 0.010      # 1.0% max total RT friction (Jupiter-quoted)
 DEXSCREENER_TIMEOUT         = 12
 WSOL_MINT                   = "So11111111111111111111111111111111111111112"
 LAMPORTS_PER_SOL            = 1_000_000_000
 
-# ── UNIFIED EXIT POLICY (identical across all strategies) ─────────────────────
-EXIT_TAKE_PROFIT_PCT        = 4.0      # +4.0% gross
-EXIT_STOP_LOSS_PCT          = -2.0     # -2.0% gross
+# ── UNIFIED EXIT POLICY ───────────────────────────────────────────────────────
+EXIT_TAKE_PROFIT_PCT        = 4.0        # +4.0% gross
+EXIT_STOP_LOSS_PCT          = -2.0       # -2.0% gross
 EXIT_MAX_HOLD_MINUTES       = 12
 EXIT_LIQ_CLIFF              = True
 
-# ── STRATEGY ENTRY CONDITIONS ─────────────────────────────────────────────────
-STRATEGIES = {
-    "momentum": {
-        "entry_r_m5_min":               2.0,
-        "entry_buy_count_ratio_min":    0.60,
-        "entry_vol_accel_min":          1.5,
-    },
-    "pullback": {
-        "entry_r_h1_min":               3.0,
-        "entry_r_m5_max":              -0.5,
-        "entry_buy_count_ratio_min":    0.55,
-    },
-    # baseline has no entry conditions — it is matched-time only
-    "baseline": {},
-}
+# ── ENTRY CONDITIONS v1 ───────────────────────────────────────────────────────
+MOMENTUM_R_M5_MIN           = 0.8        # was 2.0 — loosened
+MOMENTUM_BUY_RATIO_MIN      = 0.60
+MOMENTUM_VOL_ACCEL_MIN      = 1.5
+MOMENTUM_AVG_TRADE_USD_MIN  = 100.0      # spam filter
+
+PULLBACK_R_H1_MIN           = 2.0        # was 3.0 — loosened
+PULLBACK_R_M5_MAX           = -0.6       # was -0.5
+PULLBACK_BUY_RATIO_MIN      = 0.55       # confirmation
+PULLBACK_CONFIRM_R_M5_MIN   = -0.3       # confirmation: r_m5 must recover to >= -0.3%
+
+# Pullback pending confirmation: {mint: timestamp_of_initial_signal}
+_pullback_pending: dict[str, float] = {}
+PULLBACK_CONFIRM_WINDOW_SEC = 75         # ~1 scan cycle + buffer
 
 # ── DB HELPERS ────────────────────────────────────────────────────────────────
 def get_conn():
@@ -111,12 +149,13 @@ def init_tables():
         entry_impact_buy_pct    REAL,
         entry_impact_sell_pct   REAL,
         entry_round_trip_pct    REAL,
-        entry_jup_rt_pct        REAL,   -- Jupiter-quoted RT friction at entry
+        entry_jup_rt_pct        REAL,
         entry_r_m5              REAL,
         entry_r_h1              REAL,
         entry_buy_count_ratio   REAL,
         entry_vol_accel         REAL,
-        baseline_trigger_id     TEXT,   -- trade_id of the strategy trade that triggered this baseline
+        entry_avg_trade_usd     REAL,
+        baseline_trigger_id     TEXT,
         exited_at               TEXT,
         exit_price_usd          REAL,
         exit_price_native       REAL,
@@ -132,6 +171,7 @@ def init_tables():
         shadow_pnl_pct_fee025   REAL,
         shadow_pnl_pct_fee060   REAL,
         shadow_pnl_pct_fee100   REAL,
+        mode                    TEXT,
         status                  TEXT    DEFAULT 'open'
     )
     """)
@@ -148,6 +188,14 @@ def count_open_by_strategy(strategy: str) -> int:
         "SELECT COUNT(*) FROM shadow_trades_v1 WHERE strategy = ? AND status = 'open'",
         (strategy,)
     )
+    n = c.fetchone()[0]
+    conn.close()
+    return n
+
+def count_open_global() -> int:
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM shadow_trades_v1 WHERE status = 'open'")
     n = c.fetchone()[0]
     conn.close()
     return n
@@ -185,13 +233,11 @@ def get_latest_microstructure() -> list[dict]:
 # ── JUPITER FRICTION GATE ─────────────────────────────────────────────────────
 def get_jupiter_rt_estimate(mint: str) -> float | None:
     """
-    Get round-trip friction estimate from Jupiter quotes.
-    Returns total RT fraction (e.g. 0.008 = 0.8%) or None if no route.
-    Aborts entry if None (route risk).
+    Returns total RT friction fraction (e.g. 0.008 = 0.8%) or None if no route.
+    None means: abort entry (route risk).
     """
     sol_in_lamports = int(TRADE_SIZE_SOL * LAMPORTS_PER_SOL)
     try:
-        # Buy quote: SOL -> token
         r_buy = requests.get(
             f"{JUPITER_BASE_URL}/v6/quote",
             params={
@@ -205,12 +251,11 @@ def get_jupiter_rt_estimate(mint: str) -> float | None:
         )
         buy_q = r_buy.json()
         if "outAmount" not in buy_q:
-            return None  # no route
+            return None
         tokens_out = int(buy_q["outAmount"])
         if tokens_out <= 0:
             return None
 
-        # Sell quote: token -> SOL
         r_sell = requests.get(
             f"{JUPITER_BASE_URL}/v6/quote",
             params={
@@ -224,12 +269,10 @@ def get_jupiter_rt_estimate(mint: str) -> float | None:
         )
         sell_q = r_sell.json()
         if "outAmount" not in sell_q:
-            return None  # no sell route
+            return None
         sol_back_lamports = int(sell_q["outAmount"])
-
         rt_friction = 1.0 - (sol_back_lamports / sol_in_lamports)
         return max(0.0, rt_friction)
-
     except Exception as e:
         logger.warning(f"Jupiter RT estimate failed for {mint[:8]}: {e}")
         return None
@@ -243,73 +286,80 @@ def fetch_current_price(mint: str) -> dict | None:
         pairs = data.get("pairs") or []
         if not pairs:
             return None
-        # Pick highest-liquidity SOL pair
         sol_pairs = [p for p in pairs if (p.get("quoteToken", {}).get("symbol") or "").upper() == "SOL"]
         if not sol_pairs:
             sol_pairs = pairs
         best = max(sol_pairs, key=lambda p: float(p.get("liquidity", {}).get("usd") or 0))
-        price_usd    = float(best.get("priceUsd") or 0)
-        price_native = float(best.get("priceNative") or 0)
-        liq_usd      = float(best.get("liquidity", {}).get("usd") or 0)
-        liq_base     = float(best.get("liquidity", {}).get("base") or 0)
-        liq_quote    = float(best.get("liquidity", {}).get("quote") or 0)
+        liq_base  = float(best.get("liquidity", {}).get("base") or 0)
+        liq_quote = float(best.get("liquidity", {}).get("quote") or 0)
         k = liq_base * liq_quote if liq_base > 0 and liq_quote > 0 else None
         return {
-            "price_usd":    price_usd,
-            "price_native": price_native,
-            "liq_usd":      liq_usd,
-            "liq_base":     liq_base,
+            "price_usd":     float(best.get("priceUsd") or 0),
+            "price_native":  float(best.get("priceNative") or 0),
+            "liq_usd":       float(best.get("liquidity", {}).get("usd") or 0),
+            "liq_base":      liq_base,
             "liq_quote_sol": liq_quote,
-            "k_invariant":  k,
+            "k_invariant":   k,
         }
     except Exception:
         return None
 
-# ── ENTRY LOGIC ───────────────────────────────────────────────────────────────
+# ── ENTRY GUARDS ──────────────────────────────────────────────────────────────
+def passes_position_cap(strategy: str) -> bool:
+    if count_open_by_strategy(strategy) >= MAX_OPEN_PER_STRATEGY:
+        return False
+    if MODE == "live_sim_mode" and count_open_global() >= MAX_OPEN_GLOBAL:
+        return False
+    return True
+
 def should_enter_momentum(row: dict) -> bool:
-    p = STRATEGIES["momentum"]
+    if row.get("spam_flag"):
+        return False
     return (
-        (row.get("r_m5") or 0)               >= p["entry_r_m5_min"] and
-        (row.get("buy_count_ratio_m5") or 0)  >= p["entry_buy_count_ratio_min"] and
-        (row.get("vol_accel_m5_vs_h1") or 0)  >= p["entry_vol_accel_min"]
+        (row.get("r_m5") or 0)               >= MOMENTUM_R_M5_MIN and
+        (row.get("buy_count_ratio_m5") or 0)  >= MOMENTUM_BUY_RATIO_MIN and
+        (row.get("vol_accel_m5_vs_h1") or 0)  >= MOMENTUM_VOL_ACCEL_MIN and
+        (row.get("avg_trade_usd_m5") or 0)    >= MOMENTUM_AVG_TRADE_USD_MIN
     )
 
-def should_enter_pullback(row: dict) -> bool:
-    p = STRATEGIES["pullback"]
+def should_enter_pullback_initial(row: dict) -> bool:
+    """First leg: r_h1 >= 2.0% AND r_m5 <= -0.6%. Sets pending confirmation."""
     return (
-        (row.get("r_h1") or 0)               >= p["entry_r_h1_min"] and
-        (row.get("r_m5") or 0)               <= p["entry_r_m5_max"] and
-        (row.get("buy_count_ratio_m5") or 0)  >= p["entry_buy_count_ratio_min"]
+        (row.get("r_h1") or 0) >= PULLBACK_R_H1_MIN and
+        (row.get("r_m5") or 0) <= PULLBACK_R_M5_MAX
     )
 
+def should_confirm_pullback(row: dict) -> bool:
+    """Confirmation leg: r_m5 has recovered >= -0.3% AND buy ratio >= 0.55."""
+    return (
+        (row.get("r_m5") or 0)               >= PULLBACK_CONFIRM_R_M5_MIN and
+        (row.get("buy_count_ratio_m5") or 0)  >= PULLBACK_BUY_RATIO_MIN
+    )
+
+# ── OPEN TRADE ────────────────────────────────────────────────────────────────
 def open_trade(strategy: str, row: dict, baseline_trigger_id: str | None = None) -> str | None:
     """
     Open a shadow trade. Returns trade_id on success, None if blocked.
-    Checks:
-      1. Per-strategy cap (MAX_OPEN_PER_STRATEGY)
-      2. Jupiter friction gate (<= 1.0% RT)
+    Checks: position cap → Jupiter friction gate → insert.
     """
-    # Cap check
-    if count_open_by_strategy(strategy) >= MAX_OPEN_PER_STRATEGY:
-        logger.debug(f"SKIP {strategy}: already at MAX_OPEN_PER_STRATEGY={MAX_OPEN_PER_STRATEGY}")
+    if not passes_position_cap(strategy):
+        logger.debug(f"SKIP {strategy}: position cap reached")
         return None
 
     mint = row["mint_address"]
 
-    # Jupiter friction gate
     jup_rt = get_jupiter_rt_estimate(mint)
     if jup_rt is None:
-        logger.info(f"SKIP {strategy} {mint[:8]}: no Jupiter route (route risk)")
+        logger.info(f"SKIP {strategy} {mint[:8]}: no Jupiter route")
         return None
     if jup_rt > FRICTION_GATE_MAX_RT:
         logger.info(f"SKIP {strategy} {mint[:8]}: Jupiter RT {jup_rt*100:.2f}% > gate {FRICTION_GATE_MAX_RT*100:.1f}%")
         return None
 
-    # CPAMM model (for logging/reporting, not gating)
     liq_b = row.get("liq_base") or 0
     liq_q = row.get("liq_quote_sol") or 0
     rt = cpamm_round_trip(TRADE_SIZE_SOL, liq_b, liq_q)
-    k = liq_b * liq_q if liq_b > 0 and liq_q > 0 else None
+    k  = liq_b * liq_q if liq_b > 0 and liq_q > 0 else None
 
     trade_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
@@ -323,8 +373,9 @@ def open_trade(strategy: str, row: dict, baseline_trigger_id: str | None = None)
          entry_impact_buy_pct, entry_impact_sell_pct, entry_round_trip_pct,
          entry_jup_rt_pct,
          entry_r_m5, entry_r_h1, entry_buy_count_ratio, entry_vol_accel,
-         baseline_trigger_id, status)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         entry_avg_trade_usd,
+         baseline_trigger_id, mode, status)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, (
         trade_id, strategy, mint,
         row.get("token_symbol"), row.get("pair_address"),
@@ -336,8 +387,8 @@ def open_trade(strategy: str, row: dict, baseline_trigger_id: str | None = None)
         round(jup_rt, 6),
         row.get("r_m5"), row.get("r_h1"),
         row.get("buy_count_ratio_m5"), row.get("vol_accel_m5_vs_h1"),
-        baseline_trigger_id,
-        "open",
+        row.get("avg_trade_usd_m5"),
+        baseline_trigger_id, MODE, "open",
     ))
     conn.commit()
     conn.close()
@@ -349,7 +400,7 @@ def open_trade(strategy: str, row: dict, baseline_trigger_id: str | None = None)
     )
     return trade_id
 
-# ── EXIT LOGIC ────────────────────────────────────────────────────────────────
+# ── CLOSE TRADE ───────────────────────────────────────────────────────────────
 def close_trade(trade: dict, current: dict, reason: str):
     entry_price = trade["entry_price_usd"]
     exit_price  = current["price_usd"]
@@ -364,7 +415,6 @@ def close_trade(trade: dict, current: dict, reason: str):
     shadow_pnl_pct = gross_pnl_pct - rt["total_friction"]
     shadow_pnl_sol = shadow_pnl_pct * TRADE_SIZE_SOL
 
-    # Fee scenarios: impact is fixed; fee component varies
     impact_only = rt["buy_slippage"] + rt["sell_slippage"]
     pnl_fee025  = gross_pnl_pct - (impact_only + 0.0025)
     pnl_fee060  = gross_pnl_pct - (impact_only + 0.006)
@@ -406,10 +456,10 @@ def close_trade(trade: dict, current: dict, reason: str):
 
     logger.info(
         f"CLOSE {trade['strategy']} {trade.get('token_symbol','?')} "
-        f"reason={reason} gross={gross_pnl_pct*100:+.2f}% "
-        f"fee060={pnl_fee060*100:+.2f}%"
+        f"reason={reason} gross={gross_pnl_pct*100:+.2f}% fee060={pnl_fee060*100:+.2f}%"
     )
 
+# ── CHECK EXITS ───────────────────────────────────────────────────────────────
 def check_exits(open_trades: list[dict]):
     for trade in open_trades:
         mint = trade["mint_address"]
@@ -424,7 +474,6 @@ def check_exits(open_trades: list[dict]):
         entered_at = datetime.fromisoformat(trade["entered_at"])
         hold_min = (datetime.now(timezone.utc) - entered_at).total_seconds() / 60
 
-        # Unified exit policy
         if hold_min >= EXIT_MAX_HOLD_MINUTES:
             close_trade(trade, current, "timeout")
             continue
@@ -448,18 +497,22 @@ def check_exits(open_trades: list[dict]):
 # ── MAIN LOOP ─────────────────────────────────────────────────────────────────
 def run():
     logger.info("=" * 65)
-    logger.info("Shadow Trader v1 starting")
+    logger.info("Shadow Trader v1 (Playbook Edition) starting")
+    logger.info(f"  Mode:                  {MODE}")
     logger.info(f"  Trade size:            {TRADE_SIZE_SOL} SOL")
     logger.info(f"  Max open/strategy:     {MAX_OPEN_PER_STRATEGY}")
+    if MODE == "live_sim_mode":
+        logger.info(f"  Max open global:       {MAX_OPEN_GLOBAL}")
     logger.info(f"  Exit TP/SL/timeout:    +{EXIT_TAKE_PROFIT_PCT}% / {EXIT_STOP_LOSS_PCT}% / {EXIT_MAX_HOLD_MINUTES}min")
     logger.info(f"  Friction gate (Jup):   <= {FRICTION_GATE_MAX_RT*100:.1f}% RT")
     logger.info(f"  LP cliff threshold:    {LP_CLIFF_THRESHOLD*100:.0f}% k-drop")
-    logger.info(f"  Baseline:              matched-time (fires on each strategy entry)")
+    logger.info(f"  Momentum entry:        r_m5>={MOMENTUM_R_M5_MIN}% buy_ratio>={MOMENTUM_BUY_RATIO_MIN} vol_accel>={MOMENTUM_VOL_ACCEL_MIN} avg_trade>=${MOMENTUM_AVG_TRADE_USD_MIN}")
+    logger.info(f"  Pullback entry:        r_h1>={PULLBACK_R_H1_MIN}% r_m5<={PULLBACK_R_M5_MAX}% + confirm r_m5>={PULLBACK_CONFIRM_R_M5_MIN}% within {PULLBACK_CONFIRM_WINDOW_SEC}s")
+    logger.info(f"  Baselines:             matched-time per strategy (momentum + pullback)")
     logger.info("=" * 65)
 
     init_tables()
 
-    # Wait for microstructure data
     for _ in range(20):
         rows = get_latest_microstructure()
         if rows:
@@ -471,42 +524,60 @@ def run():
     while True:
         loop_start = time.time()
         try:
-            # 1. Check exits on all open trades
+            # 1. Check exits
             open_trades = get_open_trades()
             if open_trades:
                 check_exits(open_trades)
 
-            # 2. Get fresh microstructure snapshot
+            # 2. Fresh microstructure
             rows = get_latest_microstructure()
             if not rows:
                 time.sleep(max(2, POLL_INTERVAL_SEC - (time.time() - loop_start)))
                 continue
 
-            # 3. Evaluate entry conditions for each token
+            now_ts = time.time()
+
+            # 3. Expire stale pullback pending confirmations
+            expired = [m for m, ts in _pullback_pending.items() if now_ts - ts > PULLBACK_CONFIRM_WINDOW_SEC]
+            for m in expired:
+                logger.debug(f"Pullback confirmation expired for {m[:8]}")
+                del _pullback_pending[m]
+
+            # 4. Evaluate entries
             for row in rows:
                 mint = row.get("mint_address")
                 if not mint:
                     continue
 
-                strategy_entered = None  # track which strategy (if any) entered this token
+                strategy_trade_id = None  # track any strategy entry this cycle
 
+                # ── Momentum ──
                 if should_enter_momentum(row):
                     tid = open_trade("momentum", row)
                     if tid:
-                        strategy_entered = tid
+                        strategy_trade_id = tid
+                        # Matched baseline for momentum
+                        if passes_position_cap("baseline_matched_momentum"):
+                            baseline_row = random.choice(rows)
+                            open_trade("baseline_matched_momentum", baseline_row, baseline_trigger_id=tid)
 
-                if should_enter_pullback(row):
-                    tid = open_trade("pullback", row)
-                    if tid:
-                        strategy_entered = tid
-
-                # 4. Matched-time baseline: fires whenever momentum or pullback enters
-                #    on a randomly chosen eligible token from the same scan cycle
-                if strategy_entered is not None:
-                    if count_open_by_strategy("baseline") < MAX_OPEN_PER_STRATEGY:
-                        # Pick a random eligible token (can be same or different mint)
-                        baseline_row = random.choice(rows)
-                        open_trade("baseline", baseline_row, baseline_trigger_id=strategy_entered)
+                # ── Pullback (two-stage) ──
+                if mint in _pullback_pending:
+                    # Confirmation stage
+                    if should_confirm_pullback(row):
+                        del _pullback_pending[mint]
+                        tid = open_trade("pullback", row)
+                        if tid:
+                            strategy_trade_id = tid
+                            # Matched baseline for pullback
+                            if passes_position_cap("baseline_matched_pullback"):
+                                baseline_row = random.choice(rows)
+                                open_trade("baseline_matched_pullback", baseline_row, baseline_trigger_id=tid)
+                else:
+                    # Initial signal stage
+                    if should_enter_pullback_initial(row):
+                        _pullback_pending[mint] = now_ts
+                        logger.debug(f"Pullback initial signal for {row.get('token_symbol','?')} ({mint[:8]}), awaiting confirmation")
 
         except Exception as e:
             logger.error(f"Main loop error: {e}", exc_info=True)

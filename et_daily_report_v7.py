@@ -332,6 +332,43 @@ def main():
                     elif reason == "tp" and avg_os > 0.5:
                         note = f"  ⚠ TP overshoot {avg_os:+.2f}% — slippage at exit"
                     print(f"  {reason:<8} {n:>4}  {avg_g:>+10.2f}%  {avg_os:>+13.2f}%  {avg_sec:>11.1f}s  {worst_os:>+15.2f}%  {note}")
+
+            # Poll-gap detail: prev/curr poll at first threshold cross
+            has_prev_poll = "prev_poll_pnl_pct" in cols
+            if has_prev_poll:
+                pg_rows = conn.execute("""
+                    SELECT exit_reason, COUNT(*) as n,
+                           AVG(prev_poll_pnl_pct)*100 as avg_prev_pnl,
+                           AVG(curr_poll_pnl_pct)*100 as avg_curr_pnl,
+                           AVG(curr_poll_pnl_pct - prev_poll_pnl_pct)*100 as avg_gap
+                    FROM shadow_trades_v1
+                    WHERE status='closed' AND exit_reason IN ('sl','tp')
+                      AND prev_poll_pnl_pct IS NOT NULL AND curr_poll_pnl_pct IS NOT NULL
+                      AND exited_at >= ?
+                    GROUP BY exit_reason
+                """, (since,)).fetchall()
+                if pg_rows:
+                    print(f"  Poll-gap (prev→curr at threshold cross):")
+                    for r in pg_rows:
+                        reason, n, avg_prev, avg_curr, avg_gap = r
+                        print(f"    {reason}: n={n} avg_prev={avg_prev:+.2f}% avg_curr={avg_curr:+.2f}% avg_gap={avg_gap:+.2f}%")
+
+            # Timeout skipped count
+            has_ts = "timeout_skipped_count" in cols
+            if has_ts:
+                ts_rows = conn.execute("""
+                    SELECT strategy, SUM(timeout_skipped_count) as total_skipped,
+                           COUNT(*) as n_closed
+                    FROM shadow_trades_v1
+                    WHERE status='closed' AND exited_at >= ?
+                    GROUP BY strategy
+                    HAVING total_skipped > 0
+                """, (since,)).fetchall()
+                if ts_rows:
+                    print(f"  Timeout filter (extended holds):")
+                    for r in ts_rows:
+                        strat_name, total_skipped, n_closed = r
+                        print(f"    {strat_name}: {total_skipped} timeout skips across {n_closed} closed trades")
             else:
                 print("  No SL/TP exits with overshoot data yet (new columns active — accumulating)")
         else:
@@ -423,12 +460,13 @@ def main():
         baseline_trigger_id on the strategy trade = trade_id of the matched baseline.
         Returns list of (strategy_pnl_fee060 - baseline_pnl_fee060) pairs.
         """
-        # Strategy trades have baseline_trigger_id set to the baseline trade_id
+        # Pairing direction: baseline row stores baseline_trigger_id = strategy.trade_id
+        # So join: b.baseline_trigger_id = s.trade_id
         pairs = conn.execute("""
             SELECT s.shadow_pnl_pct_fee060, b.shadow_pnl_pct_fee060,
                    s.shadow_pnl_pct_fee100, b.shadow_pnl_pct_fee100
             FROM shadow_trades_v1 s
-            JOIN shadow_trades_v1 b ON s.baseline_trigger_id = b.trade_id
+            JOIN shadow_trades_v1 b ON b.baseline_trigger_id = s.trade_id
             WHERE s.strategy = ? AND b.strategy = ?
               AND s.status = 'closed' AND b.status = 'closed'
               AND s.exited_at >= ?

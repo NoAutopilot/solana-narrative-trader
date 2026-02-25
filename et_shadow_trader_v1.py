@@ -109,7 +109,10 @@ if not logger.handlers:
 MODE = "research_mode"
 
 # ── CONSTANTS ─────────────────────────────────────────────────────────────────
-POLL_INTERVAL_SEC           = 15
+POLL_INTERVAL_SEC           = 4          # base poll interval (was 15s — caused SL overshoot)
+POLL_INTERVAL_NEAR_EXIT_SEC = 2          # faster polling when within 0.5% of SL or TP
+EXIT_PROXIMITY_PCT          = 0.5        # trigger fast-poll when |gross| > SL-0.5% or TP-0.5%
+TIMEOUT_MIN_GROSS_BUFFER    = 0.0025     # at timeout: skip exit unless gross >= RT_floor + 0.25%
 TRADE_SIZE_SOL              = 0.01
 MAX_OPEN_PER_STRATEGY       = 1
 MAX_OPEN_GLOBAL             = 1          # only enforced in live_sim_mode
@@ -200,6 +203,10 @@ def init_tables():
         exit_impact_sell_pct    REAL,
         exit_round_trip_pct     REAL,
         exit_reason             TEXT,
+        sl_threshold_crossed_at TEXT,   -- UTC ISO: when SL was first breached
+        tp_threshold_crossed_at TEXT,   -- UTC ISO: when TP was first breached
+        exit_overshoot_pct      REAL,   -- realized_pnl - threshold (negative = overshoot past SL)
+        exit_overshoot_sec      REAL,   -- seconds between threshold cross and actual exit
         gross_pnl_pct           REAL,
         shadow_pnl_pct          REAL,
         shadow_pnl_sol          REAL,
@@ -645,7 +652,7 @@ def open_trade(strategy: str, row: dict, baseline_trigger_id: str | None = None)
     return trade_id
 
 # ── CLOSE TRADE ───────────────────────────────────────────────────────────────
-def close_trade(trade: dict, current: dict, reason: str):
+def close_trade(trade: dict, current: dict, reason: str, cross: dict | None = None):
     entry_price = trade["entry_price_usd"]
     exit_price  = current["price_usd"]
     if entry_price <= 0 or exit_price <= 0:
@@ -664,7 +671,25 @@ def close_trade(trade: dict, current: dict, reason: str):
     pnl_fee060  = gross_pnl_pct - (impact_only + 0.006)
     pnl_fee100  = gross_pnl_pct - (impact_only + 0.01)
 
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc)
+    now_iso = now.isoformat()
+
+    # Overshoot audit
+    sl_crossed_at = (cross or {}).get("sl_crossed_at")
+    tp_crossed_at = (cross or {}).get("tp_crossed_at")
+    threshold_crossed_at = sl_crossed_at if reason == "sl" else (tp_crossed_at if reason == "tp" else None)
+    threshold_pct = EXIT_STOP_LOSS_PCT if reason == "sl" else (EXIT_TAKE_PROFIT_PCT if reason == "tp" else None)
+    overshoot_pct = None
+    overshoot_sec = None
+    if threshold_pct is not None:
+        overshoot_pct = round((gross_pnl_pct * 100) - threshold_pct, 4)  # negative = overshoot past SL
+    if threshold_crossed_at:
+        try:
+            cross_dt = datetime.fromisoformat(threshold_crossed_at)
+            overshoot_sec = round((now - cross_dt).total_seconds(), 1)
+        except Exception:
+            pass
+
     conn = get_conn()
     conn.execute("""
         UPDATE shadow_trades_v1 SET
@@ -677,6 +702,10 @@ def close_trade(trade: dict, current: dict, reason: str):
             exit_impact_sell_pct    = ?,
             exit_round_trip_pct     = ?,
             exit_reason             = ?,
+            sl_threshold_crossed_at = ?,
+            tp_threshold_crossed_at = ?,
+            exit_overshoot_pct      = ?,
+            exit_overshoot_sec      = ?,
             gross_pnl_pct           = ?,
             shadow_pnl_pct          = ?,
             shadow_pnl_sol          = ?,
@@ -686,11 +715,13 @@ def close_trade(trade: dict, current: dict, reason: str):
             status                  = 'closed'
         WHERE trade_id = ?
     """, (
-        now,
+        now_iso,
         exit_price, current["price_native"],
         current["liq_usd"], liq_b, current.get("k_invariant"),
         round(rt["sell_slippage"], 6), round(rt["total_friction"], 6),
         reason,
+        sl_crossed_at, tp_crossed_at,
+        overshoot_pct, overshoot_sec,
         round(gross_pnl_pct, 6), round(shadow_pnl_pct, 6), round(shadow_pnl_sol, 6),
         round(pnl_fee025, 6), round(pnl_fee060, 6), round(pnl_fee100, 6),
         trade["trade_id"],
@@ -703,8 +734,13 @@ def close_trade(trade: dict, current: dict, reason: str):
         f"reason={reason} gross={gross_pnl_pct*100:+.2f}% fee060={pnl_fee060*100:+.2f}%"
     )
 
+# ── OVERSHOOT TRACKING ───────────────────────────────────────────────────────
+# Maps trade_id -> {"sl_crossed_at": ISO, "tp_crossed_at": ISO}
+_threshold_cross_times: dict[str, dict] = {}
+
 # ── CHECK EXITS ───────────────────────────────────────────────────────────────
 def check_exits(open_trades: list[dict]):
+    now_utc = datetime.now(timezone.utc)
     for trade in open_trades:
         mint = trade["mint_address"]
         current = fetch_current_price(mint)
@@ -716,16 +752,37 @@ def check_exits(open_trades: list[dict]):
 
         gross_pnl_pct = (current["price_usd"] / entry_price - 1.0) * 100
         entered_at = datetime.fromisoformat(trade["entered_at"])
-        hold_min = (datetime.now(timezone.utc) - entered_at).total_seconds() / 60
+        hold_min = (now_utc - entered_at).total_seconds() / 60
+        trade_id = trade["trade_id"]
+
+        # Track threshold-cross times for overshoot audit
+        cross = _threshold_cross_times.setdefault(trade_id, {})
+        if gross_pnl_pct <= EXIT_STOP_LOSS_PCT and "sl_crossed_at" not in cross:
+            cross["sl_crossed_at"] = now_utc.isoformat()
+        if gross_pnl_pct >= EXIT_TAKE_PROFIT_PCT and "tp_crossed_at" not in cross:
+            cross["tp_crossed_at"] = now_utc.isoformat()
 
         if hold_min >= EXIT_MAX_HOLD_MINUTES:
-            close_trade(trade, current, "timeout")
+            # Timeout filter: skip exit if gross < RT_floor + buffer (guaranteed net loser)
+            rt_floor = trade.get("entry_round_trip_pct") or 0.006
+            min_gross_to_exit = rt_floor + TIMEOUT_MIN_GROSS_BUFFER
+            if gross_pnl_pct < min_gross_to_exit and gross_pnl_pct > EXIT_STOP_LOSS_PCT:
+                # Extend hold — don't crystallize a fee-negative tiny win
+                logger.debug(
+                    f"TIMEOUT_SKIP {trade.get('token_symbol','?')}: "
+                    f"gross={gross_pnl_pct:+.2f}% < min_exit={min_gross_to_exit*100:.2f}% — extending hold"
+                )
+                continue
+            close_trade(trade, current, "timeout", cross)
+            _threshold_cross_times.pop(trade_id, None)
             continue
         if gross_pnl_pct >= EXIT_TAKE_PROFIT_PCT:
-            close_trade(trade, current, "tp")
+            close_trade(trade, current, "tp", cross)
+            _threshold_cross_times.pop(trade_id, None)
             continue
         if gross_pnl_pct <= EXIT_STOP_LOSS_PCT:
-            close_trade(trade, current, "sl")
+            close_trade(trade, current, "sl", cross)
+            _threshold_cross_times.pop(trade_id, None)
             continue
         if EXIT_LIQ_CLIFF:
             entry_k = trade.get("entry_k_invariant")
@@ -733,10 +790,11 @@ def check_exits(open_trades: list[dict]):
             if entry_k and exit_k:
                 cliff = k_lp_cliff(entry_k, exit_k, LP_CLIFF_THRESHOLD)
                 if cliff["lp_removal_flag"]:
-                    close_trade(trade, current, "lp_removal")
+                    close_trade(trade, current, "lp_removal", cross)
+                    _threshold_cross_times.pop(trade_id, None)
                     continue
 
-        time.sleep(0.1)
+        time.sleep(0.05)
 
 # ── MAIN LOOP ─────────────────────────────────────────────────────────────────
 def run():
@@ -856,7 +914,18 @@ def run():
             logger.error(f"Main loop error: {e}", exc_info=True)
 
         elapsed = time.time() - loop_start
-        time.sleep(max(2, POLL_INTERVAL_SEC - elapsed))
+        # Adaptive sleep: poll faster when any trade is near SL/TP
+        open_now = get_open_trades()
+        near_exit = False
+        for t in open_now:
+            ep = t.get("entry_price_usd", 0)
+            if ep > 0:
+                # We don't have current price here without fetching, so use fast poll
+                # whenever any position is open (conservative but safe)
+                near_exit = True
+                break
+        interval = POLL_INTERVAL_NEAR_EXIT_SEC if near_exit else POLL_INTERVAL_SEC
+        time.sleep(max(1, interval - elapsed))
 
 if __name__ == "__main__":
     run()

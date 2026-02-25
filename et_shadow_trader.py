@@ -16,18 +16,6 @@ import sqlite3
 import random
 import requests
 
-    # Prove-It 3: Fee sensitivity across scenarios
-    # fee_low = 0.25% (Raydium v4 maker rebate scenario)
-    # fee_med = 0.60% (standard Raydium taker)
-    # fee_p90 = 1.00% (high-fee scenario, thin pools)
-    FEE_SCENARIOS = {'fee_low': 0.0025, 'fee_med': 0.006, 'fee_p90': 0.010}
-    
-    def compute_pnl_with_fee(entry_price, exit_price, fee_rate):
-        """Compute PnL including buy + sell fee at given rate."""
-        gross = (exit_price / entry_price) - 1.0
-        total_fee = fee_rate * 2  # buy + sell
-        return gross - total_fee
-from datetime import datetime, timezone
 
 sys.path.insert(0, "/root/solana_trader")
 try:
@@ -57,6 +45,7 @@ except ImportError:
         k_change = (k_new - k_old) / k_old
         return {"k_change_pct": k_change, "lp_removal_flag": k_change < -threshold}
 
+from datetime import datetime, timezone
 from config.config import DB_PATH, LOGS_DIR
 
 os.makedirs(LOGS_DIR, exist_ok=True)

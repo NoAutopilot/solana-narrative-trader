@@ -211,37 +211,43 @@ def main():
         print(f"  stability error: {e}")
 
     # ── FRICTION AUDIT ─────────────────────────────────────────────────────────
-    print("\nIMPACT FRICTION AUDIT  (price impact only, excludes fees)")
+    # Three components reported separately:
+    #   (1) IMPACT-only:   CPAMM price impact from pool depth (model output)
+    #   (2) Fee floor:     Protocol fee, fixed regardless of size (Raydium = 0.25% one-way = 0.50% RT)
+    #   (3) Total realized: impact + fee floor (what you actually pay)
+    print("\nFRICTION AUDIT")
     friction_ok = True
+    FEE_FLOOR_RT_PCT = 0.50   # Raydium/CPAMM standard: 0.25% buy + 0.25% sell
     try:
-        fric = conn.execute("""
-            SELECT AVG(round_trip_pct), AVG(round_trip_pct)
-            FROM (
-                SELECT round_trip_pct FROM universe_snapshot
-                WHERE snapshot_at >= ? AND cpamm_valid_flag = 1 AND round_trip_pct IS NOT NULL
-                ORDER BY snapshot_at DESC LIMIT 200
-            )
-        """, (since,)).fetchone()
-        # Compute at two sizes using impact scaling
-        fric_02 = conn.execute("""
+        # Impact-only at 0.02 SOL (from CPAMM model)
+        fric_02_impact = conn.execute("""
             SELECT AVG(impact_buy_pct + impact_sell_pct)
             FROM universe_snapshot
             WHERE snapshot_at >= ? AND cpamm_valid_flag = 1 AND impact_buy_pct IS NOT NULL
         """, (since,)).fetchone()[0] or 0
-        # Scale to 0.04 SOL (impact scales ~linearly with size for small trades)
-        fric_04 = fric_02 * 2
+        # Scale to 0.04 SOL (linear approximation for small trades)
+        fric_04_impact = fric_02_impact * 2
+        # Total realized = impact + fee floor
+        fric_02_total = fric_02_impact + FEE_FLOOR_RT_PCT
+        fric_04_total = fric_04_impact + FEE_FLOOR_RT_PCT
         n_pairs = conn.execute("""
             SELECT COUNT(DISTINCT mint_address) FROM universe_snapshot
-            WHERE snapshot_at >= ? AND cpamm_valid_flag = 1 AND round_trip_pct IS NOT NULL
+            WHERE snapshot_at >= ? AND cpamm_valid_flag = 1 AND impact_buy_pct IS NOT NULL
         """, (since,)).fetchone()[0]
-        print(f"  Avg IMPACT friction (0.02 SOL): {fric_02:.3f}%")
-        print(f"  Avg IMPACT friction (0.04 SOL): {fric_04:.3f}%")
-        print(f"  (Total cost = impact + fee; fee025=0.50% RT, fee060=0.60% RT, fee100=1.00% RT)")
-        print(f"  Scale factor (04/02):       {fric_04/fric_02:.2f}x" if fric_02 > 0 else "  Scale factor: N/A")
-        print(f"  Pairs with data:            {n_pairs}")
-        if fric_04 >= 3.0:
+        print(f"  At 0.02 SOL:")
+        print(f"    (1) Price impact only:   {fric_02_impact:.3f}%  (CPAMM model)")
+        print(f"    (2) Fee floor (RT):      {FEE_FLOOR_RT_PCT:.3f}%  (0.25% buy + 0.25% sell, fixed)")
+        print(f"    (3) Total realized:      {fric_02_total:.3f}%  = impact + fee floor")
+        print(f"  At 0.04 SOL:")
+        print(f"    (1) Price impact only:   {fric_04_impact:.3f}%")
+        print(f"    (2) Fee floor (RT):      {FEE_FLOOR_RT_PCT:.3f}%  (unchanged — fee is flat)")
+        print(f"    (3) Total realized:      {fric_04_total:.3f}%")
+        print(f"  Scale factor impact (04/02): {fric_04_impact/fric_02_impact:.2f}x" if fric_02_impact > 0 else "  Scale factor: N/A")
+        print(f"  Pairs with data:             {n_pairs}")
+        print(f"  Note: fee060/fee100 PnL scenarios add 0.10%/0.50% buffer above fee floor")
+        if fric_04_impact >= 3.0:
             friction_ok = False
-            print(f"  IMPACT FRICTION AT SIZE: FAIL (>{3.0}%)")
+            print(f"  IMPACT FRICTION AT SIZE: FAIL (impact >{3.0}% — pool too shallow)")
         else:
             print(f"  IMPACT FRICTION AT SIZE: OK")
     except Exception as e:

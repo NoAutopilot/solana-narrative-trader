@@ -113,6 +113,7 @@ POLL_INTERVAL_SEC           = 4          # base poll interval (was 15s — cause
 POLL_INTERVAL_NEAR_EXIT_SEC = 2          # faster polling when within 0.5% of SL or TP
 EXIT_PROXIMITY_PCT          = 0.5        # trigger fast-poll when |gross| > SL-0.5% or TP-0.5%
 TIMEOUT_MIN_GROSS_BUFFER    = 0.0025     # at timeout: skip exit unless gross >= RT_floor + 0.25%
+HARD_MAX_HOLD_MINUTES       = 30         # absolute max hold regardless of timeout filter
 TRADE_SIZE_SOL              = 0.01
 MAX_OPEN_PER_STRATEGY       = 1
 MAX_OPEN_GLOBAL             = 1          # only enforced in live_sim_mode
@@ -194,6 +195,11 @@ def init_tables():
         entry_vol_accel         REAL,
         entry_avg_trade_usd     REAL,
         baseline_trigger_id     TEXT,
+        prev_poll_at            TEXT,
+        prev_poll_pnl_pct       REAL,
+        curr_poll_at            TEXT,
+        curr_poll_pnl_pct       REAL,
+        timeout_skipped_count   INTEGER DEFAULT 0,
         exited_at               TEXT,
         exit_price_usd          REAL,
         exit_price_native       REAL,
@@ -691,6 +697,20 @@ def close_trade(trade: dict, current: dict, reason: str, cross: dict | None = No
             pass
 
     conn = get_conn()
+    # Poll-gap columns: prev/curr snapshot at first threshold cross
+    if reason == "sl":
+        prev_poll_at  = (cross or {}).get("sl_prev_poll_at")
+        prev_poll_pnl = (cross or {}).get("sl_prev_poll_pnl")
+    elif reason == "tp":
+        prev_poll_at  = (cross or {}).get("tp_prev_poll_at")
+        prev_poll_pnl = (cross or {}).get("tp_prev_poll_pnl")
+    else:
+        prev_poll_at  = (cross or {}).get("curr_poll_at")
+        prev_poll_pnl = (cross or {}).get("curr_poll_pnl")
+    curr_poll_at  = (cross or {}).get("curr_poll_at")
+    curr_poll_pnl = (cross or {}).get("curr_poll_pnl")
+    timeout_skipped = (cross or {}).get("timeout_skipped", 0)
+
     conn.execute("""
         UPDATE shadow_trades_v1 SET
             exited_at               = ?,
@@ -706,6 +726,11 @@ def close_trade(trade: dict, current: dict, reason: str, cross: dict | None = No
             tp_threshold_crossed_at = ?,
             exit_overshoot_pct      = ?,
             exit_overshoot_sec      = ?,
+            prev_poll_at            = ?,
+            prev_poll_pnl_pct       = ?,
+            curr_poll_at            = ?,
+            curr_poll_pnl_pct       = ?,
+            timeout_skipped_count   = ?,
             gross_pnl_pct           = ?,
             shadow_pnl_pct          = ?,
             shadow_pnl_sol          = ?,
@@ -722,6 +747,9 @@ def close_trade(trade: dict, current: dict, reason: str, cross: dict | None = No
         reason,
         sl_crossed_at, tp_crossed_at,
         overshoot_pct, overshoot_sec,
+        prev_poll_at, round(prev_poll_pnl, 6) if prev_poll_pnl is not None else None,
+        curr_poll_at, round(curr_poll_pnl, 6) if curr_poll_pnl is not None else None,
+        timeout_skipped,
         round(gross_pnl_pct, 6), round(shadow_pnl_pct, 6), round(shadow_pnl_sol, 6),
         round(pnl_fee025, 6), round(pnl_fee060, 6), round(pnl_fee100, 6),
         trade["trade_id"],
@@ -735,7 +763,9 @@ def close_trade(trade: dict, current: dict, reason: str, cross: dict | None = No
     )
 
 # ── OVERSHOOT TRACKING ───────────────────────────────────────────────────────
-# Maps trade_id -> {"sl_crossed_at": ISO, "tp_crossed_at": ISO}
+# Maps trade_id -> {"sl_crossed_at": ISO, "tp_crossed_at": ISO,
+#                   "prev_poll_at": ISO, "prev_poll_pnl": float,
+#                   "timeout_skipped": int}
 _threshold_cross_times: dict[str, dict] = {}
 
 # ── CHECK EXITS ───────────────────────────────────────────────────────────────
@@ -755,21 +785,42 @@ def check_exits(open_trades: list[dict]):
         hold_min = (now_utc - entered_at).total_seconds() / 60
         trade_id = trade["trade_id"]
 
-        # Track threshold-cross times for overshoot audit
-        cross = _threshold_cross_times.setdefault(trade_id, {})
+        # Track threshold-cross times and poll-gap data for overshoot audit
+        cross = _threshold_cross_times.setdefault(trade_id, {"timeout_skipped": 0})
+
+        # Record prev/curr poll snapshot for poll-gap diagnosis on first threshold cross
+        prev_at  = cross.get("prev_poll_at")
+        prev_pnl = cross.get("prev_poll_pnl")
+        cross["prev_poll_at"]  = cross.get("curr_poll_at", now_utc.isoformat())
+        cross["prev_poll_pnl"] = cross.get("curr_poll_pnl", gross_pnl_pct)
+        cross["curr_poll_at"]  = now_utc.isoformat()
+        cross["curr_poll_pnl"] = gross_pnl_pct
+
         if gross_pnl_pct <= EXIT_STOP_LOSS_PCT and "sl_crossed_at" not in cross:
-            cross["sl_crossed_at"] = now_utc.isoformat()
+            cross["sl_crossed_at"]  = now_utc.isoformat()
+            cross["sl_prev_poll_at"]  = prev_at
+            cross["sl_prev_poll_pnl"] = prev_pnl
         if gross_pnl_pct >= EXIT_TAKE_PROFIT_PCT and "tp_crossed_at" not in cross:
-            cross["tp_crossed_at"] = now_utc.isoformat()
+            cross["tp_crossed_at"]  = now_utc.isoformat()
+            cross["tp_prev_poll_at"]  = prev_at
+            cross["tp_prev_poll_pnl"] = prev_pnl
+
+        if hold_min >= HARD_MAX_HOLD_MINUTES:
+            # Hard max hold — always exit regardless of timeout filter
+            close_trade(trade, current, "timeout", cross)
+            _threshold_cross_times.pop(trade_id, None)
+            continue
 
         if hold_min >= EXIT_MAX_HOLD_MINUTES:
-            # Timeout filter: skip exit if gross < RT_floor + buffer (guaranteed net loser)
+            # Soft timeout: apply fee filter before exiting
             rt_floor = trade.get("entry_round_trip_pct") or 0.006
             min_gross_to_exit = rt_floor + TIMEOUT_MIN_GROSS_BUFFER
             if gross_pnl_pct < min_gross_to_exit and gross_pnl_pct > EXIT_STOP_LOSS_PCT:
                 # Extend hold — don't crystallize a fee-negative tiny win
+                cross["timeout_skipped"] = cross.get("timeout_skipped", 0) + 1
                 logger.debug(
-                    f"TIMEOUT_SKIP {trade.get('token_symbol','?')}: "
+                    f"TIMEOUT_SKIP {trade.get('token_symbol','?')} "
+                    f"(skip #{cross['timeout_skipped']}): "
                     f"gross={gross_pnl_pct:+.2f}% < min_exit={min_gross_to_exit*100:.2f}% — extending hold"
                 )
                 continue

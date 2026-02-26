@@ -268,6 +268,10 @@ pairs_q = (
     f"  s.gross_pnl_pct AS s_gross, s.shadow_pnl_pct_fee100 AS s_fee100, "
     f"  s.entry_score AS s_score, "
     f"  s.mfe_gross_pct AS s_mfe, s.mae_gross_pct AS s_mae, "
+    f"  s.mfe_net_dex_pct AS s_mfe_net_dex, s.mfe_net_fee100_pct AS s_mfe_net_fee100, "
+    f"  s.max_price_seen AS s_max_price, s.min_price_seen AS s_min_price, "
+    f"  s.entry_price_usd AS s_entry_price, "
+    f"  s.mint_address AS s_mint, s.mint_prefix AS s_mint_prefix, "
     f"  s.entry_round_trip_pct AS s_rt, "
     f"  b.trade_id AS b_id, b.token_symbol AS b_token, b.lane AS b_lane, "
     f"  b.exit_reason AS b_exit, b.run_id AS b_run, "
@@ -349,11 +353,10 @@ if mode in ("mini", "decision"):
     print("\n" + "=" * 70)
     print(f"PAIR HEALTH MINI-REPORT ({SCOPE_LABEL}, join-based)")
     print("=" * 70)
-    print(f"{'#':<3} {'s_run':<6} {'s_token':<10} {'b_token':<10} "
+    print(f"{'#':<3} {'s_run':<6} {'s_token(mint)':<18} {'b_token':<10} "
           f"{'entry':<20} {'s_exit':<9} {'b_exit':<9} "
           f"{'s_gross%':>9} {'b_gross%':>9} {'s_f100%':>8} {'b_f100%':>8} {'delta%':>8}")
-    print("-" * 110)
-
+    print("-" * 118)
     for i, p in enumerate(pairs, 1):
         sg = (p["s_gross"] or 0.0) * 100
         bg = (p["b_gross"] or 0.0) * 100
@@ -361,12 +364,14 @@ if mode in ("mini", "decision"):
         bf = (p["b_fee100"] or 0.0) * 100
         delta = sf - bf
         run_short = p["s_run"][:6] if p["s_run"] else "?"
-        print(f"{i:<3} {run_short:<6} {p['s_token']:<10} {p['b_token']:<10} "
+        mp = p["s_mint_prefix"] or (p["s_mint"] or "")[:8] if p["s_mint_prefix"] or p["s_mint"] else "?"
+        s_tok_display = f"{p['s_token']}({mp})"
+        print(f"{i:<3} {run_short:<6} {s_tok_display:<18} {p['b_token']:<10} "
               f"{(p['s_entered'] or '')[:19]:<20} "
               f"{p['s_exit']:<9} {p['b_exit']:<9} "
               f"{sg:>9.3f} {bg:>9.3f} {sf:>8.3f} {bf:>8.3f} {delta:>8.3f}")
 
-    print("-" * 110)
+    print("-" * 118)
     print(f"\n  INTEGRITY: missing_baseline={n_missing_baseline} "
           f"invalid_pair={n_invalid} rollover_excluded={n_rollover}")
     print(f"  PnL SCALE: stored as decimal, displayed as % (x100). Verified in P0.2.")
@@ -392,41 +397,73 @@ if mode in ("mini", "decision"):
 
 # ── SECTIONS 5+6: MFE/MAE + SCORE MONOTONICITY (n>=3, mini and decision) ────────
 if mode in ("mini", "decision"):
-    # ── SECTION 5: MFE/MAE ANALYSIS ───────────────────────────────────────────────
-    print("\n5) MFE/MAE ANALYSIS (v1.17+ trades only)")
+    # ── SECTION 5: MFE/MAE ANALYSIS (v1.18) ─────────────────────────────────────
+    print("\n5) MFE/MAE ANALYSIS (v1.18+ price-path trades only)")
     print("-" * 70)
+    # v1.18: use max_price_seen/min_price_seen for proof; fall back to mfe_gross_pct for v1.17 rows
     pairs_with_mfe = [p for p in pairs if p["s_mfe"] is not None]
     n_mfe = len(pairs_with_mfe)
     if n_mfe == 0:
         print("  No MFE/MAE data yet (requires v1.17+ trades; columns are NULL for older rows).")
-        print("  Once v1.17 is deployed and trades close, this section will populate.")
+        print("  Once v1.18 is deployed and trades close, this section will populate.")
     else:
-        print(f"  n_pairs with MFE/MAE data : {n_mfe} of {n_pairs}")
+        # Proof table: 5 sample trades showing price path
+        proof_rows = [p for p in pairs_with_mfe if p["s_max_price"] is not None][:5]
+        if proof_rows:
+            print(f"  PRICE PATH PROOF (sample, max 5 rows):")
+            print(f"    {'trade_id':<10} {'token(mint)':<18} {'entry_price':>12} {'max_price':>12} {'min_price':>12} {'MFE%':>8} {'MAE%':>8}")
+            print(f"    {'-'*82}")
+            for p in proof_rows:
+                ep  = p["s_entry_price"] or 0.0
+                mxp = p["s_max_price"] or ep
+                mnp = p["s_min_price"] or ep
+                mfe_chk = (mxp / ep - 1.0) * 100 if ep > 0 else 0.0
+                mae_chk = (mnp / ep - 1.0) * 100 if ep > 0 else 0.0
+                mp2 = p["s_mint_prefix"] or (p["s_mint"] or "")[:8] if p["s_mint_prefix"] or p["s_mint"] else "?"
+                tok2 = f"{p['s_token']}({mp2})"
+                print(f"    {p['s_id'][:8]:<10} {tok2:<18} {ep:>12.8f} {mxp:>12.8f} {mnp:>12.8f} {mfe_chk:>7.4f}% {mae_chk:>7.4f}%")
+            print(f"    Formula: MFE = max_price/entry_price - 1  |  MAE = min_price/entry_price - 1")
+        print(f"\n  AGGREGATE ({n_mfe} pairs):")
         fee_floors = []
         mfe_pcts = []
         mae_pcts = []
+        mfe_net_dex_pcts = []
+        mfe_net_fee100_pcts = []
         mfe_above_floor_025 = 0
         mfe_above_floor_100 = 0
         for p in pairs_with_mfe:
-            rt_dec = p["s_rt"] if p["s_rt"] is not None else 0.01
+            rt_dec = p["s_rt"] if p["s_rt"] is not None else 0.005
             fee_floor = rt_dec * 100 + 1.00   # % units
             mfe = (p["s_mfe"] or 0.0) * 100
             mae = (p["s_mae"] or 0.0) * 100
             fee_floors.append(fee_floor)
             mfe_pcts.append(mfe)
             mae_pcts.append(mae)
+            # MFE_net vs two floors (from stored columns if available, else compute)
+            if p["s_mfe_net_dex"] is not None:
+                mfe_net_dex_pcts.append(p["s_mfe_net_dex"] * 100)
+            else:
+                mfe_net_dex_pcts.append(mfe - (rt_dec * 100 + 0.60))
+            if p["s_mfe_net_fee100"] is not None:
+                mfe_net_fee100_pcts.append(p["s_mfe_net_fee100"] * 100)
+            else:
+                mfe_net_fee100_pcts.append(mfe - fee_floor)
             if mfe >= fee_floor + 0.25:
                 mfe_above_floor_025 += 1
             if mfe >= fee_floor + 1.00:
                 mfe_above_floor_100 += 1
-        avg_fee_floor = sum(fee_floors) / len(fee_floors)
-        avg_mfe = sum(mfe_pcts) / len(mfe_pcts)
-        avg_mae = sum(mae_pcts) / len(mae_pcts)
-        print(f"  avg fee_floor (RT+1%)     : {avg_fee_floor:+.4f}%")
-        print(f"  avg MFE (strategy leg)    : {avg_mfe:+.4f}%")
-        print(f"  avg MAE (strategy leg)    : {avg_mae:+.4f}%")
-        print(f"  % MFE >= floor+0.25%      : {100*mfe_above_floor_025/n_mfe:.1f}%  ({mfe_above_floor_025}/{n_mfe})")
-        print(f"  % MFE >= floor+1.00%      : {100*mfe_above_floor_100/n_mfe:.1f}%  ({mfe_above_floor_100}/{n_mfe})")
+        avg_fee_floor       = sum(fee_floors) / len(fee_floors)
+        avg_mfe             = sum(mfe_pcts) / len(mfe_pcts)
+        avg_mae             = sum(mae_pcts) / len(mae_pcts)
+        avg_mfe_net_dex     = sum(mfe_net_dex_pcts) / len(mfe_net_dex_pcts)
+        avg_mfe_net_fee100  = sum(mfe_net_fee100_pcts) / len(mfe_net_fee100_pcts)
+        print(f"  avg fee_floor (RT+1%)          : {avg_fee_floor:+.4f}%")
+        print(f"  avg MFE gross (strategy leg)   : {avg_mfe:+.4f}%")
+        print(f"  avg MAE gross (strategy leg)   : {avg_mae:+.4f}%")
+        print(f"  avg MFE_net vs DEX floor (RT+0.6%): {avg_mfe_net_dex:+.4f}%")
+        print(f"  avg MFE_net vs fee100 floor (RT+1%): {avg_mfe_net_fee100:+.4f}%")
+        print(f"  % MFE >= floor+0.25%           : {100*mfe_above_floor_025/n_mfe:.1f}%  ({mfe_above_floor_025}/{n_mfe})")
+        print(f"  % MFE >= floor+1.00%           : {100*mfe_above_floor_100/n_mfe:.1f}%  ({mfe_above_floor_100}/{n_mfe})")
         print(f"\n  MFE/MAE by lane (strategy leg):")
         lane_mfe_map = {}
         for p in pairs_with_mfe:
@@ -492,7 +529,61 @@ if mode in ("mini", "decision"):
             mono = "INDETERMINATE — insufficient data in one or more terciles"
         print(f"  Verdict: {mono}")
 
-# ── DECISION REPORT (n>=20) ──────────────────────────────────────────────────────
+# ── SECTION 7: LP_REMOVAL AUDIT (n>=3, mini and decision) ────────────────────
+if mode in ("mini", "decision"):
+    print("\n7) LP_REMOVAL AUDIT")
+    print("-" * 70)
+    # Check if lp_removal_log table exists
+    has_lp_log = conn.execute(
+        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='lp_removal_log'"
+    ).fetchone()[0]
+    if not has_lp_log:
+        print("  lp_removal_log table not yet created (requires v1.18+ harness).")
+        # Fall back to summarizing from shadow_trades_v1
+        lp_exits = [p for p in pairs if p["s_exit"] == "lp_removal"]
+        print(f"  lp_removal exits in pairs: {len(lp_exits)} of {n_pairs}")
+        if lp_exits:
+            print(f"  (No trigger context available until v1.18 is deployed)")
+    else:
+        lp_rows = conn.execute(
+            f"SELECT * FROM lp_removal_log WHERE run_id IN {in_clause(INCLUDED_RUN_IDS)} "
+            f"ORDER BY logged_at ASC",
+            INCLUDED_RUN_IDS
+        ).fetchall()
+        n_lp = len(lp_rows)
+        print(f"  Total lp_removal events logged: {n_lp}")
+        if n_lp == 0:
+            print("  No lp_removal events yet in this run.")
+        else:
+            n_jup_ok   = sum(1 for r in lp_rows if r["jup_route_ok"] == 1)
+            n_jup_fail = sum(1 for r in lp_rows if r["jup_route_ok"] == 0)
+            n_jup_null = sum(1 for r in lp_rows if r["jup_route_ok"] is None)
+            avg_k_drop = sum(r["k_change_pct"] or 0 for r in lp_rows) / n_lp * 100
+            avg_liq_drop = [r["liq_pct_drop"] for r in lp_rows if r["liq_pct_drop"] is not None]
+            avg_liq_drop_pct = (sum(avg_liq_drop) / len(avg_liq_drop) * 100) if avg_liq_drop else None
+            print(f"  Jupiter route at trigger  : OK={n_jup_ok}  FAIL={n_jup_fail}  NULL={n_jup_null}")
+            print(f"  avg k_change_pct at trigger: {avg_k_drop:.2f}%")
+            if avg_liq_drop_pct is not None:
+                print(f"  avg liq_pct_drop at trigger: {avg_liq_drop_pct:.2f}%")
+            print(f"\n  Per-event detail (max 10):")
+            print(f"    {'logged_at':<20} {'token(mint)':<18} {'k_drop%':>8} {'liq_bef$':>10} {'liq_aft$':>10} {'jup_rt':>8} {'jup_ok':>7} {'gross%':>8}")
+            print(f"    {'-'*95}")
+            for r in lp_rows[:10]:
+                sym_r = r["token_symbol"] or "?"
+                mp_r  = r["mint_prefix"] or (r["mint_address"] or "")[:8]
+                tok_r = f"{sym_r}({mp_r})"
+                k_d   = (r["k_change_pct"] or 0) * 100
+                lb    = r["liq_before_usd"] or 0
+                la    = r["liq_after_usd"] or 0
+                jrt   = r["jup_rt_pct"]
+                jok   = "OK" if r["jup_route_ok"] == 1 else ("FAIL" if r["jup_route_ok"] == 0 else "NULL")
+                gp    = (r["gross_pnl_pct"] or 0) * 100
+                jrt_s = f"{jrt*100:.3f}%" if jrt is not None else "N/A"
+                print(f"    {(r['logged_at'] or '')[:19]:<20} {tok_r:<18} {k_d:>7.2f}% {lb:>10,.0f} {la:>10,.0f} {jrt_s:>8} {jok:>7} {gp:>7.4f}%")
+            if n_lp > 10:
+                print(f"    ... ({n_lp - 10} more rows not shown)")
+
+# ── DECISION REPORT (n>=20) ────────────────────────────────────────────────────
 if mode == "decision":
     print("\n" + "=" * 70)
     print(f"DECISION REPORT (n={n_pairs}, {SCOPE_LABEL})")

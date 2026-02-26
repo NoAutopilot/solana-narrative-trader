@@ -1,6 +1,17 @@
 #!/usr/bin/env python3
-""""et_shadow_trader_v1.py — ET v1 Paper Trading Harness (Playbook Edition) v1.17
+""""et_shadow_trader_v1.py — ET v1 Paper Trading Harness (Playbook Edition) v1.18
 
+v1.18 additions (2026-02-26):
+  - MFE/MAE correctness: _mfe_mae now stores entry_price, max_price_seen, min_price_seen
+    (absolute USD). mfe_gross_pct = max_price/entry-1, mae_gross_pct = min_price/entry-1.
+    Report can prove MFE/MAE from price path (5 sample trades show entry/max/min/mfe/mae).
+  - MFE_net columns: mfe_net_dex_pct (vs DEX floor = rt+0.006) and mfe_net_fee100_pct
+    (vs fee100 floor = rt+0.01) stored alongside mfe_gross_pct.
+  - lp_removal audit log: new lp_removal_log table captures liq_before, liq_after,
+    pct_drop, k_before, k_after, k_change_pct, pool_type, venue, and Jupiter
+    quote status (re-quote attempted at trigger: route_ok, jup_rt_pct).
+  - Token identity: mint_prefix (first 8 chars) stored in shadow_trades_v1.
+    All OPEN/CLOSE log lines use SYMBOL(mint_prefix) format.
 v1.17 additions (2026-02-26):
   - MFE/MAE tracking: mfe_gross_pct and mae_gross_pct tracked in-memory per poll,
     written to DB on close. NULL for pre-v1.17 rows (no backfill).
@@ -475,6 +486,12 @@ def init_tables():
         # v1.17 columns
         ("mfe_gross_pct",      "REAL"),   # max favorable excursion (decimal fraction)
         ("mae_gross_pct",      "REAL"),   # max adverse excursion (decimal fraction)
+        # v1.18 columns
+        ("mfe_net_dex_pct",    "REAL"),   # MFE net of DEX floor (rt+0.006)
+        ("mfe_net_fee100_pct", "REAL"),   # MFE net of fee100 floor (rt+0.01)
+        ("max_price_seen",     "REAL"),   # highest price_usd seen during hold
+        ("min_price_seen",     "REAL"),   # lowest price_usd seen during hold
+        ("mint_prefix",        "TEXT"),   # first 8 chars of mint_address for display
     ]:
         try:
             c.execute(f"ALTER TABLE shadow_trades_v1 ADD COLUMN {col} {coltype}")
@@ -536,7 +553,31 @@ def init_tables():
     """)
     c.execute("CREATE INDEX IF NOT EXISTS idx_fsl_at ON filter_scan_log(logged_at)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_sv1_run ON shadow_trades_v1(run_id)")
-
+    # v1.18: lp_removal_log — one row per lp_removal exit trigger
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS lp_removal_log (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        logged_at       TEXT    NOT NULL,
+        trade_id        TEXT    NOT NULL,
+        run_id          TEXT,
+        mint_address    TEXT,
+        token_symbol    TEXT,
+        mint_prefix     TEXT,
+        pool_type       TEXT,
+        venue           TEXT,
+        liq_before_usd  REAL,
+        liq_after_usd   REAL,
+        liq_pct_drop    REAL,
+        k_before        REAL,
+        k_after         REAL,
+        k_change_pct    REAL,
+        jup_route_ok    INTEGER,
+        jup_rt_pct      REAL,
+        gross_pnl_pct   REAL
+    )
+    """)
+    c.execute("CREATE INDEX IF NOT EXISTS idx_lpl_trade ON lp_removal_log(trade_id)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_lpl_at ON lp_removal_log(logged_at)")
     # v1.11 P0: run_registry — one row per process start, for run isolation
     c.execute("""
     CREATE TABLE IF NOT EXISTS run_registry (
@@ -1555,8 +1596,8 @@ def open_trade(strategy: str, row: dict, baseline_trigger_id: str | None = None,
          lane, age_at_entry_h, liq_usd_at_entry, vol_24h_at_entry,
          pool_type_at_entry, venue_at_entry, spam_flag_at_entry,
          entry_sl_pct, entry_tp_pct, entry_rv5m,
-         run_id, git_commit, lane_at_entry, entry_score)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         run_id, git_commit, lane_at_entry, entry_score, mint_prefix)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, (
         trade_id, strategy, mint,
         row.get("token_symbol"), row.get("pair_address"),
@@ -1573,7 +1614,7 @@ def open_trade(strategy: str, row: dict, baseline_trigger_id: str | None = None,
         lane, age_h, liq_usd, vol_24h,
         row.get("pool_type"), row.get("venue"), row.get("spam_flag"),
         round(entry_sl, 4), round(entry_tp, 4), round(rv5m_entry, 6) if rv5m_entry else None,
-        _RUN_ID, _GIT_COMMIT, lane, entry_score,
+        _RUN_ID, _GIT_COMMIT, lane, entry_score, mint[:8],
     ))
     conn.commit()
     conn.close()
@@ -1601,7 +1642,7 @@ def _compute_run_signature() -> str:
     """
     import json, hashlib
     sig_params = {
-        "version": "v1.17",
+        "version": "v1.18",
         "mode": MODE,
         "sl_pct": EXIT_STOP_LOSS_PCT,
         "tp_pct": EXIT_TAKE_PROFIT_PCT,
@@ -1648,10 +1689,10 @@ def _register_run():
             INSERT OR IGNORE INTO run_registry
             (run_id, git_commit, start_ts, mode, version, lane_gates, key_params, signature)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (_RUN_ID, _GIT_COMMIT, _dt.utcnow().isoformat(), MODE, "v1.17", lane_gates, key_params, sig))
+        """, (_RUN_ID, _GIT_COMMIT, _dt.utcnow().isoformat(), MODE, "v1.18", lane_gates, key_params, sig))
         conn.commit()
         conn.close()
-        logger.info(f"RUN_REGISTRY: registered run_id={_RUN_ID[:8]} version=v1.17 mode={MODE} signature={sig}")
+        logger.info(f"RUN_REGISTRY: registered run_id={_RUN_ID[:8]} version=v1.18 mode={MODE} signature={sig}")
     except Exception as e:
         logger.error(f"run_registry insert failed: {e}")
 
@@ -1753,19 +1794,27 @@ def close_trade(trade: dict, current: dict, reason: str, cross: dict | None = No
     curr_poll_pnl = (cross or {}).get("curr_poll_pnl")
     timeout_skipped = (cross or {}).get("timeout_skipped", 0)
 
-    # v1.17: retrieve MFE/MAE from in-memory tracker
+    # v1.18: retrieve MFE/MAE from price path tracker
     mfe_mae_data = _mfe_mae.get(trade["trade_id"], {})
-    mfe_val = mfe_mae_data.get("mfe")  # decimal fraction, may be None if no polls yet
-    mae_val = mfe_mae_data.get("mae")
-    # Ensure final gross is included in MFE/MAE
-    if mfe_val is None:
-        mfe_val = gross_pnl_pct
-        mae_val = gross_pnl_pct
+    ep_tracked = mfe_mae_data.get("entry_price") or entry_price
+    max_p = mfe_mae_data.get("max_price")
+    min_p = mfe_mae_data.get("min_price")
+    # Include exit price in price path
+    if max_p is None:
+        max_p = exit_price
+        min_p = exit_price
     else:
-        if gross_pnl_pct > mfe_val:
-            mfe_val = gross_pnl_pct
-        if gross_pnl_pct < mae_val:
-            mae_val = gross_pnl_pct
+        if exit_price > max_p:
+            max_p = exit_price
+        if exit_price < min_p:
+            min_p = exit_price
+    # Compute MFE/MAE as decimal fractions from price path
+    mfe_val = (max_p / ep_tracked) - 1.0   # decimal, e.g. 0.02 = +2%
+    mae_val = (min_p / ep_tracked) - 1.0   # decimal, e.g. -0.015 = -1.5%
+    # MFE net of two fee floors
+    rt_floor = trade.get("entry_round_trip_pct") or 0.005
+    mfe_net_dex_val      = mfe_val - (rt_floor + 0.006)   # vs DEX floor
+    mfe_net_fee100_val   = mfe_val - (rt_floor + 0.010)   # vs fee100 floor
 
     conn.execute("""
         UPDATE shadow_trades_v1 SET
@@ -1795,6 +1844,10 @@ def close_trade(trade: dict, current: dict, reason: str, cross: dict | None = No
             shadow_pnl_pct_fee100   = ?,
             mfe_gross_pct           = ?,
             mae_gross_pct           = ?,
+            mfe_net_dex_pct         = ?,
+            mfe_net_fee100_pct      = ?,
+            max_price_seen          = ?,
+            min_price_seen          = ?,
             status                  = 'closed'
         WHERE trade_id = ?
     """, (
@@ -1811,16 +1864,20 @@ def close_trade(trade: dict, current: dict, reason: str, cross: dict | None = No
         round(gross_pnl_pct, 6), round(shadow_pnl_pct, 6), round(shadow_pnl_sol, 6),
         round(pnl_fee025, 6), round(pnl_fee060, 6), round(pnl_fee100, 6),
         round(mfe_val, 6), round(mae_val, 6),
+        round(mfe_net_dex_val, 6), round(mfe_net_fee100_val, 6),
+        round(max_p, 8), round(min_p, 8),
         trade["trade_id"],
     ))
     conn.commit()
     conn.close()
     # Clean up in-memory MFE/MAE state
     _mfe_mae.pop(trade["trade_id"], None)
-
+    sym = trade.get('token_symbol', '?')
+    mp  = trade.get('mint_prefix') or trade.get('mint_address', '?')[:8]
     logger.info(
-        f"CLOSE {trade['strategy']} {trade.get('token_symbol','?')} "
-        f"reason={reason} gross_pct={gross_pnl_pct*100:+.2f}% fee060_pct={pnl_fee060*100:+.2f}% (stored_decimal={gross_pnl_pct:+.6f})"
+        f"CLOSE {trade['strategy']} {sym}({mp}) "
+        f"reason={reason} gross={gross_pnl_pct*100:+.4f}% mfe={mfe_val*100:+.4f}% mae={mae_val*100:+.4f}% "
+        f"fee100={pnl_fee100*100:+.4f}%"
     )
 
 # # ── OVERSHOOT TRACKING ───────────────────────────────────────────────────
@@ -1880,15 +1937,19 @@ def check_exits(open_trades: list[dict]):
         cross["curr_poll_at"]  = now_utc.isoformat()
         cross["curr_poll_pnl"] = gross_pnl_pct
 
-        # v1.17: Update MFE/MAE in-memory (decimal fraction, same as gross_pnl_pct)
-        gross_dec = gross_pnl_pct / 100.0  # gross_pnl_pct is in % units here, convert to decimal
+        # v1.18: Update MFE/MAE from price path (absolute USD prices)
+        cur_price = current["price_usd"]
         if trade_id not in _mfe_mae:
-            _mfe_mae[trade_id] = {"mfe": gross_dec, "mae": gross_dec}
+            _mfe_mae[trade_id] = {
+                "entry_price": entry_price,
+                "max_price": cur_price,
+                "min_price": cur_price,
+            }
         else:
-            if gross_dec > _mfe_mae[trade_id]["mfe"]:
-                _mfe_mae[trade_id]["mfe"] = gross_dec
-            if gross_dec < _mfe_mae[trade_id]["mae"]:
-                _mfe_mae[trade_id]["mae"] = gross_dec
+            if cur_price > _mfe_mae[trade_id]["max_price"]:
+                _mfe_mae[trade_id]["max_price"] = cur_price
+            if cur_price < _mfe_mae[trade_id]["min_price"]:
+                _mfe_mae[trade_id]["min_price"] = cur_price
 
         if gross_pnl_pct <= sl_threshold and "sl_crossed_at" not in cross:
             cross["sl_crossed_at"]  = now_utc.isoformat()
@@ -1939,6 +2000,55 @@ def check_exits(open_trades: list[dict]):
             if entry_k and exit_k:
                 cliff = k_lp_cliff(entry_k, exit_k, LP_CLIFF_THRESHOLD)
                 if cliff["lp_removal_flag"]:
+                    # v1.18: lp_removal audit — re-quote Jupiter at trigger time
+                    liq_b_jup = current.get("liq_base") or 0
+                    liq_q_jup = current.get("liq_quote_sol") or 0
+                    jup_route_ok = None
+                    jup_rt_at_trigger = None
+                    try:
+                        jup_rt_at_trigger = get_jupiter_rt_estimate(
+                            mint, liq_b_jup, liq_q_jup, cpamm_valid=True
+                        )
+                        jup_route_ok = 1 if jup_rt_at_trigger is not None else 0
+                    except Exception:
+                        jup_route_ok = 0
+                    entry_liq = trade.get("entry_liq_usd") or 0
+                    exit_liq  = current.get("liq_usd") or 0
+                    liq_drop  = ((exit_liq - entry_liq) / entry_liq) if entry_liq > 0 else None
+                    sym_lp    = trade.get("token_symbol", "?")
+                    mp_lp     = trade.get("mint_prefix") or mint[:8]
+                    try:
+                        _lp_conn = get_conn()
+                        _lp_conn.execute("""
+                            INSERT INTO lp_removal_log
+                            (logged_at, trade_id, run_id, mint_address, token_symbol, mint_prefix,
+                             pool_type, venue, liq_before_usd, liq_after_usd, liq_pct_drop,
+                             k_before, k_after, k_change_pct, jup_route_ok, jup_rt_pct, gross_pnl_pct)
+                            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                        """, (
+                            now_utc.isoformat(), trade_id, _RUN_ID, mint,
+                            sym_lp, mp_lp,
+                            trade.get("pool_type_at_entry"), trade.get("venue_at_entry"),
+                            entry_liq, exit_liq,
+                            round(liq_drop, 6) if liq_drop is not None else None,
+                            entry_k, exit_k,
+                            round(cliff["k_change_pct"], 6),
+                            jup_route_ok,
+                            round(jup_rt_at_trigger, 6) if jup_rt_at_trigger is not None else None,
+                            round(gross_pnl_pct / 100.0, 6),
+                        ))
+                        _lp_conn.commit()
+                        _lp_conn.close()
+                    except Exception as _lp_err:
+                        logger.warning(f"lp_removal_log insert failed: {_lp_err}")
+                    logger.info(
+                        f"LP_REMOVAL {sym_lp}({mp_lp}) k_drop={cliff['k_change_pct']*100:.1f}% "
+                        f"liq_before=${entry_liq:,.0f} liq_after=${exit_liq:,.0f} "
+                        f"jup_route={'OK' if jup_route_ok else 'FAIL'} "
+                        f"jup_rt={jup_rt_at_trigger*100:.2f}%" if jup_rt_at_trigger else
+                        f"LP_REMOVAL {sym_lp}({mp_lp}) k_drop={cliff['k_change_pct']*100:.1f}% "
+                        f"liq_before=${entry_liq:,.0f} liq_after=${exit_liq:,.0f} jup_route=FAIL"
+                    )
                     close_trade(trade, current, "lp_removal", cross)
                     _threshold_cross_times.pop(trade_id, None)
                     _adaptive_thresholds.pop(trade_id, None)

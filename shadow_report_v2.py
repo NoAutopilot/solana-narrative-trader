@@ -180,6 +180,34 @@ if samples:
 else:
     print("  No closed non-rollover trades yet for included runs.")
 
+# ── FEE FLOOR TRANSPARENCY ────────────────────────────────────────────────
+print("\nFEE FLOOR TRANSPARENCY")
+print("-" * 70)
+print(f"  fee100 formula : gross_pnl_pct - (entry_round_trip_pct + 0.01)")
+print(f"  fixed component: 1.00% (0.01 decimal) — identical for strategy and baseline")
+print(f"  cpamm_impact   : per-trade buy+sell slippage (stored as entry_round_trip_pct)")
+print(f"  Applied IDENTICALLY to strategy and baseline legs")
+# Show actual RT costs for closed trades
+rt_rows = conn.execute(
+    f"SELECT "
+    f"  CASE WHEN strategy LIKE 'baseline%' THEN 'baseline' ELSE 'strategy' END AS leg, "
+    f"  AVG(entry_round_trip_pct)*100 as avg_rt, "
+    f"  MIN(entry_round_trip_pct)*100 as min_rt, "
+    f"  MAX(entry_round_trip_pct)*100 as max_rt, "
+    f"  COUNT(*) as n "
+    f"FROM shadow_trades_v1 "
+    f"WHERE run_id IN {in_clause(INCLUDED_RUN_IDS)} "
+    f"AND status='closed' AND exit_reason != 'rollover_close' "
+    f"GROUP BY CASE WHEN strategy LIKE 'baseline%' THEN 'baseline' ELSE 'strategy' END",
+    INCLUDED_RUN_IDS
+).fetchall()
+if rt_rows:
+    print(f"\n  {'leg':<12} {'n':>4} {'avg_rt%':>9} {'min_rt%':>9} {'max_rt%':>9}")
+    for r in rt_rows:
+        print(f"  {r['leg']:<12} {r['n']:>4} {r['avg_rt']:>8.4f}% {r['min_rt']:>8.4f}% {r['max_rt']:>8.4f}%")
+else:
+    print("  No closed trades yet — RT cost data unavailable.")
+
 # ── P1: INTEGRITY CHECKS ───────────────────────────────────────────────────
 print("\nP1 — INTEGRITY CHECKS")
 print("-" * 70)
@@ -238,9 +266,13 @@ pairs_q = (
     f"  s.lane AS s_lane, s.entered_at AS s_entered, s.exited_at AS s_exited, "
     f"  s.exit_reason AS s_exit, s.run_id AS s_run, "
     f"  s.gross_pnl_pct AS s_gross, s.shadow_pnl_pct_fee100 AS s_fee100, "
+    f"  s.entry_score AS s_score, "
+    f"  s.mfe_gross_pct AS s_mfe, s.mae_gross_pct AS s_mae, "
+    f"  s.entry_round_trip_pct AS s_rt, "
     f"  b.trade_id AS b_id, b.token_symbol AS b_token, b.lane AS b_lane, "
     f"  b.exit_reason AS b_exit, b.run_id AS b_run, "
-    f"  b.gross_pnl_pct AS b_gross, b.shadow_pnl_pct_fee100 AS b_fee100 "
+    f"  b.gross_pnl_pct AS b_gross, b.shadow_pnl_pct_fee100 AS b_fee100, "
+    f"  b.mfe_gross_pct AS b_mfe, b.mae_gross_pct AS b_mae "
     f"FROM shadow_trades_v1 s "
     f"JOIN shadow_trades_v1 b "
     f"  ON b.baseline_trigger_id = s.trade_id "
@@ -358,7 +390,109 @@ if mode in ("mini", "decision"):
             ci_note = "CI entirely negative — strategy underperforming baseline"
         print(f"    CI note    : {ci_note}")
 
-# ── DECISION REPORT (n>=20) ────────────────────────────────────────────────
+# ── SECTIONS 5+6: MFE/MAE + SCORE MONOTONICITY (n>=3, mini and decision) ────────
+if mode in ("mini", "decision"):
+    # ── SECTION 5: MFE/MAE ANALYSIS ───────────────────────────────────────────────
+    print("\n5) MFE/MAE ANALYSIS (v1.17+ trades only)")
+    print("-" * 70)
+    pairs_with_mfe = [p for p in pairs if p["s_mfe"] is not None]
+    n_mfe = len(pairs_with_mfe)
+    if n_mfe == 0:
+        print("  No MFE/MAE data yet (requires v1.17+ trades; columns are NULL for older rows).")
+        print("  Once v1.17 is deployed and trades close, this section will populate.")
+    else:
+        print(f"  n_pairs with MFE/MAE data : {n_mfe} of {n_pairs}")
+        fee_floors = []
+        mfe_pcts = []
+        mae_pcts = []
+        mfe_above_floor_025 = 0
+        mfe_above_floor_100 = 0
+        for p in pairs_with_mfe:
+            rt_dec = p["s_rt"] if p["s_rt"] is not None else 0.01
+            fee_floor = rt_dec * 100 + 1.00   # % units
+            mfe = (p["s_mfe"] or 0.0) * 100
+            mae = (p["s_mae"] or 0.0) * 100
+            fee_floors.append(fee_floor)
+            mfe_pcts.append(mfe)
+            mae_pcts.append(mae)
+            if mfe >= fee_floor + 0.25:
+                mfe_above_floor_025 += 1
+            if mfe >= fee_floor + 1.00:
+                mfe_above_floor_100 += 1
+        avg_fee_floor = sum(fee_floors) / len(fee_floors)
+        avg_mfe = sum(mfe_pcts) / len(mfe_pcts)
+        avg_mae = sum(mae_pcts) / len(mae_pcts)
+        print(f"  avg fee_floor (RT+1%)     : {avg_fee_floor:+.4f}%")
+        print(f"  avg MFE (strategy leg)    : {avg_mfe:+.4f}%")
+        print(f"  avg MAE (strategy leg)    : {avg_mae:+.4f}%")
+        print(f"  % MFE >= floor+0.25%      : {100*mfe_above_floor_025/n_mfe:.1f}%  ({mfe_above_floor_025}/{n_mfe})")
+        print(f"  % MFE >= floor+1.00%      : {100*mfe_above_floor_100/n_mfe:.1f}%  ({mfe_above_floor_100}/{n_mfe})")
+        print(f"\n  MFE/MAE by lane (strategy leg):")
+        lane_mfe_map = {}
+        for p in pairs_with_mfe:
+            lane = p["s_lane"] or "unknown"
+            mfe = (p["s_mfe"] or 0.0) * 100
+            mae = (p["s_mae"] or 0.0) * 100
+            if lane not in lane_mfe_map:
+                lane_mfe_map[lane] = {"mfe": [], "mae": []}
+            lane_mfe_map[lane]["mfe"].append(mfe)
+            lane_mfe_map[lane]["mae"].append(mae)
+        for lane, vals in sorted(lane_mfe_map.items(), key=lambda x: -len(x[1]["mfe"])):
+            avg_m = sum(vals["mfe"]) / len(vals["mfe"])
+            avg_a = sum(vals["mae"]) / len(vals["mae"])
+            print(f"    {lane:<28} n={len(vals['mfe']):>3}  avg_MFE={avg_m:+.4f}%  avg_MAE={avg_a:+.4f}%")
+
+    # ── SECTION 6: SCORE MONOTONICITY ───────────────────────────────────────────────
+    print("\n6) SCORE MONOTONICITY (entry_score terciles)")
+    print("-" * 70)
+    pairs_with_score = [p for p in pairs if p["s_score"] is not None]
+    n_score = len(pairs_with_score)
+    if n_score < 6:
+        print(f"  Insufficient score data: {n_score} pairs with entry_score (need >=6 for terciles).")
+        if n_score == 0:
+            print("  entry_score not yet populated — check that v1.17 is running.")
+    else:
+        scores_sorted = sorted(p["s_score"] for p in pairs_with_score)
+        t1 = scores_sorted[len(scores_sorted) // 3]
+        t2 = scores_sorted[2 * len(scores_sorted) // 3]
+        buckets = {"low": [], "mid": [], "high": []}
+        for p in pairs_with_score:
+            sc = p["s_score"]
+            sf = (p["s_fee100"] or 0.0) * 100
+            bf = (p["b_fee100"] or 0.0) * 100
+            delta = sf - bf
+            if sc <= t1:
+                buckets["low"].append(delta)
+            elif sc <= t2:
+                buckets["mid"].append(delta)
+            else:
+                buckets["high"].append(delta)
+        print(f"  Score range: [{min(scores_sorted):.4f}, {max(scores_sorted):.4f}]")
+        print(f"  Tercile thresholds: t1={t1:.4f}  t2={t2:.4f}")
+        print(f"  {'bucket':<8} {'n':>4} {'avg_delta_fee100%':>18} {'%delta>0':>10}")
+        avgs = []
+        for bucket in ["low", "mid", "high"]:
+            ds = buckets[bucket]
+            if ds:
+                avg = sum(ds) / len(ds)
+                ppos = 100 * sum(1 for x in ds if x > 0) / len(ds)
+                print(f"  {bucket:<8} {len(ds):>4} {avg:>17.4f}% {ppos:>9.1f}%")
+                avgs.append(avg)
+            else:
+                print(f"  {bucket:<8} {0:>4} {'N/A':>17}")
+                avgs.append(float("nan"))
+        if len(avgs) == 3 and all(not (a != a) for a in avgs):
+            if avgs[0] < avgs[1] < avgs[2]:
+                mono = "MONOTONE INCREASING ✓ (higher score -> better delta)"
+            elif avgs[0] > avgs[1] > avgs[2]:
+                mono = "MONOTONE DECREASING ✗ (higher score -> worse delta)"
+            else:
+                mono = "NON-MONOTONE — no clear score-delta relationship"
+        else:
+            mono = "INDETERMINATE — insufficient data in one or more terciles"
+        print(f"  Verdict: {mono}")
+
+# ── DECISION REPORT (n>=20) ──────────────────────────────────────────────────────
 if mode == "decision":
     print("\n" + "=" * 70)
     print(f"DECISION REPORT (n={n_pairs}, {SCOPE_LABEL})")

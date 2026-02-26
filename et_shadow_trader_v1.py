@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-""""et_shadow_trader_v1.py — ET v1 Paper Trading Harness (Playbook Edition) v1.16
+""""et_shadow_trader_v1.py — ET v1 Paper Trading Harness (Playbook Edition) v1.17
+
+v1.17 additions (2026-02-26):
+  - MFE/MAE tracking: mfe_gross_pct and mae_gross_pct tracked in-memory per poll,
+    written to DB on close. NULL for pre-v1.17 rows (no backfill).
+  - Schema migration: ALTER TABLE adds mfe_gross_pct REAL, mae_gross_pct REAL.
+  - Version bump in run_registry (v1.16 -> v1.17) and signature hash.
 
 v1.14 additions (2026-02-26):
   - Rollover cleanup on startup: open trades from old run_ids are closed with
@@ -466,6 +472,9 @@ def init_tables():
         ("git_commit",         "TEXT"),
         ("lane_at_entry",      "TEXT"),
         ("entry_score",        "REAL"),
+        # v1.17 columns
+        ("mfe_gross_pct",      "REAL"),   # max favorable excursion (decimal fraction)
+        ("mae_gross_pct",      "REAL"),   # max adverse excursion (decimal fraction)
     ]:
         try:
             c.execute(f"ALTER TABLE shadow_trades_v1 ADD COLUMN {col} {coltype}")
@@ -1592,7 +1601,7 @@ def _compute_run_signature() -> str:
     """
     import json, hashlib
     sig_params = {
-        "version": "v1.16",
+        "version": "v1.17",
         "mode": MODE,
         "sl_pct": EXIT_STOP_LOSS_PCT,
         "tp_pct": EXIT_TAKE_PROFIT_PCT,
@@ -1639,10 +1648,10 @@ def _register_run():
             INSERT OR IGNORE INTO run_registry
             (run_id, git_commit, start_ts, mode, version, lane_gates, key_params, signature)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (_RUN_ID, _GIT_COMMIT, _dt.utcnow().isoformat(), MODE, "v1.16", lane_gates, key_params, sig))
+        """, (_RUN_ID, _GIT_COMMIT, _dt.utcnow().isoformat(), MODE, "v1.17", lane_gates, key_params, sig))
         conn.commit()
         conn.close()
-        logger.info(f"RUN_REGISTRY: registered run_id={_RUN_ID[:8]} version=v1.16 mode={MODE} signature={sig}")
+        logger.info(f"RUN_REGISTRY: registered run_id={_RUN_ID[:8]} version=v1.17 mode={MODE} signature={sig}")
     except Exception as e:
         logger.error(f"run_registry insert failed: {e}")
 
@@ -1744,6 +1753,20 @@ def close_trade(trade: dict, current: dict, reason: str, cross: dict | None = No
     curr_poll_pnl = (cross or {}).get("curr_poll_pnl")
     timeout_skipped = (cross or {}).get("timeout_skipped", 0)
 
+    # v1.17: retrieve MFE/MAE from in-memory tracker
+    mfe_mae_data = _mfe_mae.get(trade["trade_id"], {})
+    mfe_val = mfe_mae_data.get("mfe")  # decimal fraction, may be None if no polls yet
+    mae_val = mfe_mae_data.get("mae")
+    # Ensure final gross is included in MFE/MAE
+    if mfe_val is None:
+        mfe_val = gross_pnl_pct
+        mae_val = gross_pnl_pct
+    else:
+        if gross_pnl_pct > mfe_val:
+            mfe_val = gross_pnl_pct
+        if gross_pnl_pct < mae_val:
+            mae_val = gross_pnl_pct
+
     conn.execute("""
         UPDATE shadow_trades_v1 SET
             exited_at               = ?,
@@ -1770,6 +1793,8 @@ def close_trade(trade: dict, current: dict, reason: str, cross: dict | None = No
             shadow_pnl_pct_fee025   = ?,
             shadow_pnl_pct_fee060   = ?,
             shadow_pnl_pct_fee100   = ?,
+            mfe_gross_pct           = ?,
+            mae_gross_pct           = ?,
             status                  = 'closed'
         WHERE trade_id = ?
     """, (
@@ -1785,21 +1810,29 @@ def close_trade(trade: dict, current: dict, reason: str, cross: dict | None = No
         timeout_skipped,
         round(gross_pnl_pct, 6), round(shadow_pnl_pct, 6), round(shadow_pnl_sol, 6),
         round(pnl_fee025, 6), round(pnl_fee060, 6), round(pnl_fee100, 6),
+        round(mfe_val, 6), round(mae_val, 6),
         trade["trade_id"],
     ))
     conn.commit()
     conn.close()
+    # Clean up in-memory MFE/MAE state
+    _mfe_mae.pop(trade["trade_id"], None)
 
     logger.info(
         f"CLOSE {trade['strategy']} {trade.get('token_symbol','?')} "
         f"reason={reason} gross_pct={gross_pnl_pct*100:+.2f}% fee060_pct={pnl_fee060*100:+.2f}% (stored_decimal={gross_pnl_pct:+.6f})"
     )
 
-# ── OVERSHOOT TRACKING ───────────────────────────────────────────────────────
+# # ── OVERSHOOT TRACKING ───────────────────────────────────────────────────
 # Maps trade_id -> {"sl_crossed_at": ISO, "tp_crossed_at": ISO,
 #                   "prev_poll_at": ISO, "prev_poll_pnl": float,
 #                   "timeout_skipped": int}
 _threshold_cross_times: dict[str, dict] = {}
+
+# ── MFE/MAE TRACKING (v1.17) ───────────────────────────────────────────────
+# Maps trade_id -> {"mfe": float, "mae": float}  (decimal fractions, same as gross_pnl_pct)
+# Updated on every poll in check_exits; written to DB on close_trade.
+_mfe_mae: dict[str, dict] = {}
 
 # ── CHECK EXITS ───────────────────────────────────────────────────────────────
 def check_exits(open_trades: list[dict]):
@@ -1846,6 +1879,16 @@ def check_exits(open_trades: list[dict]):
         cross["prev_poll_pnl"] = cross.get("curr_poll_pnl", gross_pnl_pct)
         cross["curr_poll_at"]  = now_utc.isoformat()
         cross["curr_poll_pnl"] = gross_pnl_pct
+
+        # v1.17: Update MFE/MAE in-memory (decimal fraction, same as gross_pnl_pct)
+        gross_dec = gross_pnl_pct / 100.0  # gross_pnl_pct is in % units here, convert to decimal
+        if trade_id not in _mfe_mae:
+            _mfe_mae[trade_id] = {"mfe": gross_dec, "mae": gross_dec}
+        else:
+            if gross_dec > _mfe_mae[trade_id]["mfe"]:
+                _mfe_mae[trade_id]["mfe"] = gross_dec
+            if gross_dec < _mfe_mae[trade_id]["mae"]:
+                _mfe_mae[trade_id]["mae"] = gross_dec
 
         if gross_pnl_pct <= sl_threshold and "sl_crossed_at" not in cross:
             cross["sl_crossed_at"]  = now_utc.isoformat()

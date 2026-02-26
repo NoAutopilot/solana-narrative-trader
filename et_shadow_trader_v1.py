@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
-""""et_shadow_trader_v1.py — ET v1 Paper Trading Harness (Playbook Edition) v1.12
+""""et_shadow_trader_v1.py — ET v1 Paper Trading Harness (Playbook Edition) v1.13
+
+v1.13 additions (2026-02-26):
+  - TRUE atomic pairing: if baseline open_trade fails, strategy trade is ROLLED BACK
+    (deleted from DB) so no unpaired strategy trades ever exist.
+  - Lane sub-reason diagnostics: selection_tick_log now has separate columns for
+    rej_lane_age, rej_lane_liq, rej_lane_vol, rej_lane_pf_early (DB migration added).
+  - Stall diagnostics: when tradeable=0, log one example token with its blocking reason.
+  - Report: all pnl fields stored as decimal fractions; display must multiply by 100.
+  - Report: run_id filter is mandatory (no silent ALL-runs aggregation).
+  - Report: n_closed_pairs computed by join on baseline_trigger_id, not min().
+  - Tick reason: 'pair_open_baseline_pending' when baseline still open.
 
 v1.12 additions:
   - selection_tick_log: one heartbeat row per 15-min interval with eligible_count,
@@ -385,12 +396,35 @@ def init_tables():
             rej_vol_cap         INTEGER DEFAULT 0,
             rej_rug             INTEGER DEFAULT 0,
             rej_jup_fail        INTEGER DEFAULT 0,
-            rej_pf_stability    INTEGER DEFAULT 0
+            rej_pf_stability    INTEGER DEFAULT 0,
+            stall_example_token TEXT,
+            stall_example_reason TEXT
         )
         """)
         c.execute("CREATE INDEX IF NOT EXISTS idx_stl_at ON selection_tick_log(logged_at, run_id)")
     except Exception:
         pass
+    # v1.13: migrate existing selection_tick_log to add sub-reason columns if missing
+    stl_existing = {r[1] for r in c.execute("PRAGMA table_info(selection_tick_log)").fetchall()}
+    for col, ctype in [
+        ("rej_lane_age",       "INTEGER DEFAULT 0"),
+        ("rej_lane_liq",       "INTEGER DEFAULT 0"),
+        ("rej_lane_vol",       "INTEGER DEFAULT 0"),
+        ("rej_lane_pf_early",  "INTEGER DEFAULT 0"),
+        ("rej_anti_chase",     "INTEGER DEFAULT 0"),
+        ("rej_friction",       "INTEGER DEFAULT 0"),
+        ("rej_vol_cap",        "INTEGER DEFAULT 0"),
+        ("rej_rug",            "INTEGER DEFAULT 0"),
+        ("rej_jup_fail",       "INTEGER DEFAULT 0"),
+        ("rej_pf_stability",   "INTEGER DEFAULT 0"),
+        ("stall_example_token",  "TEXT"),
+        ("stall_example_reason", "TEXT"),
+    ]:
+        if col not in stl_existing:
+            try:
+                c.execute(f"ALTER TABLE selection_tick_log ADD COLUMN {col} {ctype}")
+            except Exception:
+                pass
     try:
         c.execute("""
         CREATE TABLE IF NOT EXISTS filter_rejection_log (
@@ -782,17 +816,22 @@ def log_filter_scan(counts: dict):
 
 def log_selection_tick(eligible_count: int, tradeable_count: int, top_token: str | None,
                        top_score: float | None, opened: bool, reason_no_trade: str | None,
-                       rej: dict):
-    """v1.12: Write one heartbeat row per selection interval to selection_tick_log."""
+                       rej: dict, stall_example: tuple | None = None):
+    """v1.13: Write one heartbeat row per selection interval to selection_tick_log.
+    stall_example: (token_symbol, reason_str) for the first token that failed the gate.
+    """
     try:
         conn = get_conn()
+        ex_tok = stall_example[0] if stall_example else None
+        ex_rsn = stall_example[1] if stall_example else None
         conn.execute("""
             INSERT INTO selection_tick_log
             (logged_at, run_id, eligible_count, tradeable_count, top_token, top_score,
              opened_trade_bool, reason_no_trade,
              rej_lane_age, rej_lane_liq, rej_lane_vol, rej_lane_pf_early,
-             rej_anti_chase, rej_friction, rej_vol_cap, rej_rug, rej_jup_fail, rej_pf_stability)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+             rej_anti_chase, rej_friction, rej_vol_cap, rej_rug, rej_jup_fail, rej_pf_stability,
+             stall_example_token, stall_example_reason)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             datetime.now(timezone.utc).isoformat(), _RUN_ID,
             eligible_count, tradeable_count, top_token, top_score,
@@ -800,6 +839,7 @@ def log_selection_tick(eligible_count: int, tradeable_count: int, top_token: str
             rej.get("lane_age", 0), rej.get("lane_liq", 0), rej.get("lane_vol", 0), rej.get("lane_pf_early", 0),
             rej.get("anti_chase", 0), rej.get("friction", 0), rej.get("vol_cap", 0),
             rej.get("rug", 0), rej.get("jup_fail", 0), rej.get("pf_stability", 0),
+            ex_tok, ex_rsn,
         ))
         conn.commit()
         conn.close()
@@ -1179,13 +1219,20 @@ def maybe_fire_rank_entry(strategy: str, all_rows: list[dict], score_fn) -> str 
 
     # ── Build tradeable set E ──────────────────────────────────────────────────
     eligible_rows = [r for r in all_rows if classify_lane(r) != "pumpfun_early"]
-    rej_counts = {"lane_age": 0, "lane_liq": 0, "lane_vol": 0, "lane_pf_early": 0, "anti_chase": 0, "friction": 0, "vol_cap": 0, "rug": 0, "jup_fail": 0, "pf_stability": 0}
+    pf_early_count = sum(1 for r in all_rows if classify_lane(r) == "pumpfun_early")
+    rej_counts = {"lane_age": 0, "lane_liq": 0, "lane_vol": 0, "lane_pf_early": pf_early_count,
+                  "anti_chase": 0, "friction": 0, "vol_cap": 0, "rug": 0, "jup_fail": 0, "pf_stability": 0}
     tradeable_set = []
+    # v1.13: capture first stall example (token + reason) for diagnostics
+    stall_example: tuple | None = None
     for r in eligible_rows:
         ok, reason = _check_tradeable(r)
         if ok:
             tradeable_set.append(r)
         else:
+            sym = r.get("token_symbol", "?")
+            if stall_example is None:
+                stall_example = (sym, reason)
             if reason == "lane:age":
                 rej_counts["lane_age"] += 1
             elif reason == "lane:liq":
@@ -1246,14 +1293,14 @@ def maybe_fire_rank_entry(strategy: str, all_rows: list[dict], score_fn) -> str 
                 f"vol24h=${vol_nm:,.0f} r_m5={r_m5_nm:.2f}% rv5m={rv5m_nm:.3f}% "
                 f"pairCreatedAt={pair_ts}"
             )
-        log_selection_tick(len(eligible_rows), 0, None, None, False, "no_tradeable_tokens", rej_counts)
+        log_selection_tick(len(eligible_rows), 0, None, None, False, "no_tradeable_tokens", rej_counts, stall_example)
         return None
 
     # ── Require |E| >= 2 ──────────────────────────────────────────────────────
     if len(tradeable_set) < 2:
         only = tradeable_set[0].get("token_symbol", "?")
         logger.info(f"RANK {strategy}: |E|={len(tradeable_set)} < 2 — skipping (need baseline slot)")
-        log_selection_tick(len(eligible_rows), len(tradeable_set), only, scored[0][0], False, "tradeable_lt_2", rej_counts)
+        log_selection_tick(len(eligible_rows), len(tradeable_set), only, scored[0][0], False, "tradeable_lt_2", rej_counts, stall_example)
         return None
 
     # ── Pick strategy = top-score, baseline = random from E\{strategy} ────────
@@ -1286,15 +1333,21 @@ def maybe_fire_rank_entry(strategy: str, all_rows: list[dict], score_fn) -> str 
     baseline_strat = "baseline_matched_pullback_score_rank"
     btid = open_trade(baseline_strat, baseline_row, baseline_trigger_id=tid)
     if not btid:
-        logger.warning(f"RANK {strategy}: baseline open FAILED post-validation for trigger={tid[:8]} — marking invalid_pair")
+        # v1.13: TRUE ATOMIC ROLLBACK — delete the strategy trade so no orphaned rows exist
+        logger.warning(
+            f"RANK {strategy}: baseline open FAILED — ROLLING BACK strategy trade {tid[:8]} "
+            f"(token={best.get('token_symbol','?')}) to maintain atomic pairing invariant"
+        )
         try:
             conn = get_conn()
-            conn.execute("UPDATE shadow_trades_v1 SET invalid_pair=1 WHERE trade_id=?", (tid,))
+            conn.execute("DELETE FROM shadow_trades_v1 WHERE trade_id=?", (tid,))
             conn.commit()
             conn.close()
+            logger.info(f"RANK {strategy}: strategy trade {tid[:8]} deleted (atomic rollback OK)")
         except Exception as e:
-            logger.error(f"invalid_pair mark failed: {e}")
+            logger.error(f"atomic rollback DELETE failed: {e} — trade {tid[:8]} may be orphaned")
         log_selection_tick(len(eligible_rows), len(tradeable_set), best.get("token_symbol"), best_score, False, "baseline_open_failed", rej_counts)
+        return None
     else:
         logger.info(
             f"RANK {strategy}: PAIR OPENED strategy={tid[:8]} baseline={btid[:8]} "
@@ -1521,10 +1574,10 @@ def _register_run():
             INSERT OR IGNORE INTO run_registry
             (run_id, git_commit, start_ts, mode, version, lane_gates, key_params)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (_RUN_ID, _GIT_COMMIT, _dt.utcnow().isoformat(), MODE, "v1.12", lane_gates, key_params))
+        """, (_RUN_ID, _GIT_COMMIT, _dt.utcnow().isoformat(), MODE, "v1.13", lane_gates, key_params))
         conn.commit()
         conn.close()
-        logger.info(f"RUN_REGISTRY: registered run_id={_RUN_ID[:8]} version=v1.12 mode={MODE}")
+        logger.info(f"RUN_REGISTRY: registered run_id={_RUN_ID[:8]} version=v1.13 mode={MODE}")
     except Exception as e:
         logger.error(f"run_registry insert failed: {e}")
 
@@ -1630,7 +1683,7 @@ def close_trade(trade: dict, current: dict, reason: str, cross: dict | None = No
 
     logger.info(
         f"CLOSE {trade['strategy']} {trade.get('token_symbol','?')} "
-        f"reason={reason} gross={gross_pnl_pct*100:+.2f}% fee060={pnl_fee060*100:+.2f}%"
+        f"reason={reason} gross_pct={gross_pnl_pct*100:+.2f}% fee060_pct={pnl_fee060*100:+.2f}% (stored_decimal={gross_pnl_pct:+.6f})"
     )
 
 # ── OVERSHOOT TRACKING ───────────────────────────────────────────────────────

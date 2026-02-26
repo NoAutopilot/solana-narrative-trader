@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """"et_shadow_trader_v1.py — ET v1 Paper Trading Harness (Playbook Edition) v1.13
 
+v1.14 additions (2026-02-26):
+  - Rollover cleanup on startup: open trades from old run_ids are closed with
+    exit_reason=rollover_close (excluded from reports)
+  - Position cap log now shows blocking trade_id + run_id + age_minutes
+  - Rejection reason primary counts added to selection_tick_log
+
 v1.13 additions (2026-02-26):
   - TRUE atomic pairing: if baseline open_trade fails, strategy trade is ROLLED BACK
     (deleted from DB) so no unpaired strategy trades ever exist.
@@ -1318,7 +1324,26 @@ def maybe_fire_rank_entry(strategy: str, all_rows: list[dict], score_fn) -> str 
 
     # ── Check position cap for strategy (baseline always exempt) ──────────────
     if not passes_position_cap(strategy):
-        logger.info(f"RANK {strategy}: position cap reached — skipping this interval")
+        # v1.14: show which trade is holding the cap slot
+        _cap_conn = get_conn()
+        _cap_trade = _cap_conn.execute(
+            "SELECT trade_id, run_id, token_symbol, entered_at FROM shadow_trades_v1 "
+            "WHERE status='open' ORDER BY entered_at ASC LIMIT 1"
+        ).fetchone()
+        _cap_conn.close()
+        if _cap_trade:
+            from datetime import datetime as _dt3, timezone as _tz3
+            _entered = _dt3.fromisoformat(_cap_trade["entered_at"].replace("Z", "+00:00"))
+            _age_min = (_dt3.now(_tz3.utc) - _entered).total_seconds() / 60
+            logger.info(
+                f"RANK {strategy}: position cap reached — "
+                f"blocking={_cap_trade['trade_id'][:8]} "
+                f"token={_cap_trade['token_symbol']} "
+                f"run={_cap_trade['run_id'][:8]} "
+                f"age={_age_min:.1f}min"
+            )
+        else:
+            logger.info(f"RANK {strategy}: position cap reached — no open trade found (race?)")
         log_selection_tick(len(eligible_rows), len(tradeable_set), best.get("token_symbol"), best_score, False, "position_cap", rej_counts)
         return None
 
@@ -1574,12 +1599,56 @@ def _register_run():
             INSERT OR IGNORE INTO run_registry
             (run_id, git_commit, start_ts, mode, version, lane_gates, key_params)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (_RUN_ID, _GIT_COMMIT, _dt.utcnow().isoformat(), MODE, "v1.13", lane_gates, key_params))
+        """, (_RUN_ID, _GIT_COMMIT, _dt.utcnow().isoformat(), MODE, "v1.14", lane_gates, key_params))
         conn.commit()
         conn.close()
-        logger.info(f"RUN_REGISTRY: registered run_id={_RUN_ID[:8]} version=v1.13 mode={MODE}")
+        logger.info(f"RUN_REGISTRY: registered run_id={_RUN_ID[:8]} version=v1.14 mode={MODE}")
     except Exception as e:
         logger.error(f"run_registry insert failed: {e}")
+
+# ── v1.14: Rollover cleanup — close open trades from old run_ids ──────────
+def rollover_cleanup():
+    """On startup, mark all open trades from prior run_ids as rollover_close.
+    These are excluded from PnL reports (exit_reason='rollover_close').
+    """
+    from datetime import datetime as _dt2
+    conn = get_conn()
+    stale = conn.execute("""
+        SELECT trade_id, token_symbol, run_id, strategy, entered_at
+        FROM shadow_trades_v1
+        WHERE status = 'open' AND run_id != ?
+    """, (_RUN_ID,)).fetchall()
+    if not stale:
+        logger.info("ROLLOVER: no stale open trades — clean start")
+        conn.close()
+        return
+    now_iso = _dt2.utcnow().isoformat()
+    for t in stale:
+        entered_str = t["entered_at"].replace("Z", "+00:00")
+        if "+" not in entered_str and entered_str.endswith("00:00") is False:
+            entered_str = entered_str + "+00:00"
+        try:
+            entered = _dt2.fromisoformat(entered_str)
+        except Exception:
+            entered = _dt2.fromisoformat(t["entered_at"].replace("Z", "")).replace(tzinfo=__import__('datetime').timezone.utc)
+        now_utc = _dt2.now(__import__('datetime').timezone.utc)
+        age_min = (now_utc - entered).total_seconds() / 60
+        conn.execute("""
+            UPDATE shadow_trades_v1
+            SET status='closed', exited_at=?, exit_reason='rollover_close',
+                gross_pnl_pct=0.0, shadow_pnl_pct=0.0, shadow_pnl_pct_fee100=0.0
+            WHERE trade_id=?
+        """, (now_iso, t["trade_id"]))
+        logger.info(
+            f"ROLLOVER: closed stale trade {t['trade_id'][:8]} "
+            f"token={t['token_symbol']} run={t['run_id'][:8]} "
+            f"strategy={t['strategy']} age={age_min:.1f}min"
+        )
+    conn.commit()
+    conn.close()
+    logger.info(f"ROLLOVER: closed {len(stale)} stale open trade(s) from prior run_ids")
+
+rollover_cleanup()
 
 # ── CLOSE TRADE ──────────────────────────────────────────────────────────────
 def close_trade(trade: dict, current: dict, reason: str, cross: dict | None = None):

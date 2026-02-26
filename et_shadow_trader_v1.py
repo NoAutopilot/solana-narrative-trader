@@ -1940,10 +1940,12 @@ def check_exits(open_trades: list[dict]):
         # v1.18: Update MFE/MAE from price path (absolute USD prices)
         cur_price = current["price_usd"]
         if trade_id not in _mfe_mae:
+            # Seed max/min to entry_price so MFE >= 0 always.
+            # If price only falls, max_price stays at entry -> MFE = 0%.
             _mfe_mae[trade_id] = {
                 "entry_price": entry_price,
-                "max_price": cur_price,
-                "min_price": cur_price,
+                "max_price": entry_price,  # NOT cur_price — guarantees MFE >= 0
+                "min_price": entry_price,  # NOT cur_price — MAE starts at 0 from entry
             }
         else:
             if cur_price > _mfe_mae[trade_id]["max_price"]:

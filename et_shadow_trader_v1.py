@@ -1335,12 +1335,16 @@ def maybe_fire_rank_entry(strategy: str, all_rows: list[dict], score_fn) -> str 
             from datetime import datetime as _dt3, timezone as _tz3
             _entered = _dt3.fromisoformat(_cap_trade["entered_at"].replace("Z", "+00:00"))
             _age_min = (_dt3.now(_tz3.utc) - _entered).total_seconds() / 60
+            # P3: label whether blocker is current-run or stale cross-run
+            _is_current_run = (_cap_trade["run_id"] == _RUN_ID)
+            _cap_label = "current_run_pair" if _is_current_run else "STALE_CROSS_RUN (rollover missed?)"
             logger.info(
                 f"RANK {strategy}: position cap reached — "
                 f"blocking={_cap_trade['trade_id'][:8]} "
                 f"token={_cap_trade['token_symbol']} "
                 f"run={_cap_trade['run_id'][:8]} "
-                f"age={_age_min:.1f}min"
+                f"age={_age_min:.1f}min "
+                f"type={_cap_label}"
             )
         else:
             logger.info(f"RANK {strategy}: position cap reached — no open trade found (race?)")

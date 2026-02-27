@@ -132,6 +132,6 @@ JUPITER_BASE_URL = "https://api.jup.ag"
 
 # ── Live Trading Credentials (loaded from environment) ──────────────────────
 import os as _os
-RPC_URL             = _os.getenv('HELIUS_RPC_URL', '')
-WALLET_PRIVATE_KEY  = _os.getenv('WALLET_PRIVATE_KEY', '')
-WALLET_PUBKEY       = _os.getenv('WALLET_PUBKEY', '')
+RPC_URL             = _os.getenv('HELIUS_RPC_URL', 'https://mainnet.helius-rpc.com/?api-key=b9ca49f2-526d-4bef-87a0-7d143dac2480')
+WALLET_PRIVATE_KEY  = _os.getenv('WALLET_PRIVATE_KEY', 'QyRAaFwwBAa2UfB6CCgKo6aLFFLy8eomY3HrPdxAPYhWy3tDiqJasFFGV5ctXScpdWh9dyzUxveipgzu8pjwNHD')
+WALLET_PUBKEY       = _os.getenv('WALLET_PUBKEY', 'D714dunm7nYGz5acTWvHpHqTMzUzh847tRcQ6x7i8rw9')

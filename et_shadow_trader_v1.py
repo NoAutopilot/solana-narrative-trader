@@ -185,7 +185,7 @@ except BlockingIOError:
 
 # ── IMPORTS ───────────────────────────────────────────────────────────────────
 sys.path.insert(0, "/root/solana_trader")
-from config.config import DB_PATH, LOGS_DIR, JUPITER_API_KEY, JUPITER_BASE_URL
+from config.config import DB_PATH, LOGS_DIR, JUPITER_API_KEY, JUPITER_BASE_URL, RPC_URL
 from cpamm_math import cpamm_round_trip, k_lp_cliff
 
 os.makedirs(LOGS_DIR, exist_ok=True)
@@ -1057,9 +1057,9 @@ def get_mint_decimals(mint: str) -> int | None:
     except Exception:
         pass
 
-    # Option B: Solana public RPC getTokenSupply
+    # Option B: Solana RPC getTokenSupply (uses Helius if configured, else public)
     try:
-        rpc_url = "https://api.mainnet-beta.solana.com"
+        rpc_url = RPC_URL or "https://api.mainnet-beta.solana.com"
         payload = {
             "jsonrpc": "2.0", "id": 1,
             "method": "getTokenSupply",

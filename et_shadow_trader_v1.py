@@ -1469,7 +1469,7 @@ def maybe_fire_rank_entry(strategy: str, all_rows: list[dict], score_fn) -> str 
         logger.info(
             f"RANK {strategy}: NO TRADEABLE TOKENS "
             f"(eligible={len(eligible_rows)} universe={len(all_rows)} "
-            f"best={_best_diag_token} sc={_best_diag_score:.4f if _best_diag_score is not None else 'N/A'} block={_best_diag_block} "
+            f"best={_best_diag_token} sc={f'{_best_diag_score:.4f}' if _best_diag_score is not None else 'N/A'} block={_best_diag_block} "
             f"rej=age:{rej_counts['lane_age']} liq:{rej_counts['lane_liq']} vol:{rej_counts['lane_vol']} pf_early:{rej_counts['lane_pf_early']} "
             f"anti_chase:{rej_counts['anti_chase']} jup:{rej_counts['jup_fail']} vol_cap:{rej_counts['vol_cap']} rug:{rej_counts['rug']} pf_stab:{rej_counts['pf_stability']})"
         )

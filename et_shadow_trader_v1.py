@@ -439,7 +439,10 @@ def init_tables():
             rej_jup_fail        INTEGER DEFAULT 0,
             rej_pf_stability    INTEGER DEFAULT 0,
             stall_example_token TEXT,
-            stall_example_reason TEXT
+            stall_example_reason TEXT,
+            best_token TEXT,
+            best_score REAL,
+            best_block_reason TEXT
         )
         """)
         c.execute("CREATE INDEX IF NOT EXISTS idx_stl_at ON selection_tick_log(logged_at, run_id)")
@@ -460,6 +463,9 @@ def init_tables():
         ("rej_pf_stability",   "INTEGER DEFAULT 0"),
         ("stall_example_token",  "TEXT"),
         ("stall_example_reason", "TEXT"),
+        ("best_token",           "TEXT"),
+        ("best_score",           "REAL"),
+        ("best_block_reason",    "TEXT"),
     ]:
         if col not in stl_existing:
             try:
@@ -903,9 +909,13 @@ def log_filter_scan(counts: dict):
 
 def log_selection_tick(eligible_count: int, tradeable_count: int, top_token: str | None,
                        top_score: float | None, opened: bool, reason_no_trade: str | None,
-                       rej: dict, stall_example: tuple | None = None):
-    """v1.13: Write one heartbeat row per selection interval to selection_tick_log.
+                       rej: dict, stall_example: tuple | None = None,
+                       best_token: str | None = None, best_score: float | None = None,
+                       best_block_reason: str | None = None):
+    """v1.13+: Write one heartbeat row per selection interval to selection_tick_log.
     stall_example: (token_symbol, reason_str) for the first token that failed the gate.
+    best_token/best_score/best_block_reason: highest-scoring eligible token even when
+    no tradeable tokens exist — populated on zero-open ticks for diagnostics.
     """
     try:
         conn = get_conn()
@@ -917,8 +927,9 @@ def log_selection_tick(eligible_count: int, tradeable_count: int, top_token: str
              opened_trade_bool, reason_no_trade,
              rej_lane_age, rej_lane_liq, rej_lane_vol, rej_lane_pf_early,
              rej_anti_chase, rej_friction, rej_vol_cap, rej_rug, rej_jup_fail, rej_pf_stability,
-             stall_example_token, stall_example_reason)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+             stall_example_token, stall_example_reason,
+             best_token, best_score, best_block_reason)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
         """, (
             datetime.now(timezone.utc).isoformat(), _RUN_ID,
             eligible_count, tradeable_count, top_token, top_score,
@@ -927,6 +938,7 @@ def log_selection_tick(eligible_count: int, tradeable_count: int, top_token: str
             rej.get("anti_chase", 0), rej.get("friction", 0), rej.get("vol_cap", 0),
             rej.get("rug", 0), rej.get("jup_fail", 0), rej.get("pf_stability", 0),
             ex_tok, ex_rsn,
+            best_token, best_score, best_block_reason,
         ))
         conn.commit()
         conn.close()
@@ -1442,9 +1454,22 @@ def maybe_fire_rank_entry(strategy: str, all_rows: list[dict], score_fn) -> str 
             f"anti_chase:{rej_counts['anti_chase']} jup:{rej_counts['jup_fail']} vol_cap:{rej_counts['vol_cap']} rug:{rej_counts['rug']} pf_stab:{rej_counts['pf_stability']}"
         )
     else:
+        # Compute best_token/best_score/best_block_reason from eligible_rows for diagnostics
+        _best_diag_token = None
+        _best_diag_score = None
+        _best_diag_block = None
+        if eligible_rows:
+            _scored_elig = sorted(
+                [(score_fn(r), r) for r in eligible_rows],
+                key=lambda x: x[0], reverse=True
+            )
+            _best_diag_score, _best_diag_row = _scored_elig[0]
+            _best_diag_token = _best_diag_row.get("token_symbol", "?")
+            _, _best_diag_block = _check_tradeable(_best_diag_row)
         logger.info(
             f"RANK {strategy}: NO TRADEABLE TOKENS "
             f"(eligible={len(eligible_rows)} universe={len(all_rows)} "
+            f"best={_best_diag_token} sc={_best_diag_score:.4f if _best_diag_score is not None else 'N/A'} block={_best_diag_block} "
             f"rej=age:{rej_counts['lane_age']} liq:{rej_counts['lane_liq']} vol:{rej_counts['lane_vol']} pf_early:{rej_counts['lane_pf_early']} "
             f"anti_chase:{rej_counts['anti_chase']} jup:{rej_counts['jup_fail']} vol_cap:{rej_counts['vol_cap']} rug:{rej_counts['rug']} pf_stab:{rej_counts['pf_stability']})"
         )
@@ -1457,14 +1482,14 @@ def maybe_fire_rank_entry(strategy: str, all_rows: list[dict], score_fn) -> str 
             vol_nm = nm.get("vol_h24") or 0
             r_m5_nm = nm.get("r_m5") or 0
             rv5m_nm = nm.get("rv_5m") or 0
-            # Compute pairCreatedAt for unit sanity
             pair_ts = nm.get("pair_created_at") or nm.get("pairCreatedAt") or "?"
             logger.info(
                 f"  NEAR-MISS {sym}: age={age_h_nm:.1f}h liq=${liq_nm:,.0f} "
                 f"vol24h=${vol_nm:,.0f} r_m5={r_m5_nm:.2f}% rv5m={rv5m_nm:.3f}% "
                 f"pairCreatedAt={pair_ts}"
             )
-        log_selection_tick(len(eligible_rows), 0, None, None, False, "no_tradeable_tokens", rej_counts, stall_example)
+        log_selection_tick(len(eligible_rows), 0, None, None, False, "no_tradeable_tokens", rej_counts, stall_example,
+                           best_token=_best_diag_token, best_score=_best_diag_score, best_block_reason=_best_diag_block)
         return None
 
     # ── Require |E| >= 2 ──────────────────────────────────────────────────────

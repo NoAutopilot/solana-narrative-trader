@@ -330,7 +330,7 @@ _sig_rows = conn.execute("""
         MAX(st.exited_at)              AS last_exit
     FROM shadow_trades_v1 st
     LEFT JOIN run_registry rr ON rr.run_id = st.run_id
-    WHERE st.version = 'v1.19'
+    WHERE rr.version = 'v1.19'
       AND st.status  = 'closed'
       AND st.exit_reason != 'rollover_close'
     GROUP BY rr.signature, rr.git_commit

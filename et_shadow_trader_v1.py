@@ -955,8 +955,8 @@ def log_selection_tick(eligible_count: int, tradeable_count: int, top_token: str
             rej.get("rug", 0), rej.get("jup_fail", 0), rej.get("pf_stability", 0),
             ex_tok, ex_rsn,
             best_token, best_score, best_block_reason,
-            wi.get("no_pf_stability", 0), wi.get("no_anti_chase", 0), wi.get("no_pf_early", 0),
-            wi.get("no_lane_liq", 0), wi.get("no_lane_vol", 0),
+            wi.get("no_pf_stability"), wi.get("no_anti_chase"), wi.get("no_pf_early"),
+            wi.get("no_lane_liq"), wi.get("no_lane_vol"),
         ))
         conn.commit()
         conn.close()
@@ -1591,7 +1591,9 @@ def maybe_fire_rank_entry(strategy: str, all_rows: list[dict], score_fn) -> str 
             "no_lane_liq":     _count_tradeable_without(all_rows, "lane_liq"),
             "no_lane_vol":     _count_tradeable_without(all_rows, "lane_vol"),
         }
+        _bt_lt2, _bs_lt2, _bb_lt2 = _best_diag_for_best(scored[0][1], scored[0][0])
         log_selection_tick(len(eligible_rows), len(tradeable_set), only, scored[0][0], False, "tradeable_lt_2", rej_counts, stall_example,
+                           best_token=_bt_lt2, best_score=_bs_lt2, best_block_reason=_bb_lt2,
                            whatif=_whatif)
         return None
 

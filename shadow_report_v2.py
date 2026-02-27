@@ -308,9 +308,41 @@ n_base_open = conn.execute(
     INCLUDED_RUN_IDS
 ).fetchone()[0]
 
+# last_exit timestamp for the included runs
+_last_exit_row = conn.execute(
+    f"SELECT MAX(exited_at) FROM shadow_trades_v1 "
+    f"WHERE run_id IN {in_clause(INCLUDED_RUN_IDS)} AND status='closed'",
+    INCLUDED_RUN_IDS
+).fetchone()
+_last_exit = (_last_exit_row[0] or "none")[:19] if _last_exit_row else "none"
 print(f"  n_closed_pairs (join-based) : {n_pairs}")
+print(f"  last_exit                   : {_last_exit} UTC")
 print(f"  strategy still open         : {n_strat_open}")
 print(f"  baseline still open         : {n_base_open}")
+
+# ── Closed pairs by signature (split-sample check) ────────────────────────
+print("\n  CLOSED PAIRS BY SIGNATURE (split-sample check):")
+_sig_rows = conn.execute("""
+    SELECT
+        COALESCE(rr.signature, 'NULL') AS sig,
+        COALESCE(rr.git_commit, '?')   AS commit,
+        COUNT(*) / 2.0                 AS approx_pairs_closed,
+        MAX(st.exited_at)              AS last_exit
+    FROM shadow_trades_v1 st
+    LEFT JOIN run_registry rr ON rr.run_id = st.run_id
+    WHERE st.version = 'v1.19'
+      AND st.status  = 'closed'
+      AND st.exit_reason != 'rollover_close'
+    GROUP BY rr.signature, rr.git_commit
+    ORDER BY last_exit DESC
+""").fetchall()
+if _sig_rows:
+    print(f"  {'sig':<18} {'commit':<10} {'approx_pairs':>13} {'last_exit':<22}")
+    for _sr in _sig_rows:
+        print(f"  {str(_sr['sig'])[:18]:<18} {str(_sr['commit'])[:8]:<10} "
+              f"{_sr['approx_pairs_closed']:>13.1f} {str(_sr['last_exit'] or '')[:19]:<22}")
+else:
+    print("  (no closed v1.19 trades found)")
 
 # ── Decide mode ────────────────────────────────────────────────────────────
 mode = args.mode

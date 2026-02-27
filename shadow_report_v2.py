@@ -281,8 +281,10 @@ pairs_q = (
     f"  b.forced_close AS b_forced, b.duration_sec AS b_dur, b.poll_count AS b_polls, "
     f"  b.run_id AS b_run, "
     f"  b.gross_pnl_pct AS b_gross, b.shadow_pnl_pct_fee100 AS b_fee100, "
-    f"  b.mfe_gross_pct AS b_mfe, b.mae_gross_pct AS b_mae "
+    f"  b.mfe_gross_pct AS b_mfe, b.mae_gross_pct AS b_mae, "
+    f"  rr.git_commit AS s_commit, rr.signature AS s_sig "
     f"FROM shadow_trades_v1 s "
+    f"LEFT JOIN run_registry rr ON rr.run_id = s.run_id "
     f"JOIN shadow_trades_v1 b "
     f"  ON b.baseline_trigger_id = s.trade_id "
     f"  AND b.run_id IN {in_clause(INCLUDED_RUN_IDS)} "
@@ -745,44 +747,102 @@ if mode == "decision":
         verdict = "INCONCLUSIVE — CI crosses zero. Need more pairs or parameter review."
     print(f"  VERDICT         : {verdict}")
 
-    # ── No-FAST delta summary (exclude strategy duration_sec < 60s) ────────────
-    fast_pairs = [p for p in pairs if isinstance(p["s_dur"], (int, float)) and p["s_dur"] < 60]
+    # ── FAST classification ────────────────────────────────────────────────────
+    fast_pairs  = [p for p in pairs if isinstance(p["s_dur"], (int, float)) and p["s_dur"] < 60]
     nofast_pairs = [p for p in pairs if not (isinstance(p["s_dur"], (int, float)) and p["s_dur"] < 60)]
-    nofast_deltas = [
-        (p["s_fee100"] or 0.0) * 100 - (p["b_fee100"] or 0.0) * 100
-        for p in nofast_pairs
-    ]
-    n_fast = len(fast_pairs)
-    n_nofast = len(nofast_deltas)
+    n_fast   = len(fast_pairs)
+    n_nofast = len(nofast_pairs)
+
+    # ── FAST token frequency ──────────────────────────────────────────────────
+    from collections import Counter
+    fast_tok_counts = Counter(p["s_token"] for p in fast_pairs)
     print(f"\n  FAST EXITS (strategy duration_sec < 60s): {n_fast} of {n} pairs")
     if n_fast > 0:
-        fast_tokens = ", ".join(p["s_token"] for p in fast_pairs)
-        print(f"  Fast tokens: {fast_tokens}")
-    if n_nofast >= 3:
-        nf_mean, nf_median, nf_pct_pos = summary_stats(nofast_deltas)
-        nf_ci_lo, nf_ci_hi = bootstrap_ci(nofast_deltas)
-        nf_trim_k = max(1, int(n_nofast * 0.10))
-        nf_trimmed = sorted(nofast_deltas)[nf_trim_k:-nf_trim_k] if n_nofast > 2 * nf_trim_k else nofast_deltas
-        nf_trimmed_mean = sum(nf_trimmed) / len(nf_trimmed) if nf_trimmed else float("nan")
-        if nf_ci_lo > 0:
-            nf_verdict = "POSITIVE EDGE"
-        elif nf_ci_hi < 0:
-            nf_verdict = "NEGATIVE EDGE"
-        else:
-            nf_verdict = "INCONCLUSIVE"
-        nf_strat_abs = sum((p["s_fee100"] or 0.0)*100 for p in nofast_pairs) / n_nofast
-        nf_base_abs  = sum((p["b_fee100"] or 0.0)*100 for p in nofast_pairs) / n_nofast
-        print(f"  NO-FAST SUMMARY (n={n_nofast})")
-        print(f"    mean strategy_fee100% : {nf_strat_abs:+.4f}%")
-        print(f"    mean baseline_fee100% : {nf_base_abs:+.4f}%")
-        print(f"    mean delta    : {nf_mean:+.4f}%")
-        print(f"    median delta  : {nf_median:+.4f}%")
-        print(f"    trimmed mean  : {nf_trimmed_mean:+.4f}%  (n={len(nf_trimmed)})")
-        print(f"    %delta > 0    : {nf_pct_pos:.1f}%")
-        print(f"    95% CI        : [{nf_ci_lo:+.4f}%, {nf_ci_hi:+.4f}%]")
-        print(f"    VERDICT       : {nf_verdict}")
+        freq_str = "  ".join(f"{tok}={cnt}" for tok, cnt in fast_tok_counts.most_common())
+        print(f"  FAST token frequency: {freq_str}")
+
+    # ── Helper: compute and print one sensitivity block ───────────────────────
+    def _print_sensitivity(label: str, subset: list, indent: str = "  "):
+        if len(subset) < 3:
+            print(f"{indent}{label} (n={len(subset)}): insufficient pairs for CI.")
+            return
+        deltas = [(p["s_fee100"] or 0.0)*100 - (p["b_fee100"] or 0.0)*100 for p in subset]
+        s_abs  = sum((p["s_fee100"] or 0.0)*100 for p in subset) / len(subset)
+        b_abs  = sum((p["b_fee100"] or 0.0)*100 for p in subset) / len(subset)
+        mn, med, pct = summary_stats(deltas)
+        ci_lo, ci_hi = bootstrap_ci(deltas)
+        trim_k = max(1, int(len(deltas) * 0.10))
+        trimmed = sorted(deltas)[trim_k:-trim_k] if len(deltas) > 2*trim_k else deltas
+        tm = sum(trimmed)/len(trimmed) if trimmed else float("nan")
+        if ci_lo > 0:   verdict = "POSITIVE EDGE"
+        elif ci_hi < 0: verdict = "NEGATIVE EDGE"
+        else:           verdict = "INCONCLUSIVE"
+        print(f"{indent}{label} (n={len(subset)})")
+        print(f"{indent}  mean strategy_fee100% : {s_abs:+.4f}%")
+        print(f"{indent}  mean baseline_fee100% : {b_abs:+.4f}%")
+        print(f"{indent}  mean delta    : {mn:+.4f}%")
+        print(f"{indent}  median delta  : {med:+.4f}%")
+        print(f"{indent}  trimmed mean  : {tm:+.4f}%  (n={len(trimmed)})")
+        print(f"{indent}  %delta > 0    : {pct:.1f}%")
+        print(f"{indent}  95% CI        : [{ci_lo:+.4f}%, {ci_hi:+.4f}%]")
+        print(f"{indent}  VERDICT       : {verdict}")
+
+    # ── 4-way sensitivity summaries ───────────────────────────────────────────
+    print(f"\n" + "-" * 70)
+    print("SENSITIVITY SUMMARIES")
+    print("-" * 70)
+
+    # A) Full dataset
+    _print_sensitivity("A) FULL DATASET", pairs)
+
+    # B) NO-FAST
+    _print_sensitivity("B) NO-FAST", nofast_pairs)
+
+    # C) NO-FAST + SAME COMMIT (modal/most-recent commit in current sig)
+    commit_counts = Counter(p["s_commit"][:8] for p in pairs if p["s_commit"])
+    if commit_counts:
+        modal_commit = commit_counts.most_common(1)[0][0]
+        same_commit_nofast = [p for p in nofast_pairs
+                              if p["s_commit"] and p["s_commit"][:8] == modal_commit]
+        print(f"  (C uses modal commit={modal_commit}, n_all_pairs_in_commit="
+              f"{sum(1 for p in pairs if p['s_commit'] and p['s_commit'][:8]==modal_commit)})")
+        _print_sensitivity("C) NO-FAST + SAME COMMIT", same_commit_nofast)
     else:
-        print(f"  NO-FAST SUMMARY: only {n_nofast} pairs remain after excluding FAST — insufficient for CI.")
+        print("  C) NO-FAST + SAME COMMIT: no commit data available.")
+
+    # D) NO-FAST + LAST 6 HOURS
+    from datetime import datetime, timezone, timedelta
+    cutoff_6h = (datetime.now(timezone.utc) - timedelta(hours=6)).isoformat()
+    last6h_nofast = [p for p in nofast_pairs
+                     if p["s_entered"] and str(p["s_entered"]) >= cutoff_6h]
+    _print_sensitivity("D) NO-FAST + LAST 6H", last6h_nofast)
+
+    # ── FAST PAIRS DETAIL TABLE ───────────────────────────────────────────────
+    if n_fast > 0:
+        print(f"\n" + "-" * 70)
+        print(f"FAST PAIRS DETAIL (strategy duration_sec < 60s, n={n_fast})")
+        print("-" * 70)
+        hdr = (f"  {'entered_at':<20} {'s_tok(mint)':<18} {'b_tok':<12} "
+               f"{'s_dur':>6} {'s_pol':>5} {'s_exit':<10} {'b_exit':<10} "
+               f"{'s_f100%':>8} {'b_f100%':>8} {'delta%':>8} "
+               f"{'lane':<16} {'score':>7} {'run':<8} {'commit':<10} {'sig':<18}")
+        print(hdr)
+        print("-" * len(hdr))
+        for p in fast_pairs:
+            s_tok = f"{p['s_token']}({(p['s_mint_prefix'] or (p['s_mint'] or '')[:8])[:8]})"
+            sf    = (p["s_fee100"] or 0.0) * 100
+            bf    = (p["b_fee100"] or 0.0) * 100
+            delta = sf - bf
+            s_exit = p["s_exit_eff"] or p["s_exit"] or "?"
+            b_exit = p["b_exit_eff"] or p["b_exit"] or "?"
+            commit_s = str(p["s_commit"] or "")[:8]
+            sig_s    = str(p["s_sig"]   or "")[:16]
+            run_s    = str(p["s_run"]   or "")[:8]
+            print(f"  {str(p['s_entered'] or '')[:19]:<20} {s_tok:<18} {str(p['b_token'] or ''):<12} "
+                  f"{(p['s_dur'] or 0):>6.1f} {(p['s_polls'] or 0):>5} {s_exit:<10} {b_exit:<10} "
+                  f"{sf:>+8.4f}% {bf:>+8.4f}% {delta:>+8.4f}% "
+                  f"{str(p['s_lane'] or ''):<16} {(p['s_score'] or 0):>7.3f} "
+                  f"{run_s:<8} {commit_s:<10} {sig_s:<18}")
 
     # ── FAST DIAGNOSTICS TABLE ──────────────────────────────────────────────────
     if n_fast > 0:

@@ -426,41 +426,31 @@ if mode in ("mini", "decision"):
     # All rows that have any MFE data
     pairs_with_mfe_all = [p for p in pairs if p["s_mfe"] is not None]
     # Exclude pre-fix rows: max_price_seen < entry_price_usd means MFE init bug
-    # Also exclude price_mismatch=1 rows (DEX price vs Jupiter diverged at entry)
-    pairs_with_mfe = [
-        p for p in pairs_with_mfe_all
-        if not (
+    def _is_prefix_bug(p):
+        return (
             p["s_max_price"] is not None
             and p["s_entry_price"] is not None
             and p["s_entry_price"] > 0
             and p["s_max_price"] < p["s_entry_price"]
         )
-        and not p["s_price_mm"]
-    ]
-    n_mfe_total = len(pairs_with_mfe_all)
-    n_mfe_excl_prefix = sum(
-        1 for p in pairs_with_mfe_all
-        if p["s_max_price"] is not None
-        and p["s_entry_price"] is not None
-        and p["s_entry_price"] > 0
-        and p["s_max_price"] < p["s_entry_price"]
-    )
-    n_mfe_excl_mm = sum(1 for p in pairs_with_mfe_all if p["s_price_mm"])
-    n_mfe_excl  = n_mfe_total - len(pairs_with_mfe)
-    n_mfe       = len(pairs_with_mfe)
+    # All-rows set: exclude only pre-fix bug rows (keep price_mismatch rows)
+    pairs_with_mfe_all_rows = [p for p in pairs_with_mfe_all if not _is_prefix_bug(p)]
+    # No-mismatch set: also exclude price_mismatch=1 rows
+    pairs_with_mfe = [p for p in pairs_with_mfe_all_rows if not p["s_price_mm"]]
+    n_mfe_total      = len(pairs_with_mfe_all)
+    n_mfe_excl_prefix = sum(1 for p in pairs_with_mfe_all if _is_prefix_bug(p))
+    n_mfe_excl_mm    = sum(1 for p in pairs_with_mfe_all_rows if p["s_price_mm"])
+    n_mfe_all_rows   = len(pairs_with_mfe_all_rows)
+    n_mfe            = len(pairs_with_mfe)
     if n_mfe_total == 0:
         print("  No MFE/MAE data yet (requires v1.17+ trades; columns are NULL for older rows).")
         print("  Once v1.18 is deployed and trades close, this section will populate.")
     else:
-        excl_parts = []
-        if n_mfe_excl_prefix:
-            excl_parts.append(f"{n_mfe_excl_prefix} pre-fix (max_price < entry)")
-        if n_mfe_excl_mm:
-            excl_parts.append(f"{n_mfe_excl_mm} price_mismatch")
-        excl_note = f"  (excluded: {', '.join(excl_parts)})" if excl_parts else ""
-        print(f"  mfe_valid_n / total_n : {n_mfe} / {n_mfe_total}{excl_note}")
-        if n_mfe == 0:
-            print("  All MFE rows are excluded. No valid data to aggregate yet.")
+        excl_note = f"  ({n_mfe_excl_prefix} pre-fix excluded)" if n_mfe_excl_prefix else ""
+        print(f"  all_rows n / total_n  : {n_mfe_all_rows} / {n_mfe_total}{excl_note}")
+        print(f"  no_mismatch n         : {n_mfe} ({n_mfe_excl_mm} price_mismatch rows excluded)")
+        if n_mfe_all_rows == 0:
+            print("  All MFE rows are excluded (pre-fix bug). No valid data to aggregate yet.")
     if n_mfe > 0:
         # Proof table: 5 sample trades showing price path
         proof_rows = [p for p in pairs_with_mfe if p["s_max_price"] is not None][:5]
@@ -478,61 +468,46 @@ if mode in ("mini", "decision"):
                 tok2 = f"{p['s_token']}({mp2})"
                 print(f"    {p['s_id'][:8]:<10} {tok2:<18} {ep:>12.8f} {mxp:>12.8f} {mnp:>12.8f} {mfe_chk:>7.4f}% {mae_chk:>7.4f}%")
             print(f"    Formula: MFE = max_price/entry_price - 1  |  MAE = min_price/entry_price - 1")
-        print(f"\n  AGGREGATE ({n_mfe} pairs):")
-        fee_floors = []
-        mfe_pcts = []
-        mae_pcts = []
-        mfe_net_dex_pcts = []
-        mfe_net_fee100_pcts = []
-        mfe_above_floor_025 = 0
-        mfe_above_floor_100 = 0
-        for p in pairs_with_mfe:
-            rt_dec = p["s_rt"] if p["s_rt"] is not None else 0.005
-            fee_floor = rt_dec * 100 + 1.00   # % units
-            mfe = (p["s_mfe"] or 0.0) * 100
-            mae = (p["s_mae"] or 0.0) * 100
-            fee_floors.append(fee_floor)
-            mfe_pcts.append(mfe)
-            mae_pcts.append(mae)
-            # MFE_net vs two floors (from stored columns if available, else compute)
-            if p["s_mfe_net_dex"] is not None:
-                mfe_net_dex_pcts.append(p["s_mfe_net_dex"] * 100)
-            else:
-                mfe_net_dex_pcts.append(mfe - (rt_dec * 100 + 0.60))
-            if p["s_mfe_net_fee100"] is not None:
-                mfe_net_fee100_pcts.append(p["s_mfe_net_fee100"] * 100)
-            else:
-                mfe_net_fee100_pcts.append(mfe - fee_floor)
-            if mfe >= fee_floor + 0.25:
-                mfe_above_floor_025 += 1
-            if mfe >= fee_floor + 1.00:
-                mfe_above_floor_100 += 1
-        avg_fee_floor       = sum(fee_floors) / len(fee_floors)
-        avg_mfe             = sum(mfe_pcts) / len(mfe_pcts)
-        avg_mae             = sum(mae_pcts) / len(mae_pcts)
-        avg_mfe_net_dex     = sum(mfe_net_dex_pcts) / len(mfe_net_dex_pcts)
-        avg_mfe_net_fee100  = sum(mfe_net_fee100_pcts) / len(mfe_net_fee100_pcts)
-        print(f"  avg fee_floor (RT+1%)          : {avg_fee_floor:+.4f}%")
-        print(f"  avg MFE gross (strategy leg)   : {avg_mfe:+.4f}%")
-        print(f"  avg MAE gross (strategy leg)   : {avg_mae:+.4f}%")
-        print(f"  avg MFE_net vs DEX floor (RT+0.6%): {avg_mfe_net_dex:+.4f}%")
-        print(f"  avg MFE_net vs fee100 floor (RT+1%): {avg_mfe_net_fee100:+.4f}%")
-        print(f"  % MFE >= floor+0.25%           : {100*mfe_above_floor_025/n_mfe:.1f}%  ({mfe_above_floor_025}/{n_mfe})")
-        print(f"  % MFE >= floor+1.00%           : {100*mfe_above_floor_100/n_mfe:.1f}%  ({mfe_above_floor_100}/{n_mfe})")
-        print(f"\n  MFE/MAE by lane (strategy leg):")
-        lane_mfe_map = {}
-        for p in pairs_with_mfe:
-            lane = p["s_lane"] or "unknown"
-            mfe = (p["s_mfe"] or 0.0) * 100
-            mae = (p["s_mae"] or 0.0) * 100
-            if lane not in lane_mfe_map:
-                lane_mfe_map[lane] = {"mfe": [], "mae": []}
-            lane_mfe_map[lane]["mfe"].append(mfe)
-            lane_mfe_map[lane]["mae"].append(mae)
-        for lane, vals in sorted(lane_mfe_map.items(), key=lambda x: -len(x[1]["mfe"])):
-            avg_m = sum(vals["mfe"]) / len(vals["mfe"])
-            avg_a = sum(vals["mae"]) / len(vals["mae"])
-            print(f"    {lane:<28} n={len(vals['mfe']):>3}  avg_MFE={avg_m:+.4f}%  avg_MAE={avg_a:+.4f}%")
+        # Helper to compute and print aggregate stats for a given set of pairs
+        def _print_mfe_aggregate(label: str, pset: list):
+            if not pset:
+                print(f"  {label}: no data")
+                return
+            ff, mfe_p, mae_p, mfe_nd, mfe_nf = [], [], [], [], []
+            above_025 = above_100 = 0
+            for p in pset:
+                rt_dec = p["s_rt"] if p["s_rt"] is not None else 0.005
+                fee_floor = rt_dec * 100 + 1.00
+                mfe = (p["s_mfe"] or 0.0) * 100
+                mae = (p["s_mae"] or 0.0) * 100
+                ff.append(fee_floor); mfe_p.append(mfe); mae_p.append(mae)
+                mfe_nd.append(p["s_mfe_net_dex"] * 100 if p["s_mfe_net_dex"] is not None else mfe - (rt_dec * 100 + 0.60))
+                mfe_nf.append(p["s_mfe_net_fee100"] * 100 if p["s_mfe_net_fee100"] is not None else mfe - fee_floor)
+                if mfe >= fee_floor + 0.25: above_025 += 1
+                if mfe >= fee_floor + 1.00: above_100 += 1
+            n = len(pset)
+            print(f"\n  AGGREGATE — {label} ({n} pairs):")
+            print(f"  avg fee_floor (RT+1%)          : {sum(ff)/n:+.4f}%")
+            print(f"  avg MFE gross (strategy leg)   : {sum(mfe_p)/n:+.4f}%")
+            print(f"  avg MAE gross (strategy leg)   : {sum(mae_p)/n:+.4f}%")
+            print(f"  avg MFE_net vs DEX floor (RT+0.6%): {sum(mfe_nd)/n:+.4f}%")
+            print(f"  avg MFE_net vs fee100 floor (RT+1%): {sum(mfe_nf)/n:+.4f}%")
+            print(f"  % MFE >= floor+0.25%           : {100*above_025/n:.1f}%  ({above_025}/{n})")
+            print(f"  % MFE >= floor+1.00%           : {100*above_100/n:.1f}%  ({above_100}/{n})")
+            print(f"  MFE/MAE by lane (strategy leg):")
+            lane_map: dict = {}
+            for p in pset:
+                ln = p["s_lane"] or "unknown"
+                lane_map.setdefault(ln, {"mfe": [], "mae": []})
+                lane_map[ln]["mfe"].append((p["s_mfe"] or 0.0) * 100)
+                lane_map[ln]["mae"].append((p["s_mae"] or 0.0) * 100)
+            for ln, vals in sorted(lane_map.items(), key=lambda x: -len(x[1]["mfe"])):
+                print(f"    {ln:<28} n={len(vals['mfe']):>3}  avg_MFE={sum(vals['mfe'])/len(vals['mfe']):+.4f}%  avg_MAE={sum(vals['mae'])/len(vals['mae']):+.4f}%")
+
+        if n_mfe_all_rows > 0:
+            _print_mfe_aggregate("ALL ROWS (incl. price_mismatch)", pairs_with_mfe_all_rows)
+        if n_mfe > 0:
+            _print_mfe_aggregate("NO MISMATCH (price_mismatch=0)", pairs_with_mfe)
 
     # ── SECTION 6: SCORE MONOTONICITY ───────────────────────────────────────────────
     print("\n6) SCORE MONOTONICITY (entry_score terciles)")

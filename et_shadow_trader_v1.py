@@ -8,9 +8,13 @@ v1.19 additions (2026-02-26):
     baseline (if still open) is immediately closed with exit_reason_effective=
     'forced_pair_close'. forced_close=1 stored in DB. Baseline's own exit_reason
     is preserved; effective reason used in report display.
-  - Price sanity check: entry_jup_implied_price stored at open (derived from
-    get_jupiter_rt_estimate mid-price). If |entry_price_usd / jup_implied - 1| > 2%,
-    price_mismatch=1 is set and trade is excluded from analysis sections.
+  - Price sanity check (corrected): native-to-native comparison at open.
+    dex_price_native (SOL/token from DexScreener priceNative) vs
+    jup_exec_price_native = (inAmount_lamports/1e9) / (outAmount_raw/10^decimals_est).
+    jup_exec_vs_dex_pct = jup_exec_price_native/dex_price_native - 1.
+    price_mismatch=1 if |jup_exec_vs_dex_pct| > 2% AND lane=large_cap_ray.
+    Route identity (label, ammKey, contextSlot) logged on mismatch.
+    entry_jup_implied_price column now stores jup_exec_price_native (SOL/token).
 
 v1.18 additions (2026-02-26):
   - MFE/MAE correctness: _mfe_mae now stores entry_price, max_price_seen, min_price_seen
@@ -508,8 +512,8 @@ def init_tables():
         ("poll_count",         "INTEGER"),# number of check_exits polls during hold
         ("forced_close",       "INTEGER"),# 1 if baseline was force-closed by strategy exit
         ("exit_reason_effective", "TEXT"),# 'forced_pair_close' for forced baseline, else = exit_reason
-        ("entry_jup_implied_price", "REAL"),# Jupiter mid-price at entry for sanity check
-        ("price_mismatch",     "INTEGER"),# 1 if |entry_price/jup_implied - 1| > 0.02
+        ("entry_jup_implied_price", "REAL"),# Jupiter exec priceNative (SOL/token) at entry — native-to-native check
+        ("price_mismatch",     "INTEGER"),# 1 if |jup_exec_native/dex_native - 1| > 2% AND lane=large_cap_ray
     ]:
         try:
             c.execute(f"ALTER TABLE shadow_trades_v1 ADD COLUMN {col} {coltype}")
@@ -1029,8 +1033,9 @@ def get_jupiter_rt_estimate(
 ) -> "float | None | tuple":
     """
     Returns total RT friction fraction (e.g. 0.008 = 0.8%) or None if no route.
-    If return_price=True, returns (rt_fraction, jup_implied_price_usd) or (None, None).
-    jup_implied_price_usd is derived from outAmount/inAmount * SOL_USD_price.
+    If return_price=True, returns (rt_fraction, jup_quote_data) or (None, None).
+    jup_quote_data is a dict with keys: inAmount (lamports), outAmount (raw token units),
+    route_label, amm_key, context_slot — used by caller for native-to-native price comparison.
     Pool-type aware:
       cpamm_valid=True  → CPAMM math fallback when Jupiter unavailable
       cpamm_valid=False → return None when Jupiter unavailable (CLMM/DLMM: wrong math)
@@ -1077,11 +1082,18 @@ def get_jupiter_rt_estimate(
                 )
                 rt_final = max(rt_pct, 0.0)
                 if return_price:
-                    # jup_implied_price = DEX price adjusted by Jupiter one-way impact.
-                    # This is the effective buy price Jupiter sees vs what DexScreener shows.
-                    # Stored so caller can flag |dex_price / jup_implied - 1| > 2% as mismatch.
-                    # impact is already a fraction (e.g. 0.003 = 0.3%)
-                    return rt_final, impact  # caller computes jup_implied = entry_price*(1-impact)
+                    # Return raw quote amounts + route identity for native-to-native price check.
+                    # Caller computes: jup_exec_price_native = (inAmount/1e9) / (outAmount/10^decimals)
+                    # and compares to DexScreener priceNative (SOL per token).
+                    swap_info = route_plan[0].get("swapInfo", {}) if route_plan else {}
+                    jup_quote_data = {
+                        "inAmount":     int(data.get("inAmount") or sol_in_lamports),
+                        "outAmount":    int(data.get("outAmount") or 0),
+                        "route_label":  swap_info.get("label", "?"),
+                        "amm_key":      swap_info.get("ammKey", "?"),
+                        "context_slot": int(data.get("contextSlot") or 0),
+                    }
+                    return rt_final, jup_quote_data
                 return rt_final
         except requests.exceptions.Timeout:
             logger.debug(f"Jupiter timeout for {mint[:8]}")
@@ -1292,7 +1304,7 @@ def _check_tradeable(row: dict) -> tuple[bool, str]:
 def maybe_fire_rank_entry(strategy: str, all_rows: list[dict], score_fn) -> str | None:
     """
     v1.12: Build tradeable set E, require |E|>=2, pick strategy=top-score,
-    baseline=random from E\{strategy}. Open both atomically.
+    baseline=random from E\\{strategy}. Open both atomically.
     Writes selection_tick_log heartbeat every interval regardless of outcome.
     """
     if not SCORE_RANK_ENABLED:
@@ -1576,26 +1588,51 @@ def open_trade(strategy: str, row: dict, baseline_trigger_id: str | None = None,
     liq_b_for_jup  = row.get("liq_base") or 0
     liq_q_for_jup  = row.get("liq_quote_sol") or 0
     cpamm_valid    = bool(row.get("cpamm_valid_flag", 1))  # default True if field missing
-    # v1.19: request impact alongside RT so we can compute jup_implied_price for sanity check
+    # v1.19 (corrected): request raw quote data for native-to-native price mismatch check
     jup_result = get_jupiter_rt_estimate(mint, liq_b_for_jup, liq_q_for_jup, cpamm_valid=cpamm_valid, return_price=True)
     if isinstance(jup_result, tuple):
-        jup_rt, jup_impact = jup_result
+        jup_rt, jup_quote_data = jup_result
     else:
-        jup_rt, jup_impact = jup_result, None  # fallback: shouldn't happen with return_price=True
+        jup_rt, jup_quote_data = jup_result, None  # fallback: shouldn't happen with return_price=True
     if jup_rt is None:
         logger.info(f"SKIP {strategy} {mint[:8]}: no Jupiter route")
         return None
     if jup_rt > FRICTION_GATE_MAX_RT:
         logger.info(f"SKIP {strategy} {mint[:8]}: Jupiter RT {jup_rt*100:.2f}% > gate {FRICTION_GATE_MAX_RT*100:.1f}%")
         return None
-    # v1.19: compute jup_implied_price and price_mismatch flag
-    entry_price_dex = row.get("price_usd") or 0
-    if jup_impact is not None and entry_price_dex > 0:
-        jup_implied_price = entry_price_dex * (1.0 - jup_impact)  # effective buy price after impact
-        price_mismatch_flag = 1 if abs(entry_price_dex / jup_implied_price - 1.0) > 0.02 else 0
-    else:
-        jup_implied_price = None
-        price_mismatch_flag = 0
+    # v1.19 (corrected): native-to-native price mismatch check
+    # Compare DexScreener priceNative (SOL per token) vs Jupiter execution priceNative.
+    # Jupiter exec price: (inAmount_lamports / 1e9) / (outAmount_raw / 10^decimals)
+    # We infer decimals from the ratio: decimals = round(log10(outAmount / (inAmount/1e9) / dex_price_native))
+    # This avoids any extra API call and is self-consistent with the quote.
+    dex_price_native = row.get("price_native") or 0  # SOL per token from DexScreener
+    jup_exec_price_native = None
+    jup_exec_vs_dex_pct   = None
+    price_mismatch_flag   = 0
+    jup_implied_price     = None  # kept for DB column (now stores jup_exec_price_native)
+    if jup_quote_data is not None and dex_price_native > 0:
+        in_sol  = jup_quote_data["inAmount"] / 1e9
+        out_raw = jup_quote_data["outAmount"]
+        if out_raw > 0 and in_sol > 0:
+            import math
+            # Infer token decimals from the ratio of raw outAmount to expected token amount
+            raw_ratio = out_raw / in_sol  # raw units per SOL
+            dex_units_per_sol = 1.0 / dex_price_native  # expected token units per SOL
+            decimals_est = round(math.log10(raw_ratio / dex_units_per_sol)) if dex_units_per_sol > 0 else 6
+            decimals_est = max(0, min(decimals_est, 18))  # clamp to sane range
+            jup_exec_price_native = in_sol / (out_raw / (10 ** decimals_est))  # SOL per token
+            jup_exec_vs_dex_pct   = (jup_exec_price_native / dex_price_native - 1.0)
+            jup_implied_price      = jup_exec_price_native  # store in existing DB column
+            # Flag mismatch only for large_cap_ray (most liquid; clearest signal)
+            if lane == "large_cap_ray" and abs(jup_exec_vs_dex_pct) > 0.02:
+                price_mismatch_flag = 1
+                logger.info(
+                    f"PRICE_MISMATCH {strategy} {row.get('token_symbol','?')} ({mint[:8]}): "
+                    f"dex_native={dex_price_native:.8f} jup_exec_native={jup_exec_price_native:.8f} "
+                    f"delta={jup_exec_vs_dex_pct*100:+.2f}% "
+                    f"route={jup_quote_data['route_label']} amm={jup_quote_data['amm_key'][:12]} "
+                    f"slot={jup_quote_data['context_slot']}"
+                )
 
     liq_b = row.get("liq_base") or 0
     liq_q = row.get("liq_quote_sol") or 0
@@ -1663,15 +1700,23 @@ def open_trade(strategy: str, row: dict, baseline_trigger_id: str | None = None,
     # Store adaptive thresholds in memory for fast exit checking
     _adaptive_thresholds[trade_id] = {"sl_pct": entry_sl, "tp_pct": entry_tp}
 
+    _price_mm_note = (
+        f" jup_vs_dex={jup_exec_vs_dex_pct*100:+.2f}% mm={price_mismatch_flag}"
+        if jup_exec_vs_dex_pct is not None else ""
+    )
     logger.info(
         f"OPEN {strategy} {row.get('token_symbol','?')} ({mint[:8]}...) "
         f"lane={lane} age={age_h:.1f}h liq=${liq_usd:,.0f} "
         f"jup_rt={jup_rt*100:.2f}% cpamm_rt={rt['total_friction']*100:.2f}% "
-        f"SL={entry_sl:+.2f}% TP={entry_tp:+.2f}% rv5m={rv5m_entry:.4f}%" if rv5m_entry else
+        f"SL={entry_sl:+.2f}% TP={entry_tp:+.2f}% rv5m={rv5m_entry:.4f}%"
+        + _price_mm_note
+        + (f" [triggered_by={baseline_trigger_id[:8]}]" if baseline_trigger_id else "")
+        if rv5m_entry else
         f"OPEN {strategy} {row.get('token_symbol','?')} ({mint[:8]}...) "
         f"lane={lane} age={age_h:.1f}h liq=${liq_usd:,.0f} "
         f"jup_rt={jup_rt*100:.2f}% cpamm_rt={rt['total_friction']*100:.2f}% "
         f"SL={entry_sl:+.2f}% TP={entry_tp:+.2f}% rv5m=warmup"
+        + _price_mm_note
         + (f" [triggered_by={baseline_trigger_id[:8]}]" if baseline_trigger_id else "")
     )
     return trade_id

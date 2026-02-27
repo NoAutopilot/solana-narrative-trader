@@ -556,35 +556,37 @@ if mode in ("mini", "decision"):
         scores_sorted = sorted(p["s_score"] for p in pairs_with_score)
         t1 = scores_sorted[len(scores_sorted) // 3]
         t2 = scores_sorted[2 * len(scores_sorted) // 3]
-        buckets = {"low": [], "mid": [], "high": []}
+        buckets      = {"low": [], "mid": [], "high": []}
+        bucket_strat  = {"low": [], "mid": [], "high": []}  # strategy_fee100
+        bucket_base   = {"low": [], "mid": [], "high": []}  # baseline_fee100
         for p in pairs_with_score:
             sc = p["s_score"]
             sf = (p["s_fee100"] or 0.0) * 100
             bf = (p["b_fee100"] or 0.0) * 100
             delta = sf - bf
-            if sc <= t1:
-                buckets["low"].append(delta)
-            elif sc <= t2:
-                buckets["mid"].append(delta)
-            else:
-                buckets["high"].append(delta)
+            bkt = "low" if sc <= t1 else ("mid" if sc <= t2 else "high")
+            buckets[bkt].append(delta)
+            bucket_strat[bkt].append(sf)
+            bucket_base[bkt].append(bf)
         n_low  = len(buckets["low"])
         n_mid  = len(buckets["mid"])
         n_high = len(buckets["high"])
         print(f"  Score range: [{min(scores_sorted):.4f}, {max(scores_sorted):.4f}]")
         print(f"  Tercile thresholds: t1={t1:.4f}  t2={t2:.4f}")
         print(f"  Bucket counts: n_low={n_low}  n_mid={n_mid}  n_high={n_high}  (total={n_low+n_mid+n_high})")
-        print(f"  {'bucket':<8} {'n':>4} {'avg_delta_fee100%':>18} {'%delta>0':>10}")
+        print(f"  {'bucket':<8} {'n':>4} {'avg_strat_f100%':>16} {'avg_base_f100%':>16} {'avg_delta_f100%':>16} {'%delta>0':>10}")
         avgs = []
         for bucket in ["low", "mid", "high"]:
             ds = buckets[bucket]
             if ds:
-                avg = sum(ds) / len(ds)
-                ppos = 100 * sum(1 for x in ds if x > 0) / len(ds)
-                print(f"  {bucket:<8} {len(ds):>4} {avg:>17.4f}% {ppos:>9.1f}%")
+                avg   = sum(ds) / len(ds)
+                s_avg = sum(bucket_strat[bucket]) / len(bucket_strat[bucket])
+                b_avg = sum(bucket_base[bucket])  / len(bucket_base[bucket])
+                ppos  = 100 * sum(1 for x in ds if x > 0) / len(ds)
+                print(f"  {bucket:<8} {len(ds):>4} {s_avg:>+15.4f}% {b_avg:>+15.4f}% {avg:>+15.4f}% {ppos:>9.1f}%")
                 avgs.append(avg)
             else:
-                print(f"  {bucket:<8} {0:>4} {'N/A':>17}")
+                print(f"  {bucket:<8} {0:>4} {'N/A':>15} {'N/A':>15} {'N/A':>15}")
                 avgs.append(float("nan"))
         if len(avgs) == 3 and all(not (a != a) for a in avgs):
             if avgs[0] < avgs[1] < avgs[2]:
@@ -862,6 +864,7 @@ if mode == "decision":
             f"duration_sec, poll_count, "
             f"entry_rv5m, entry_r_m5, entry_buy_count_ratio, entry_vol_accel, "
             f"entry_jup_rt_pct, entry_price_native, entry_jup_implied_price, price_mismatch, "
+            f"jup_price_unit_native_ok, "
             f"exit_reason, gross_pnl_pct, shadow_pnl_pct_fee100, "
             f"baseline_trigger_id "
             f"FROM shadow_trades_v1 "
@@ -869,10 +872,14 @@ if mode == "decision":
             f"AND strategy NOT LIKE 'baseline%' AND duration_sec < 60 AND status='closed'",
             fast_mints + fast_run_ids
         ).fetchall()
+        n_fast_native_ok = sum(1 for fr in fast_rows
+                               if fr["jup_price_unit_native_ok"] == 1)
+        print(f"  FAST rows with jup_price_unit_native_ok=1: {n_fast_native_ok}/{len(fast_rows)}")
+        print(f"  (mm_pct analysis below is only meaningful for native_ok=1 rows)")
         # Print header
         print(f"  {'#':<3} {'token(mint)':<18} {'lane':<16} {'score':>7} {'dur_s':>6} {'polls':>5} "
               f"{'rv5m':>7} {'r_m5':>7} {'buy_r':>7} {'vol_ac':>7} "
-              f"{'jup_rt':>7} {'dex_nat':>12} {'jup_nat':>12} {'mm_pct':>8} {'mm':>3} "
+              f"{'jup_rt':>7} {'dex_nat':>12} {'jup_nat':>12} {'mm_pct':>8} {'mm':>3} {'nat':>4} "
               f"{'exit':<8} {'gross%':>8} {'f100%':>8} {'delta%':>8}")
         print("-" * 155)
         for i, fr in enumerate(fast_rows, 1):
@@ -890,18 +897,52 @@ if mode == "decision":
             else:
                 mm_pct_str = "N/A"
             tok_disp = f"{fr['token_symbol']}({(fr['mint_prefix'] or fr['mint_address'] or '')[:8]})"
+            nat_ok = fr["jup_price_unit_native_ok"] if "jup_price_unit_native_ok" in fr.keys() else None
+            nat_str = str(nat_ok) if nat_ok is not None else "?"
             print(f"  {i:<3} {tok_disp:<18} {(fr['lane'] or '?'):<16} "
                   f"{(fr['entry_score'] or 0):>7.3f} {(fr['duration_sec'] or 0):>6.1f} {(fr['poll_count'] or 0):>5} "
                   f"{(fr['entry_rv5m'] or 0)*100:>6.3f}% {(fr['entry_r_m5'] or 0):>7.3f} "
                   f"{(fr['entry_buy_count_ratio'] or 0):>7.4f} {(fr['entry_vol_accel'] or 0):>7.4f} "
                   f"{(fr['entry_jup_rt_pct'] or 0)*100:>6.3f}% "
                   f"{(dex_nat or 0):.4e} {(jup_nat or 0):.4e} "
-                  f"{mm_pct_str:>8} {(fr['price_mismatch'] or 0):>3} "
+                  f"{mm_pct_str:>8} {(fr['price_mismatch'] or 0):>3} {nat_str:>4} "
                   f"{(fr['exit_reason'] or '?'):<8} {(fr['gross_pnl_pct'] or 0)*100:>+7.4f}% "
                   f"{(fr['shadow_pnl_pct_fee100'] or 0)*100:>+7.4f}% {delta_str:>8}")
         print()
         print("  NOTE: rv_1m and range_5m not stored in DB — use entry_rv5m as proxy.")
         print("  NOTE: entry_jup_implied_price = jup_exec_price_native (SOL/token) post v1.19 fix.")
 
+# ── n=50 VERDICT GRID ────────────────────────────────────────────────────────
+if n_pairs >= 50:
+    print("\n" + "=" * 70)
+    print("n=50 VERDICT GRID")
+    print("=" * 70)
+    # Recompute needed values
+    full_deltas   = [(p["s_fee100"] or 0.0)*100 - (p["b_fee100"] or 0.0)*100 for p in pairs]
+    nf_pairs_v    = [p for p in pairs if not (isinstance(p["s_dur"], (int, float)) and p["s_dur"] < 60)]
+    nf_deltas_v   = [(p["s_fee100"] or 0.0)*100 - (p["b_fee100"] or 0.0)*100 for p in nf_pairs_v]
+    full_ci_lo, full_ci_hi = bootstrap_ci(full_deltas)
+    nf_ci_lo,   nf_ci_hi   = bootstrap_ci(nf_deltas_v) if len(nf_deltas_v) >= 3 else (float("nan"), float("nan"))
+    # High-score bucket strategy_fee100
+    pairs_with_score_v = [p for p in pairs if p["s_score"] is not None]
+    high_strat_pos = False
+    if len(pairs_with_score_v) >= 6:
+        sv = sorted(p["s_score"] for p in pairs_with_score_v)
+        t2v = sv[2 * len(sv) // 3]
+        high_bucket = [p for p in pairs_with_score_v if p["s_score"] > t2v]
+        if high_bucket:
+            high_strat_mean = sum((p["s_fee100"] or 0.0)*100 for p in high_bucket) / len(high_bucket)
+            high_strat_pos = high_strat_mean > 0
+        else:
+            high_strat_mean = float("nan")
+    else:
+        high_strat_mean = float("nan")
+    def yn(cond): return "YES ✓" if cond else "NO  ✗"
+    print(f"  {'Criterion':<45} {'Result':<10} {'Detail'}")
+    print("-" * 70)
+    print(f"  {'Δ_fee100 CI > 0 (full sample)':<45} {yn(full_ci_lo > 0):<10} CI=[{full_ci_lo:+.2f}%, {full_ci_hi:+.2f}%]")
+    print(f"  {'Δ_fee100 CI > 0 (no-FAST)':<45} {yn(nf_ci_lo > 0):<10} CI=[{nf_ci_lo:+.2f}%, {nf_ci_hi:+.2f}%]")
+    print(f"  {'strategy_fee100 > 0 (high-score bucket)':<45} {yn(high_strat_pos):<10} avg={high_strat_mean:+.4f}%")
+    print("=" * 70)
 print("\n" + "=" * 70)
 conn.close()

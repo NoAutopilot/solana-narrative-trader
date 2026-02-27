@@ -543,6 +543,7 @@ def init_tables():
         ("exit_reason_effective", "TEXT"),# 'forced_pair_close' for forced baseline, else = exit_reason
         ("entry_jup_implied_price", "REAL"),# Jupiter exec priceNative (SOL/token) at entry — native-to-native check
         ("price_mismatch",     "INTEGER"),# 1 if |jup_exec_native/dex_native - 1| > 2% AND lane=large_cap_ray
+        ("jup_price_unit_native_ok", "INTEGER"),# 1 = native-to-native method used (real decimals, direction enforced); 0 = pre-fix or fallback
     ]:
         try:
             c.execute(f"ALTER TABLE shadow_trades_v1 ADD COLUMN {col} {coltype}")
@@ -1895,10 +1896,11 @@ def open_trade(strategy: str, row: dict, baseline_trigger_id: str | None = None,
     from decimal import Decimal
     import time as _time
     dex_price_native  = float(row.get("price_native") or 0.0)  # SOL per token from DexScreener
-    jup_exec_price_native = None
-    jup_exec_vs_dex_pct   = None
-    price_mismatch_flag   = 0
-    jup_implied_price     = None  # kept for DB column (now stores jup_exec_price_native)
+    jup_exec_price_native    = None
+    jup_exec_vs_dex_pct      = None
+    price_mismatch_flag      = 0
+    jup_implied_price        = None  # kept for DB column (now stores jup_exec_price_native)
+    jup_price_unit_native_ok = 0     # 1 = native-to-native method used with real decimals
     if jup_quote_data is not None and dex_price_native > 0:
         try:
             in_lamports  = int(jup_quote_data["inAmount"])   # Jupiter returns strings
@@ -1920,9 +1922,10 @@ def open_trade(strategy: str, row: dict, baseline_trigger_id: str | None = None,
                 in_sol     = Decimal(in_lamports) / Decimal(10**9)
                 out_tokens = Decimal(out_raw) / Decimal(10**decimals)
                 if out_tokens > 0:
-                    jup_exec_price_native = float(in_sol / out_tokens)  # SOL per token
-                    jup_exec_vs_dex_pct   = (jup_exec_price_native / dex_price_native) - 1.0
-                    jup_implied_price     = jup_exec_price_native
+                    jup_exec_price_native    = float(in_sol / out_tokens)  # SOL per token
+                    jup_exec_vs_dex_pct      = (jup_exec_price_native / dex_price_native) - 1.0
+                    jup_implied_price        = jup_exec_price_native
+                    jup_price_unit_native_ok = 1  # real decimals + direction enforced
                     # Flag mismatch only for large_cap_ray (most liquid; clearest signal)
                     if lane == "large_cap_ray" and abs(jup_exec_vs_dex_pct) > 0.02:
                         price_mismatch_flag = 1
@@ -1981,7 +1984,7 @@ def open_trade(strategy: str, row: dict, baseline_trigger_id: str | None = None,
          pool_type_at_entry, venue_at_entry, spam_flag_at_entry,
          entry_sl_pct, entry_tp_pct, entry_rv5m,
          run_id, git_commit, lane_at_entry, entry_score, mint_prefix,
-         entry_jup_implied_price, price_mismatch)
+         entry_jup_implied_price, price_mismatch, jup_price_unit_native_ok)
         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, (
         trade_id, strategy, mint,
@@ -2001,6 +2004,7 @@ def open_trade(strategy: str, row: dict, baseline_trigger_id: str | None = None,
         round(entry_sl, 4), round(entry_tp, 4), round(rv5m_entry, 6) if rv5m_entry else None,
         _RUN_ID, _GIT_COMMIT, lane, entry_score, mint[:8],
         round(jup_implied_price, 8) if jup_implied_price else None, price_mismatch_flag,
+        jup_price_unit_native_ok,
     ))
     conn.commit()
     conn.close()

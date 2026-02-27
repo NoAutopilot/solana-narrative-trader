@@ -325,7 +325,7 @@ print("\n  CLOSED PAIRS BY SIGNATURE (split-sample check):")
 _sig_rows = conn.execute("""
     SELECT
         COALESCE(rr.signature, 'NULL') AS sig,
-        COALESCE(rr.git_commit, '?')   AS commit,
+        COALESCE(rr.git_commit, '?')   AS git_commit,
         COUNT(*) / 2.0                 AS approx_pairs_closed,
         MAX(st.exited_at)              AS last_exit
     FROM shadow_trades_v1 st
@@ -339,7 +339,7 @@ _sig_rows = conn.execute("""
 if _sig_rows:
     print(f"  {'sig':<18} {'commit':<10} {'approx_pairs':>13} {'last_exit':<22}")
     for _sr in _sig_rows:
-        print(f"  {str(_sr['sig'])[:18]:<18} {str(_sr['commit'])[:8]:<10} "
+        print(f"  {str(_sr['sig'])[:18]:<18} {str(_sr['git_commit'])[:8]:<10} "
               f"{_sr['approx_pairs_closed']:>13.1f} {str(_sr['last_exit'] or '')[:19]:<22}")
 else:
     print("  (no closed v1.19 trades found)")
@@ -566,8 +566,12 @@ if mode in ("mini", "decision"):
                 buckets["mid"].append(delta)
             else:
                 buckets["high"].append(delta)
+        n_low  = len(buckets["low"])
+        n_mid  = len(buckets["mid"])
+        n_high = len(buckets["high"])
         print(f"  Score range: [{min(scores_sorted):.4f}, {max(scores_sorted):.4f}]")
         print(f"  Tercile thresholds: t1={t1:.4f}  t2={t2:.4f}")
+        print(f"  Bucket counts: n_low={n_low}  n_mid={n_mid}  n_high={n_high}  (total={n_low+n_mid+n_high})")
         print(f"  {'bucket':<8} {'n':>4} {'avg_delta_fee100%':>18} {'%delta>0':>10}")
         avgs = []
         for bucket in ["low", "mid", "high"]:
@@ -733,6 +737,41 @@ if mode == "decision":
     else:
         verdict = "INCONCLUSIVE — CI crosses zero. Need more pairs or parameter review."
     print(f"  VERDICT         : {verdict}")
+
+    # ── No-FAST delta summary (exclude strategy duration_sec < 60s) ────────────
+    fast_pairs = [p for p in pairs if isinstance(p["s_dur"], (int, float)) and p["s_dur"] < 60]
+    nofast_pairs = [p for p in pairs if not (isinstance(p["s_dur"], (int, float)) and p["s_dur"] < 60)]
+    nofast_deltas = [
+        (p["s_fee100"] or 0.0) * 100 - (p["b_fee100"] or 0.0) * 100
+        for p in nofast_pairs
+    ]
+    n_fast = len(fast_pairs)
+    n_nofast = len(nofast_deltas)
+    print(f"\n  FAST EXITS (strategy duration_sec < 60s): {n_fast} of {n} pairs")
+    if n_fast > 0:
+        fast_tokens = ", ".join(p["s_token"] for p in fast_pairs)
+        print(f"  Fast tokens: {fast_tokens}")
+    if n_nofast >= 3:
+        nf_mean, nf_median, nf_pct_pos = summary_stats(nofast_deltas)
+        nf_ci_lo, nf_ci_hi = bootstrap_ci(nofast_deltas)
+        nf_trim_k = max(1, int(n_nofast * 0.10))
+        nf_trimmed = sorted(nofast_deltas)[nf_trim_k:-nf_trim_k] if n_nofast > 2 * nf_trim_k else nofast_deltas
+        nf_trimmed_mean = sum(nf_trimmed) / len(nf_trimmed) if nf_trimmed else float("nan")
+        if nf_ci_lo > 0:
+            nf_verdict = "POSITIVE EDGE"
+        elif nf_ci_hi < 0:
+            nf_verdict = "NEGATIVE EDGE"
+        else:
+            nf_verdict = "INCONCLUSIVE"
+        print(f"  NO-FAST SUMMARY (n={n_nofast})")
+        print(f"    mean delta    : {nf_mean:+.4f}%")
+        print(f"    median delta  : {nf_median:+.4f}%")
+        print(f"    trimmed mean  : {nf_trimmed_mean:+.4f}%  (n={len(nf_trimmed)})")
+        print(f"    %delta > 0    : {nf_pct_pos:.1f}%")
+        print(f"    95% CI        : [{nf_ci_lo:+.4f}%, {nf_ci_hi:+.4f}%]")
+        print(f"    VERDICT       : {nf_verdict}")
+    else:
+        print(f"  NO-FAST SUMMARY: only {n_nofast} pairs remain after excluding FAST — insufficient for CI.")
 
 print("\n" + "=" * 70)
 conn.close()

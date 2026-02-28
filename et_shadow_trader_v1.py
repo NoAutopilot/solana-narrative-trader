@@ -1,5 +1,18 @@
 #!/usr/bin/env python3
-""""et_shadow_trader_v1.py — ET v1 Paper Trading Harness (Playbook Edition) v1.20
+""""et_shadow_trader_v1.py — ET v1 Paper Trading Harness (Playbook Edition) v1.21
+
+v1.21 additions (2026-02-28):
+  - UNIVERSE SHIFT (new signature): widen ALLOWED_LANES to pumpfun_mature + mature_pumpswap.
+    large_cap_ray stays blocked. All other params FROZEN.
+  - mature_pumpswap: new lane for non-pump-origin tokens on pumpswap venue with age>=24h.
+    Classified in classify_lane() when venue contains 'pumpswap' but pumpfun_origin=0.
+    Applies same pf_stability gates as pumpfun_mature.
+  - pf_stability_counterfactual_log: new sidecar table.
+    Each tick, records the top pf_stability-blocked candidate (token, score, lane,
+    rv_5m, range_5m, sell_ratio_spike). Informational only — not traded.
+    Purpose: evaluate whether pf_stability is too strict without contaminating main run.
+  - Pre-registered evaluation at n=50: NO-FAST %mfe120>0 >= 25% AND CI lower > 0.
+    Lane-separated reporting: pumpfun_mature vs mature_pumpswap delta by lane.
 
 v1.20 additions (2026-02-27):
   - UNIVERSE SHIFT (new signature): restrict trading to pumpfun_mature only.
@@ -248,9 +261,10 @@ PF_MATURE_RANGE_MULT        = 3.0        # range_5m must be <= this * rv_5m
 # ── v1.20 UNIVERSE SHIFT ─────────────────────────────────────────────────────
 # ALLOWED_LANES: only lanes in this set are eligible for strategy entries.
 # None = allow all non-blocked lanes (legacy v1.19 behaviour).
-# v1.20: pumpfun_mature ONLY. large_cap_ray + non_pumpfun_mature BLOCKED.
+# v1.21: pumpfun_mature + mature_pumpswap. large_cap_ray + non_pumpfun_mature BLOCKED.
+# mature_pumpswap = non-pump-origin tokens on pumpswap venue, age>=24h.
 # This is the SOLE change in this signature — all other params frozen.
-ALLOWED_LANES: set | None = {"pumpfun_mature"}
+ALLOWED_LANES: set | None = {"pumpfun_mature", "mature_pumpswap"}
 
 # P1: Anti-chase filter — block ALL long entries when r_m5 > this cap.
 R_M5_CHASE_CAP              = 1.0        # % — skip entry if r_m5 > this
@@ -514,6 +528,27 @@ def init_tables():
                 c.execute(f"ALTER TABLE selection_tick_log ADD COLUMN {col} {ctype}")
             except Exception:
                 pass
+    # v1.21: pf_stability counterfactual sidecar log
+    try:
+        c.execute("""
+        CREATE TABLE IF NOT EXISTS pf_stability_counterfactual_log (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            logged_at       TEXT    NOT NULL,
+            run_id          TEXT,
+            token_symbol    TEXT,
+            mint_address    TEXT,
+            mint_prefix     TEXT,
+            lane            TEXT,
+            entry_score     REAL,
+            rv_5m           REAL,
+            range_5m        REAL,
+            sell_ratio_spike REAL,
+            block_reason    TEXT
+        )
+        """)
+        c.execute("CREATE INDEX IF NOT EXISTS idx_pfcf_at ON pf_stability_counterfactual_log(logged_at, run_id)")
+    except Exception:
+        pass
     try:
         c.execute("""
         CREATE TABLE IF NOT EXISTS filter_rejection_log (
@@ -1034,17 +1069,22 @@ def classify_lane(row: dict) -> str:
     """
     age_h     = row.get("age_hours") or 0
     pf_origin = row.get("pumpfun_origin") or 0
-
-    # Also treat pumpswap venue as pumpfun_origin if flag not set
     venue     = (row.get("venue") or "").lower()
     pool_type = (row.get("pool_type") or "").lower()
-    if "pumpswap" in venue or "pump" in pool_type:
-        pf_origin = 1
+    on_pumpswap = "pumpswap" in venue or "pumpswap" in pool_type
 
+    # pumpfun_origin=1 (native pump tokens) — always classified as pumpfun_*
     if pf_origin:
         return "pumpfun_mature" if age_h >= PF_MATURE_MIN_AGE_H else "pumpfun_early"
 
-    # Non-pump venues
+    # Non-pump-origin tokens that migrated to pumpswap venue (age>=24h) -> mature_pumpswap
+    # v1.21: this is a separate lane from pumpfun_mature, eligible in ALLOWED_LANES
+    if on_pumpswap and age_h >= PF_MATURE_MIN_AGE_H:
+        return "mature_pumpswap"
+    if on_pumpswap:
+        return "pumpfun_early"  # pumpswap but too young — block same as pumpfun_early
+
+    # Non-pump, non-pumpswap venues
     if age_h >= 24 * 30:  # 30 days
         return "large_cap_ray"
     return "non_pumpfun_mature"
@@ -1403,8 +1443,8 @@ def _check_tradeable(row: dict) -> tuple[bool, str]:
         is_risky, rug_reason = check_rug_risk(row, "pullback_score_rank")
         if is_risky:
             return False, f"rug:{rug_reason}"
-    # pumpfun_mature stability gates
-    if lane == "pumpfun_mature":
+    # pumpfun_mature and mature_pumpswap stability gates (same thresholds)
+    if lane in ("pumpfun_mature", "mature_pumpswap"):
         rv5m_check = row.get("rv_5m")
         if rv5m_check is None:
             return False, "pf_stability:rv5m_missing"
@@ -1511,7 +1551,7 @@ def _count_tradeable_without(all_rows: list[dict], skip_gate: str) -> int:
             is_risky, _ = check_rug_risk(row, "pullback_score_rank")
             if is_risky:
                 continue  # rug gate is never skipped
-        if lane == "pumpfun_mature" and skip_gate != "pf_stability":
+        if lane in ("pumpfun_mature", "mature_pumpswap") and skip_gate != "pf_stability":
             rv5m_check = row.get("rv_5m")
             if rv5m_check is None:
                 continue
@@ -1531,6 +1571,58 @@ def _count_tradeable_without(all_rows: list[dict], skip_gate: str) -> int:
             continue  # friction gate is never skipped
         count += 1
     return count
+
+
+def _log_pf_stability_counterfactual(eligible_rows: list[dict], score_fn) -> None:
+    """
+    v1.21: Each tick, find the highest-scoring token that is blocked ONLY by
+    pf_stability (rv5m or range_5m gate) and log it to pf_stability_counterfactual_log.
+    Informational only — never traded.
+    """
+    try:
+        # Score all eligible rows, find the top one blocked by pf_stability
+        candidates = []
+        for r in eligible_rows:
+            lane = classify_lane(r)
+            if lane not in ("pumpfun_mature", "mature_pumpswap"):
+                continue  # only pf_stability lanes are relevant
+            rv5m  = r.get("rv_5m")
+            range5m = r.get("range_5m")
+            sell_spike = r.get("sell_ratio_spike")
+            # Check if this token would pass all gates EXCEPT pf_stability
+            ok_no_pf, _ = _check_tradeable.__wrapped__(r) if hasattr(_check_tradeable, '__wrapped__') else (None, None)
+            # Simpler: check if pf_stability is the blocking reason
+            ok_full, reason_full = _check_tradeable(r)
+            if ok_full:
+                continue  # already tradeable, not a counterfactual
+            if not reason_full.startswith("pf_stability"):
+                continue  # blocked by something else
+            sc = score_fn(r)
+            candidates.append((sc, r, reason_full))
+        if not candidates:
+            return
+        candidates.sort(key=lambda x: x[0], reverse=True)
+        best_sc, best_r, best_reason = candidates[0]
+        sym   = best_r.get("token_symbol") or "?"
+        mint  = best_r.get("mint_address") or ""
+        mp    = best_r.get("mint_prefix") or mint[:8]
+        lane  = classify_lane(best_r)
+        rv5m  = best_r.get("rv_5m")
+        range5m = best_r.get("range_5m")
+        sell_spike = best_r.get("sell_ratio_spike")
+        now_iso = datetime.now(timezone.utc).isoformat()
+        conn = get_conn()
+        conn.execute("""
+            INSERT INTO pf_stability_counterfactual_log
+            (logged_at, run_id, token_symbol, mint_address, mint_prefix, lane,
+             entry_score, rv_5m, range_5m, sell_ratio_spike, block_reason)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (now_iso, _RUN_ID, sym, mint, mp, lane,
+               best_sc, rv5m, range5m, sell_spike, best_reason))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.debug(f"pf_stability_counterfactual_log insert failed: {e}")
 
 
 def maybe_fire_rank_entry(strategy: str, all_rows: list[dict], score_fn) -> str | None:
@@ -1587,6 +1679,11 @@ def maybe_fire_rank_entry(strategy: str, all_rows: list[dict], score_fn) -> str 
                 rej_counts["pf_stability"] += 1
             else:
                 rej_counts["friction"] += 1
+
+    # ── v1.21: pf_stability counterfactual sidecar log ──────────────────────────
+    # Each tick, find the top pf_stability-blocked candidate (by score) and log it.
+    # This is informational only — not traded.
+    _log_pf_stability_counterfactual(eligible_rows, score_fn)
 
     # ── Log diagnostics ────────────────────────────────────────────────────────
     if tradeable_set:
@@ -2087,8 +2184,9 @@ def _compute_run_signature() -> str:
         "lane_gate_min_vol_h1": LANE_GATE_MIN_VOL_H1,
         "lane_pumpfun_early": "BLOCKED",
         "lane_pumpfun_mature": f"rv5m<={PF_MATURE_RV5M_MAX}",
-        "lane_non_pumpfun_mature": "BLOCKED_v1.20",
-        "lane_large_cap_ray": "BLOCKED_v1.20",
+        "lane_non_pumpfun_mature": "BLOCKED_v1.21",
+        "lane_large_cap_ray": "BLOCKED_v1.21",
+        "lane_mature_pumpswap": f"rv5m<={PF_MATURE_RV5M_MAX}",
     }
     canonical = json.dumps(sig_params, sort_keys=True)
     return hashlib.sha256(canonical.encode()).hexdigest()[:16]
@@ -2111,7 +2209,8 @@ def _register_run():
         "pf_mature_rv5m_max": PF_MATURE_RV5M_MAX,
     })
     lane_gates = (f"pumpfun_early=BLOCKED pumpfun_mature=rv5m<={PF_MATURE_RV5M_MAX}% "
-                  f"non_pumpfun_mature=BLOCKED_v1.20 large_cap_ray=BLOCKED_v1.20 "
+                  f"mature_pumpswap=rv5m<={PF_MATURE_RV5M_MAX}% "
+                  f"non_pumpfun_mature=BLOCKED_v1.21 large_cap_ray=BLOCKED_v1.21 "
                   f"allowed_lanes={sorted(ALLOWED_LANES) if ALLOWED_LANES else 'ALL'} "
                   f"liq>={LANE_GATE_MIN_LIQ_USD} vol_h1>={LANE_GATE_MIN_VOL_H1}")
     sig = _compute_run_signature()
@@ -2122,10 +2221,10 @@ def _register_run():
             INSERT OR IGNORE INTO run_registry
             (run_id, git_commit, start_ts, mode, version, lane_gates, key_params, signature)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (_RUN_ID, _GIT_COMMIT, _dt.utcnow().isoformat(), MODE, "v1.20", lane_gates, key_params, sig))
+        """, (_RUN_ID, _GIT_COMMIT, _dt.utcnow().isoformat(), MODE, "v1.21", lane_gates, key_params, sig))
         conn.commit()
         conn.close()
-        logger.info(f"RUN_REGISTRY: registered run_id={_RUN_ID[:8]} version=v1.20 mode={MODE} signature={sig}")
+        logger.info(f"RUN_REGISTRY: registered run_id={_RUN_ID[:8]} version=v1.21 mode={MODE} signature={sig}")
     except Exception as e:
         logger.error(f"run_registry insert failed: {e}")
 
@@ -2581,7 +2680,7 @@ def run():
     logger.info(f"  Pullback strict:       log-only (not trading)")
     logger.info(f"  pullback_score_rank:   SOLE ACTIVE STRATEGY (interval={SCORE_RANK_INTERVAL_SEC}s top-1/hour)")
     logger.info(f"  Anti-chase filter:     {'ENABLED' if ANTI_CHASE_FILTER_ENABLED else 'DISABLED'} r_m5_cap={R_M5_CHASE_CAP}%")
-    logger.info(f"  Lane split (v1.10):    pumpfun_early=BLOCKED pumpfun_mature=ELIGIBLE(rv5m<={PF_MATURE_RV5M_MAX}%) non_pumpfun_mature=OK large_cap_ray=OK")
+    logger.info(f"  Lane split (v1.21):    pumpfun_early=BLOCKED pumpfun_mature=ELIGIBLE(rv5m<={PF_MATURE_RV5M_MAX}%) mature_pumpswap=ELIGIBLE(rv5m<={PF_MATURE_RV5M_MAX}%) non_pumpfun_mature=BLOCKED large_cap_ray=BLOCKED")
     logger.info(f"  run_id:                {_RUN_ID}")
     logger.info(f"  git_commit:            {_GIT_COMMIT}")
     logger.info("=" * 65)

@@ -361,13 +361,20 @@ print(f"\n  Mode selected: {mode.upper()} (n_pairs={n_pairs})")
 
 # ── LANE FEASIBILITY REPORT (v1.21) ────────────────────────────────────────────────────────
 print("\n" + "=" * 70)
-print("LANE FEASIBILITY REPORT (v1.21: pumpfun_mature + mature_pumpswap)")
+print("LANE FEASIBILITY REPORT (pumpfun_mature + mature_pumpswap universe)")
 print("=" * 70)
 print("  Source: selection_tick_log for this signature's run_ids.")
-print("  Answers: is the pumpfun_mature+mature_pumpswap universe operationally viable?")
+print("  Answers: is this universe operationally viable?")
 print("  Decision rule:")
-print("    pass_all_gates ~ 0 on most ticks -> too sparse, pivot/relax gates.")
-print("    tradeable_count >= 2 on >=20% of ticks -> viable, collect to n=20 then evaluate.")
+print("    tradeable_count >= 2 on >=20% of ticks -> VIABLE (collect to n=20).")
+print("    tradeable_count >= 2 on  <5% of ticks -> TOO SPARSE (relax/pivot).")
+print("  Gate count definitions:")
+print("    primary_fail_X = token fails gate X AND passes all other gates (sole blocker).")
+print("    any_fail_X     = token fails gate X regardless of other failures.")
+print("  What-if definition:")
+print("    whatif_no_X = tradeable count if gate X is removed but all other gates kept.")
+print("    NOTE: whatif_no_X > rej_X is expected when tokens fail multiple gates.")
+print("    The true single-gate lever is primary_fail_X, not whatif_no_X.")
 print()
 _has_stl_feas = conn.execute(
     "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='selection_tick_log'"
@@ -402,15 +409,25 @@ else:
         _n_gte2     = sum(1 for r in _wrows if (r['tradeable_count'] or 0) >= 2)
         _avg_elig   = sum(r['eligible_count'] or 0 for r in _wrows) / _n_w
         _avg_trade  = sum(r['tradeable_count'] or 0 for r in _wrows) / _n_w
-        _tot_age    = sum(r['rej_lane_age']     or 0 for r in _wrows)
-        _tot_liq    = sum(r['rej_lane_liq']     or 0 for r in _wrows)
-        _tot_vol    = sum(r['rej_lane_vol']      or 0 for r in _wrows)
-        _tot_pfs    = sum(r['rej_pf_stability'] or 0 for r in _wrows)
-        _tot_ac     = sum(r['rej_anti_chase']   or 0 for r in _wrows)
+        # any_fail: token fails this gate (may also fail others)
+        _any_age    = sum(r['rej_lane_age']     or 0 for r in _wrows)
+        _any_liq    = sum(r['rej_lane_liq']     or 0 for r in _wrows)
+        _any_vol    = sum(r['rej_lane_vol']      or 0 for r in _wrows)
+        _any_pfs    = sum(r['rej_pf_stability'] or 0 for r in _wrows)
+        _any_ac     = sum(r['rej_anti_chase']   or 0 for r in _wrows)
+        # primary_fail: token fails ONLY this gate (sole blocker)
+        # Approximated as: any_fail_X - (any_fail_X that also fail at least one other gate)
+        # Since we don't have per-token breakdown, we use:
+        # primary_fail_X ~ whatif_no_X - tradeable_count (tokens that would trade if only X removed)
         _avg_wi_pfs = sum(r['whatif_no_pf_stability'] or 0 for r in _wrows) / _n_w
         _avg_wi_ac  = sum(r['whatif_no_anti_chase']   or 0 for r in _wrows) / _n_w
         _avg_wi_liq = sum(r['whatif_no_lane_liq']     or 0 for r in _wrows) / _n_w
         _avg_wi_vol = sum(r['whatif_no_lane_vol']      or 0 for r in _wrows) / _n_w
+        # primary_fail_X = whatif_no_X - tradeable (tokens unblocked by removing only X)
+        _prim_pfs = _avg_wi_pfs - _avg_trade
+        _prim_ac  = _avg_wi_ac  - _avg_trade
+        _prim_liq = _avg_wi_liq - _avg_trade
+        _prim_vol = _avg_wi_vol - _avg_trade
         _implied    = _n_gte2 / _n_w * 96  # 96 ticks/day at 15-min cadence
         print(f"  {'─'*2} Window: {_wname} ({_n_w} ticks) {'─'*40}")
         print(f"    avg eligible_count/tick  : {_avg_elig:.2f}")
@@ -420,18 +437,25 @@ else:
         print(f"    implied pairs/day (>=2)  : {_implied:.1f}  (at 15-min cadence)")
         print(f"    ticks with trade opened  : {_n_opened_w} ({100*_n_opened_w/_n_w:.1f}%)")
         print()
-        print(f"    Gate rejection totals ({_wname}):")
-        print(f"      rej_lane_age      : {_tot_age:>6}  (age < 24h)")
-        print(f"      rej_lane_liq      : {_tot_liq:>6}  (liq < $50k)")
-        print(f"      rej_lane_vol      : {_tot_vol:>6}  (vol_h1 < $10k)")
-        print(f"      rej_pf_stability  : {_tot_pfs:>6}  (range_5m > 3x rv5m)")
-        print(f"      rej_anti_chase    : {_tot_ac:>6}  (r_m5 > 1.0%)")
+        print(f"    Gate counts ({_wname}) — any_fail = fails this gate (may also fail others):")
+        print(f"      {'gate':<18} {'any_fail':>10}  {'whatif_no_X (avg/tick)':>24}  {'primary_unblock (avg/tick)':>28}")
+        print(f"      {'-'*84}")
+        for _gname, _any, _wi, _prim in [
+            ('lane_age (<24h)',   _any_age, None,       None),
+            ('lane_liq (<$50k)',  _any_liq, _avg_wi_liq, _prim_liq),
+            ('lane_vol (<$10k/h)',_any_vol, _avg_wi_vol, _prim_vol),
+            ('pf_stability',     _any_pfs, _avg_wi_pfs, _prim_pfs),
+            ('anti_chase',       _any_ac,  _avg_wi_ac,  _prim_ac),
+        ]:
+            _wi_s   = f"{_wi:.2f}" if _wi is not None else "N/A"
+            _prim_s = f"+{_prim:.2f}" if _prim is not None else "N/A"
+            print(f"      {_gname:<18} {_any:>10}  {_wi_s:>24}  {_prim_s:>28}")
         print()
-        print(f"    What-if gate relief (avg tradeable/tick if gate removed):")
-        print(f"      no_pf_stability   : {_avg_wi_pfs:.2f}  (vs actual {_avg_trade:.2f})")
-        print(f"      no_anti_chase     : {_avg_wi_ac:.2f}")
-        print(f"      no_lane_liq       : {_avg_wi_liq:.2f}")
-        print(f"      no_lane_vol       : {_avg_wi_vol:.2f}")
+        print(f"    NOTE: whatif_no_X counts tokens that pass all gates when X is removed,")
+        print(f"    even if they also fail other gates. primary_unblock = whatif_no_X - actual")
+        print(f"    tradeable, i.e. the marginal gain from removing only that one gate.")
+        print(f"    A gate with any_fail=0 but high whatif is NOT a real bottleneck — those")
+        print(f"    tokens are blocked by other gates too; removing vol alone won't help.")
         print()
         _stall_ex = {}
         for r in _wrows:
@@ -444,6 +468,7 @@ else:
                 _ts, _rs = _k.split('|', 1)
                 print(f"      {_ts:<18} {_rs:<52} {_cnt:>4} ticks")
             print()
+        # Dominant bottleneck: use primary_unblock (not whatif) for gates that have any_fail > 0
         _viable = (_n_gte2 / _n_w) >= 0.20
         _sparse = (_n_gte2 / _n_w) < 0.05
         print(f"    VERDICT ({_wname}):")
@@ -453,18 +478,34 @@ else:
             print(f"      VIABLE — {100*_n_gte2/_n_w:.1f}% of ticks have tradeable>=2. Collect to n=20 then evaluate delta.")
         elif _sparse:
             print(f"      TOO SPARSE — {100*_n_gte2/_n_w:.1f}% of ticks have tradeable>=2 (<5% threshold).")
-            _bns = sorted([
-                ('pf_stability', _avg_wi_pfs - _avg_trade),
-                ('anti_chase',   _avg_wi_ac  - _avg_trade),
-                ('lane_liq',     _avg_wi_liq - _avg_trade),
-                ('lane_vol',     _avg_wi_vol - _avg_trade),
-            ], key=lambda x: -x[1])
-            _top = _bns[0]
-            print(f"      Dominant bottleneck: {_top[0]} (relaxing adds +{_top[1]:.2f} tradeable/tick avg).")
-            print(f"      Recommendation: relax {_top[0]} gate OR widen universe before waiting for n=50.")
+            # Identify dominant bottleneck using any_fail (not whatif) as primary signal
+            _bn_candidates = []
+            if _any_age > 0:  _bn_candidates.append(('lane_age',      _any_age / _n_w, _prim_pfs))
+            if _any_liq > 0:  _bn_candidates.append(('lane_liq',      _any_liq / _n_w, _prim_liq))
+            if _any_vol > 0:  _bn_candidates.append(('lane_vol',      _any_vol / _n_w, _prim_vol))
+            if _any_pfs > 0:  _bn_candidates.append(('pf_stability',  _any_pfs / _n_w, _prim_pfs))
+            if _any_ac  > 0:  _bn_candidates.append(('anti_chase',    _any_ac  / _n_w, _prim_ac))
+            if _bn_candidates:
+                _top_bn = sorted(_bn_candidates, key=lambda x: -x[1])[0]
+                print(f"      Dominant bottleneck (by any_fail count): {_top_bn[0]} ({_top_bn[1]:.1f} fails/tick avg).")
+                if _top_bn[2] is not None and _top_bn[2] > 0.1:
+                    print(f"      Primary unblock gain if {_top_bn[0]} relaxed: +{_top_bn[2]:.2f} tradeable/tick.")
+            else:
+                print(f"      No gate failures recorded — universe feed may not contain eligible tokens.")
         else:
             print(f"      MARGINAL — {100*_n_gte2/_n_w:.1f}% of ticks have tradeable>=2 (5-20% range).")
             print(f"      Collect 24h more data before deciding to relax gates.")
+        # 8-12h checkpoint
+        _hrs_data = (_n_w * 15) / 60  # approximate hours of data at 15-min cadence
+        if 8 <= _hrs_data <= 24 and _wname == "ALL":
+            print()
+            print(f"    8-12h CHECKPOINT (approx {_hrs_data:.1f}h of data):")
+            if _avg_trade < 1.0 or (_n_gte2 / _n_w) < 0.10:
+                print(f"      FAIL — avg tradeable/tick={_avg_trade:.2f} (need>=1) OR %ticks>=2={100*_n_gte2/_n_w:.1f}% (need>=10%).")
+                print(f"      Lane is TOO SPARSE. Recommend pivot or gate relaxation.")
+            else:
+                print(f"      PASS — avg tradeable/tick={_avg_trade:.2f} AND %ticks>=2={100*_n_gte2/_n_w:.1f}%.")
+                print(f"      Continue collecting to n=20 pairs.")
         print()
 
 if n_pairs == 0:

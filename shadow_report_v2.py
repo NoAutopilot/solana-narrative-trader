@@ -1828,5 +1828,97 @@ if n_pairs >= 20:  # show grid from n=20 onwards so it is always visible
         print(f"  Pre-registered rule: see HORIZON ORACLE + SCORE BUCKET + UNIVERSE MONETIZABILITY above.")
     if n_c < 10:
         print(f"  NOTE: cohort C has only n={n_c} pairs -- CI will be wide until more native_ok=1 trades accumulate.")
+# ── LANE-SEPARATED DELTA (v1.21: pumpfun_mature vs mature_pumpswap) ─────────────────
+print("\n" + "=" * 70)
+print("LANE-SEPARATED DELTA (pumpfun_mature vs mature_pumpswap)")
+print("=" * 70)
+print("  Paired delta fee100 by lane of the strategy leg.")
+print("  Answers: which lane is generating the edge (if any)?")
+print()
+lane_pairs: dict = {}
+for p in pairs:
+    ln = p["s_lane"] or "unknown"
+    lane_pairs.setdefault(ln, []).append(p)
+if lane_pairs:
+    print(f"  {'lane':<26} {'n':>4}  {'mean_strat%':>12} {'mean_delta%':>12}  {'95% CI':>24}  {'CI>0?':>5}  {'strat>0?':>8}")
+    print("-" * 100)
+    for ln in sorted(lane_pairs.keys(), key=lambda l: -len(lane_pairs[l])):
+        lp = lane_pairs[ln]
+        ms_l, mb_l, md_l, ci_lo_l, ci_hi_l, n_l = _cohort_stats(lp)
+        if ci_lo_l != ci_lo_l:
+            ci_str_l, ci_pos_l = "[N/A]", "N/A"
+        else:
+            ci_str_l = f"[{ci_lo_l:+.2f}%, {ci_hi_l:+.2f}%]"
+            ci_pos_l = yn(ci_lo_l > 0)
+        strat_pos_l = yn(ms_l > 0) if ms_l == ms_l else "N/A"
+        ms_str_l = f"{ms_l:>+10.4f}%" if ms_l == ms_l else "      N/A"
+        md_str_l = f"{md_l:>+10.4f}%" if md_l == md_l else "      N/A"
+        print(f"  {ln:<26} {n_l:>4}  {ms_str_l:>12} {md_str_l:>12}  {ci_str_l:>24}  {ci_pos_l:>5}  {strat_pos_l:>8}")
+else:
+    print("  No lane data available.")
+
+# ── PF_STABILITY COUNTERFACTUAL SIDECAR SUMMARY (v1.21) ──────────────────────────
+print("\n" + "=" * 70)
+print("PF_STABILITY COUNTERFACTUAL SIDECAR (v1.21)")
+print("=" * 70)
+print("  Records the highest-scoring token blocked ONLY by pf_stability each tick.")
+print("  Informational only — never traded. Purpose: evaluate if pf_stability is too strict.")
+print()
+try:
+    # Check if the table exists
+    pfcf_exists = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='pf_stability_counterfactual_log'"
+    ).fetchone()
+    if not pfcf_exists:
+        print("  pf_stability_counterfactual_log table not yet created (requires v1.21+ run).")
+    else:
+        pfcf_rows = conn.execute("""
+            SELECT logged_at, token_symbol, mint_prefix, lane, entry_score,
+                   rv_5m, range_5m, sell_ratio_spike, block_reason
+            FROM pf_stability_counterfactual_log
+            ORDER BY logged_at DESC
+            LIMIT 200
+        """).fetchall()
+        n_pfcf = len(pfcf_rows)
+        if n_pfcf == 0:
+            print("  No counterfactual records yet (v1.21 run has not started or no pf_stability blocks).")
+        else:
+            print(f"  Total counterfactual ticks logged: {n_pfcf}")
+            # Summary stats
+            rv5m_vals   = [r['rv_5m']   for r in pfcf_rows if r['rv_5m']   is not None]
+            range5m_vals = [r['range_5m'] for r in pfcf_rows if r['range_5m'] is not None]
+            score_vals  = [r['entry_score'] for r in pfcf_rows if r['entry_score'] is not None]
+            def _pct50(vals):
+                if not vals: return float('nan')
+                s = sorted(vals); return s[len(s)//2]
+            print(f"  avg rv_5m blocked: {sum(rv5m_vals)/len(rv5m_vals)*100:.3f}%  (p50={_pct50(rv5m_vals)*100:.3f}%)" if rv5m_vals else "  avg rv_5m: N/A")
+            print(f"  avg range_5m blocked: {sum(range5m_vals)/len(range5m_vals)*100:.3f}%  (p50={_pct50(range5m_vals)*100:.3f}%)" if range5m_vals else "  avg range_5m: N/A")
+            print(f"  avg score blocked: {sum(score_vals)/len(score_vals):.4f}  (p50={_pct50(score_vals):.4f})" if score_vals else "  avg score: N/A")
+            # Block reason breakdown
+            from collections import Counter as _Ctr
+            reason_counts = _Ctr(r['block_reason'] for r in pfcf_rows)
+            print(f"  Block reason breakdown:")
+            for rsn, cnt in reason_counts.most_common(5):
+                print(f"    {rsn:<50} {cnt:>5} ticks ({100*cnt/n_pfcf:.1f}%)")
+            # Top tokens blocked
+            tok_counts = _Ctr(r['token_symbol'] for r in pfcf_rows)
+            print(f"  Top tokens blocked by pf_stability:")
+            for tok, cnt in tok_counts.most_common(8):
+                print(f"    {tok:<20} {cnt:>5} ticks")
+            # Recent 10 rows
+            print(f"\n  Recent 10 counterfactual records:")
+            print(f"  {'logged_at':<20} {'token(mint)':<22} {'lane':<18} {'score':>7} {'rv5m%':>8} {'range5m%':>10} {'block_reason':<40}")
+            print(f"  {'-'*130}")
+            for r in pfcf_rows[:10]:
+                sym_r = r['token_symbol'] or '?'
+                mp_r  = r['mint_prefix'] or '?'
+                tok_r = f"{sym_r}({mp_r[:8]})"
+                rv_s  = f"{r['rv_5m']*100:.3f}%" if r['rv_5m'] is not None else "N/A"
+                rng_s = f"{r['range_5m']*100:.3f}%" if r['range_5m'] is not None else "N/A"
+                sc_s  = f"{r['entry_score']:.4f}" if r['entry_score'] is not None else "N/A"
+                print(f"  {(r['logged_at'] or '')[:19]:<20} {tok_r:<22} {(r['lane'] or ''):<18} {sc_s:>7} {rv_s:>8} {rng_s:>10} {(r['block_reason'] or ''):<40}")
+except Exception as e:
+    print(f"  Error reading pf_stability_counterfactual_log: {e}")
+
 print("\n" + "=" * 70)
 conn.close()

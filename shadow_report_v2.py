@@ -359,6 +359,114 @@ if mode == "auto":
 
 print(f"\n  Mode selected: {mode.upper()} (n_pairs={n_pairs})")
 
+# ── LANE FEASIBILITY REPORT (v1.21) ────────────────────────────────────────────────────────
+print("\n" + "=" * 70)
+print("LANE FEASIBILITY REPORT (v1.21: pumpfun_mature + mature_pumpswap)")
+print("=" * 70)
+print("  Source: selection_tick_log for this signature's run_ids.")
+print("  Answers: is the pumpfun_mature+mature_pumpswap universe operationally viable?")
+print("  Decision rule:")
+print("    pass_all_gates ~ 0 on most ticks -> too sparse, pivot/relax gates.")
+print("    tradeable_count >= 2 on >=20% of ticks -> viable, collect to n=20 then evaluate.")
+print()
+_has_stl_feas = conn.execute(
+    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='selection_tick_log'"
+).fetchone()[0]
+if not _has_stl_feas:
+    print("  selection_tick_log not found.")
+else:
+    from datetime import datetime as _dt_feas, timezone as _tz_feas, timedelta as _td_feas
+    _now_utc = _dt_feas.now(_tz_feas.utc)
+    _cutoff_12h = (_now_utc - _td_feas(hours=12)).isoformat()
+    _cutoff_24h = (_now_utc - _td_feas(hours=24)).isoformat()
+    _feas_rows = conn.execute(
+        f"SELECT logged_at, eligible_count, tradeable_count, opened_trade_bool, "
+        f"reason_no_trade, stall_example_token, stall_example_reason, "
+        f"rej_lane_age, rej_lane_liq, rej_lane_vol, rej_pf_stability, rej_anti_chase, "
+        f"whatif_no_pf_stability, whatif_no_anti_chase, whatif_no_lane_liq, whatif_no_lane_vol "
+        f"FROM selection_tick_log "
+        f"WHERE run_id IN {in_clause(INCLUDED_RUN_IDS)} "
+        f"ORDER BY logged_at DESC LIMIT 2000",
+        INCLUDED_RUN_IDS
+    ).fetchall()
+    _rows_12h = [r for r in _feas_rows if (r['logged_at'] or '') >= _cutoff_12h]
+    _rows_24h = [r for r in _feas_rows if (r['logged_at'] or '') >= _cutoff_24h]
+    _windows = [("ALL", _feas_rows), ("24h", _rows_24h), ("12h", _rows_12h)]
+    for _wname, _wrows in _windows:
+        _n_w = len(_wrows)
+        if _n_w == 0:
+            print(f"  Window {_wname}: no tick data yet.")
+            continue
+        _n_opened_w = sum(1 for r in _wrows if r['opened_trade_bool'])
+        _n_gte1     = sum(1 for r in _wrows if (r['tradeable_count'] or 0) >= 1)
+        _n_gte2     = sum(1 for r in _wrows if (r['tradeable_count'] or 0) >= 2)
+        _avg_elig   = sum(r['eligible_count'] or 0 for r in _wrows) / _n_w
+        _avg_trade  = sum(r['tradeable_count'] or 0 for r in _wrows) / _n_w
+        _tot_age    = sum(r['rej_lane_age']     or 0 for r in _wrows)
+        _tot_liq    = sum(r['rej_lane_liq']     or 0 for r in _wrows)
+        _tot_vol    = sum(r['rej_lane_vol']      or 0 for r in _wrows)
+        _tot_pfs    = sum(r['rej_pf_stability'] or 0 for r in _wrows)
+        _tot_ac     = sum(r['rej_anti_chase']   or 0 for r in _wrows)
+        _avg_wi_pfs = sum(r['whatif_no_pf_stability'] or 0 for r in _wrows) / _n_w
+        _avg_wi_ac  = sum(r['whatif_no_anti_chase']   or 0 for r in _wrows) / _n_w
+        _avg_wi_liq = sum(r['whatif_no_lane_liq']     or 0 for r in _wrows) / _n_w
+        _avg_wi_vol = sum(r['whatif_no_lane_vol']      or 0 for r in _wrows) / _n_w
+        _implied    = _n_gte2 / _n_w * 96  # 96 ticks/day at 15-min cadence
+        print(f"  {'─'*2} Window: {_wname} ({_n_w} ticks) {'─'*40}")
+        print(f"    avg eligible_count/tick  : {_avg_elig:.2f}")
+        print(f"    avg tradeable_count/tick : {_avg_trade:.2f}")
+        print(f"    % ticks tradeable >= 1   : {100*_n_gte1/_n_w:.1f}%  ({_n_gte1}/{_n_w})")
+        print(f"    % ticks tradeable >= 2   : {100*_n_gte2/_n_w:.1f}%  ({_n_gte2}/{_n_w})  <- pair-open eligible")
+        print(f"    implied pairs/day (>=2)  : {_implied:.1f}  (at 15-min cadence)")
+        print(f"    ticks with trade opened  : {_n_opened_w} ({100*_n_opened_w/_n_w:.1f}%)")
+        print()
+        print(f"    Gate rejection totals ({_wname}):")
+        print(f"      rej_lane_age      : {_tot_age:>6}  (age < 24h)")
+        print(f"      rej_lane_liq      : {_tot_liq:>6}  (liq < $50k)")
+        print(f"      rej_lane_vol      : {_tot_vol:>6}  (vol_h1 < $10k)")
+        print(f"      rej_pf_stability  : {_tot_pfs:>6}  (range_5m > 3x rv5m)")
+        print(f"      rej_anti_chase    : {_tot_ac:>6}  (r_m5 > 1.0%)")
+        print()
+        print(f"    What-if gate relief (avg tradeable/tick if gate removed):")
+        print(f"      no_pf_stability   : {_avg_wi_pfs:.2f}  (vs actual {_avg_trade:.2f})")
+        print(f"      no_anti_chase     : {_avg_wi_ac:.2f}")
+        print(f"      no_lane_liq       : {_avg_wi_liq:.2f}")
+        print(f"      no_lane_vol       : {_avg_wi_vol:.2f}")
+        print()
+        _stall_ex = {}
+        for r in _wrows:
+            if not r['opened_trade_bool'] and r['stall_example_token']:
+                _k = f"{r['stall_example_token']}|{(r['stall_example_reason'] or '')[:50]}"
+                _stall_ex[_k] = _stall_ex.get(_k, 0) + 1
+        if _stall_ex:
+            print(f"    Top stall examples (token | blocking reason):")
+            for _k, _cnt in sorted(_stall_ex.items(), key=lambda x: -x[1])[:8]:
+                _ts, _rs = _k.split('|', 1)
+                print(f"      {_ts:<18} {_rs:<52} {_cnt:>4} ticks")
+            print()
+        _viable = (_n_gte2 / _n_w) >= 0.20
+        _sparse = (_n_gte2 / _n_w) < 0.05
+        print(f"    VERDICT ({_wname}):")
+        if _n_w < 4:
+            print(f"      INSUFFICIENT DATA ({_n_w} ticks) — wait for more ticks.")
+        elif _viable:
+            print(f"      VIABLE — {100*_n_gte2/_n_w:.1f}% of ticks have tradeable>=2. Collect to n=20 then evaluate delta.")
+        elif _sparse:
+            print(f"      TOO SPARSE — {100*_n_gte2/_n_w:.1f}% of ticks have tradeable>=2 (<5% threshold).")
+            _bns = sorted([
+                ('pf_stability', _avg_wi_pfs - _avg_trade),
+                ('anti_chase',   _avg_wi_ac  - _avg_trade),
+                ('lane_liq',     _avg_wi_liq - _avg_trade),
+                ('lane_vol',     _avg_wi_vol - _avg_trade),
+            ], key=lambda x: -x[1])
+            _top = _bns[0]
+            print(f"      Dominant bottleneck: {_top[0]} (relaxing adds +{_top[1]:.2f} tradeable/tick avg).")
+            print(f"      Recommendation: relax {_top[0]} gate OR widen universe before waiting for n=50.")
+        else:
+            print(f"      MARGINAL — {100*_n_gte2/_n_w:.1f}% of ticks have tradeable>=2 (5-20% range).")
+            print(f"      Collect 24h more data before deciding to relax gates.")
+        print()
+
 if n_pairs == 0:
     print("\n  No closed pairs yet. Re-run when n_closed_pairs >= 3.")
     conn.close()
@@ -1007,8 +1115,124 @@ if mode == "decision":
                 sc_s = f"{sc:.3f}" if sc is not None else "N/A"
                 rsn  = (r["reason_no_trade"] or "")[:34]
                 print(f"    {la:<20} {el:>5} {tr:>6} {op:>7} {tok:<14} {sc_s:>10} {rsn:<35}")
+    print(f"\n" + "=" * 70)
+    print("LANE FEASIBILITY REPORT (v1.21: pumpfun_mature + mature_pumpswap)")
+    print("=" * 70)
+    print("  Source: selection_tick_log for this signature's run_ids.")
+    print("  Answers: is the pumpfun_mature+mature_pumpswap universe operationally viable?")
+    print("  Decision rule:")
+    print("    pass_all_gates ~ 0 on most ticks -> too sparse, pivot/relax gates.")
+    print("    tradeable_count >= 2 on >=20% of ticks -> viable, collect to n=20 then evaluate.")
+    print()
+    has_stl_feas = conn.execute(
+        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='selection_tick_log'"
+    ).fetchone()[0]
+    if not has_stl_feas:
+        print("  selection_tick_log not found.")
+    else:
+        from datetime import datetime, timezone, timedelta
+        now_utc = datetime.now(timezone.utc)
+        cutoff_12h = (now_utc - timedelta(hours=12)).isoformat()
+        cutoff_24h = (now_utc - timedelta(hours=24)).isoformat()
+        # Fetch all tick rows for this signature (all run_ids in scope)
+        feas_rows = conn.execute(
+            f"SELECT logged_at, eligible_count, tradeable_count, opened_trade_bool, "
+            f"reason_no_trade, stall_example_token, stall_example_reason, "
+            f"rej_lane_age, rej_lane_liq, rej_lane_vol, rej_pf_stability, rej_anti_chase, "
+            f"whatif_no_pf_stability, whatif_no_anti_chase, whatif_no_lane_liq, whatif_no_lane_vol "
+            f"FROM selection_tick_log "
+            f"WHERE run_id IN {in_clause(INCLUDED_RUN_IDS)} "
+            f"ORDER BY logged_at DESC LIMIT 2000",
+            INCLUDED_RUN_IDS
+        ).fetchall()
+        n_all = len(feas_rows)
+        rows_12h = [r for r in feas_rows if (r['logged_at'] or '') >= cutoff_12h]
+        rows_24h = [r for r in feas_rows if (r['logged_at'] or '') >= cutoff_24h]
+        # Use whichever window has data; fall back to all rows if <12h of data
+        windows = [("ALL", feas_rows), ("24h", rows_24h), ("12h", rows_12h)]
+        for wname, wrows in windows:
+            n_w = len(wrows)
+            if n_w == 0:
+                print(f"  Window {wname}: no tick data yet.")
+                continue
+            n_opened_w   = sum(1 for r in wrows if r['opened_trade_bool'])
+            n_gte1       = sum(1 for r in wrows if (r['tradeable_count'] or 0) >= 1)
+            n_gte2       = sum(1 for r in wrows if (r['tradeable_count'] or 0) >= 2)
+            avg_elig_w   = sum(r['eligible_count'] or 0 for r in wrows) / n_w
+            avg_trade_w  = sum(r['tradeable_count'] or 0 for r in wrows) / n_w
+            # Gate rejection totals
+            tot_age  = sum(r['rej_lane_age']     or 0 for r in wrows)
+            tot_liq  = sum(r['rej_lane_liq']     or 0 for r in wrows)
+            tot_vol  = sum(r['rej_lane_vol']      or 0 for r in wrows)
+            tot_pfs  = sum(r['rej_pf_stability'] or 0 for r in wrows)
+            tot_ac   = sum(r['rej_anti_chase']   or 0 for r in wrows)
+            # What-if: how many tradeable if gate relaxed
+            avg_wi_pfs = sum(r['whatif_no_pf_stability'] or 0 for r in wrows) / n_w
+            avg_wi_ac  = sum(r['whatif_no_anti_chase']   or 0 for r in wrows) / n_w
+            avg_wi_liq = sum(r['whatif_no_lane_liq']     or 0 for r in wrows) / n_w
+            avg_wi_vol = sum(r['whatif_no_lane_vol']      or 0 for r in wrows) / n_w
+            # Cadence: 900s interval -> 96 ticks/day max
+            TICKS_PER_DAY = 96
+            implied_pairs_day = n_gte2 / n_w * TICKS_PER_DAY  # each tick with >=2 tradeable can open 1 pair
+            print(f"  {'─'*2} Window: {wname} ({n_w} ticks) {'─'*40}")
+            print(f"    avg eligible_count/tick  : {avg_elig_w:.2f}")
+            print(f"    avg tradeable_count/tick : {avg_trade_w:.2f}")
+            print(f"    % ticks tradeable >= 1   : {100*n_gte1/n_w:.1f}%  ({n_gte1}/{n_w})")
+            print(f"    % ticks tradeable >= 2   : {100*n_gte2/n_w:.1f}%  ({n_gte2}/{n_w})  <- pair-open eligible")
+            print(f"    implied pairs/day (>=2)  : {implied_pairs_day:.1f}  (at 15-min cadence)")
+            print(f"    ticks with trade opened  : {n_opened_w} ({100*n_opened_w/n_w:.1f}%)")
+            print()
+            print(f"    Gate rejection totals ({wname}):")
+            print(f"      rej_lane_age      : {tot_age:>6}  (primary: age < 24h)")
+            print(f"      rej_lane_liq      : {tot_liq:>6}  (primary: liq < $50k)")
+            print(f"      rej_lane_vol      : {tot_vol:>6}  (primary: vol_h1 < $10k)")
+            print(f"      rej_pf_stability  : {tot_pfs:>6}  (primary: range_5m > 3x rv5m)")
+            print(f"      rej_anti_chase    : {tot_ac:>6}  (primary: r_m5 > 1.0%)")
+            print()
+            print(f"    What-if gate relief (avg tradeable/tick if gate removed):")
+            print(f"      no_pf_stability   : {avg_wi_pfs:.2f}  (vs actual {avg_trade_w:.2f})")
+            print(f"      no_anti_chase     : {avg_wi_ac:.2f}")
+            print(f"      no_lane_liq       : {avg_wi_liq:.2f}")
+            print(f"      no_lane_vol       : {avg_wi_vol:.2f}")
+            print()
+            # Stall example breakdown (top 10 stall tokens + reasons)
+            stall_examples = {}
+            for r in wrows:
+                if not r['opened_trade_bool'] and r['stall_example_token']:
+                    key = f"{r['stall_example_token']}|{(r['stall_example_reason'] or '')[:50]}"
+                    stall_examples[key] = stall_examples.get(key, 0) + 1
+            if stall_examples:
+                print(f"    Top stall examples (token | blocking reason):")
+                for key, cnt in sorted(stall_examples.items(), key=lambda x: -x[1])[:8]:
+                    tok_s, rsn_s = key.split('|', 1)
+                    print(f"      {tok_s:<18} {rsn_s:<52} {cnt:>4} ticks")
+                print()
+            # Verdict
+            viable = (n_gte2 / n_w) >= 0.20
+            sparse = (n_gte2 / n_w) < 0.05
+            print(f"    VERDICT ({wname}):")
+            if n_w < 4:
+                print(f"      INSUFFICIENT DATA ({n_w} ticks) — wait for more ticks before deciding.")
+            elif viable:
+                print(f"      VIABLE — {100*n_gte2/n_w:.1f}% of ticks have tradeable>=2. Collect to n=20 then evaluate delta.")
+            elif sparse:
+                print(f"      TOO SPARSE — {100*n_gte2/n_w:.1f}% of ticks have tradeable>=2 (<5% threshold).")
+                # Identify the dominant bottleneck
+                bottlenecks = sorted([
+                    ('pf_stability', avg_wi_pfs - avg_trade_w),
+                    ('anti_chase',   avg_wi_ac  - avg_trade_w),
+                    ('lane_liq',     avg_wi_liq - avg_trade_w),
+                    ('lane_vol',     avg_wi_vol - avg_trade_w),
+                ], key=lambda x: -x[1])
+                top_bn = bottlenecks[0]
+                print(f"      Dominant bottleneck: {top_bn[0]} (relaxing adds +{top_bn[1]:.2f} tradeable/tick avg).")
+                print(f"      Recommendation: relax {top_bn[0]} gate OR widen universe before waiting for n=50.")
+            else:
+                print(f"      MARGINAL — {100*n_gte2/n_w:.1f}% of ticks have tradeable>=2 (5-20% range).")
+                print(f"      Collect 24h more data before deciding to relax gates.")
+            print()
 
-    # ── 4-way sensitivity summaries ──────────────────────────────────────────────────────
+    # ── 4-way sensitivity summaries ────────────────────────────────────────────────────────
     print(f"\n" + "-" * 70)
     print("SENSITIVITY SUMMARIES")
     print("-" * 70)

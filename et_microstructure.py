@@ -281,6 +281,28 @@ def fetch_pairs_batch(mints: list[str]) -> list[dict]:
         logger.debug(f"Batch fetch error: {e}")
         return []
 
+def fetch_pair_by_address(pair_address: str) -> dict | None:
+    """Fallback: fetch a single pair by pair address when mint-based batch misses it."""
+    if not pair_address:
+        return None
+    try:
+        r = requests.get(
+            f"{DEXSCREENER_BASE}/latest/dex/pairs/solana/{pair_address}",
+            timeout=DEXSCREENER_TIMEOUT
+        )
+        if r.status_code != 200:
+            return None
+        data = r.json()
+        pairs = data.get("pairs") or data.get("pair")
+        if isinstance(pairs, list) and pairs:
+            return pairs[0]
+        if isinstance(pairs, dict):
+            return pairs
+        return None
+    except Exception as e:
+        logger.debug(f"Pair address fallback error ({pair_address[:8]}): {e}")
+        return None
+
 # ── Poll ──────────────────────────────────────────────────────────────────────
 def poll_and_log():
     eligible = get_eligible_mints()
@@ -290,6 +312,7 @@ def poll_and_log():
     logged_at = datetime.now(timezone.utc).isoformat()
     now_ts = time.time()
     rows = []
+    covered_mints: set[str] = set()
 
     for i in range(0, len(eligible), MAX_TOKENS_PER_BATCH):
         batch = eligible[i:i + MAX_TOKENS_PER_BATCH]
@@ -305,6 +328,14 @@ def poll_and_log():
             existing = mint_to_pair.get(mint)
             if existing is None or liq > float(existing.get("liquidity", {}).get("usd", 0) or 0):
                 mint_to_pair[mint] = pair
+
+        # Retry missed mints via pair_address fallback
+        missed = [(mint, pair_addr) for mint, pair_addr, _, _ in batch if mint not in mint_to_pair]
+        for mint, pair_addr in missed:
+            fallback = fetch_pair_by_address(pair_addr)
+            if fallback:
+                mint_to_pair[mint] = fallback
+                logger.debug(f"Fallback hit for {mint[:8]} via pair_address {pair_addr[:8]}")
 
         for mint, _, pair_created_at, venue_db in batch:
             pair = mint_to_pair.get(mint)
@@ -372,6 +403,7 @@ def poll_and_log():
             venue_pair = pair.get("dexId", "") or ""
             pf_origin = is_pumpfun_origin(venue_pair or venue_db, pair_created_at)
 
+            covered_mints.add(mint)
             rows.append((
                 logged_at, mint,
                 pair.get("baseToken", {}).get("symbol", ""),
@@ -429,11 +461,40 @@ def poll_and_log():
         n_pf    = sum(1 for r in rows if r[43] == 1)
         rv_vals = [r[12] for r in rows if r[12] is not None]
         rv_med  = sorted(rv_vals)[len(rv_vals)//2] if rv_vals else None
+        n_elig = len(eligible)
+        n_covered = len(covered_mints)
+        n_missing = n_elig - n_covered
+        coverage_pct = round(100 * n_covered / n_elig, 1) if n_elig > 0 else 0.0
+        rv_summary = f"rv_5m_median={rv_med:.4f}%" if rv_med else "rv_5m=warming_up"
         logger.info(
-            f"Logged {len(rows)} rows | lp_removal={n_lp} | spam={n_spam} | "
-            f"pumpfun_origin={n_pf} | rv_5m_median={rv_med:.4f}%" if rv_med else
-            f"Logged {len(rows)} rows | lp_removal={n_lp} | spam={n_spam} | pumpfun_origin={n_pf} | rv_5m=warming_up"
+            f"Logged {n_covered}/{n_elig} eligible mints "
+            f"(coverage={coverage_pct}% missing={n_missing}) | "
+            f"lp_removal={n_lp} | spam={n_spam} | pumpfun_origin={n_pf} | {rv_summary}"
         )
+        if n_missing > 0:
+            missing_mints = [m for m, _, _, _ in eligible if m not in covered_mints]
+            try:
+                conn2 = get_conn()
+                snap_ts = conn2.execute(
+                    "SELECT MAX(snapshot_at) FROM universe_snapshot"
+                ).fetchone()[0]
+                placeholders = ",".join(["?"]*len(missing_mints[:10]))
+                snap_rows2 = conn2.execute(
+                    f"SELECT mint_address, token_symbol, venue, liq_usd, vol_h24, gate_reason "
+                    f"FROM universe_snapshot WHERE snapshot_at=? AND mint_address IN ({placeholders}) "
+                    f"ORDER BY vol_h24 DESC",
+                    [snap_ts] + missing_mints[:10]
+                ).fetchall()
+                conn2.close()
+                logger.warning(f"MICRO_MISSING top {min(n_missing,10)}/{n_missing} uncovered eligible mints:")
+                for sr in snap_rows2:
+                    logger.warning(
+                        f"  {sr['token_symbol']:<12} {sr['mint_address'][:8]}  "
+                        f"venue={sr['venue']}  liq=${sr['liq_usd']:,.0f}  "
+                        f"vol24h=${sr['vol_h24']:,.0f}  gate={sr['gate_reason']}"
+                    )
+            except Exception as diag_e:
+                logger.debug(f"micro_missing diagnostic error: {diag_e}")
 
 def run():
     logger.info("=" * 65)

@@ -70,7 +70,7 @@ except ImportError:
             return False, f"non_sol_quote:{quote_mint[:8]}"
         return True, "ok"
 
-from config.config import DB_PATH, LOGS_DIR, DATA_DIR
+from config.config import DB_PATH, LOGS_DIR, DATA_DIR, JUPITER_API_KEY
 
 os.makedirs(LOGS_DIR, exist_ok=True)
 
@@ -87,7 +87,8 @@ if not logger.handlers:
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 DEXSCREENER_BASE    = "https://api.dexscreener.com"
-JUPITER_QUOTE_URL   = "https://<REDACTED_JUP>/ultra/v1/order"  # Updated: ultra endpoint
+JUPITER_QUOTE_URL   = "https://lite-api.jup.ag/swap/v1/quote"
+_JUP_HEADERS: dict  = ({"x-api-key": JUPITER_API_KEY} if JUPITER_API_KEY else {})
 WSOL_MINT           = "So11111111111111111111111111111111111111112"
 DEXSCREENER_TIMEOUT = 12
 JUPITER_TIMEOUT     = 8
@@ -249,13 +250,15 @@ def check_jupiter_available() -> bool:
                 "amount": "1000000",
                 "slippageBps": "50",
             },
+            headers=_JUP_HEADERS,
             timeout=JUPITER_TIMEOUT
         )
+        auth_note = f"auth={'key_set' if JUPITER_API_KEY else 'no_key'}  status={r.status_code}"
         _jup_available = r.status_code == 200
         if _jup_available:
-            logger.info("Jupiter quote API available at <REDACTED_JUP>/swap/v1/quote")
+            logger.info(f"Jupiter quote API available at {JUPITER_QUOTE_URL}  {auth_note}")
         else:
-            logger.warning(f"Jupiter quote API returned {r.status_code} — CPAMM-only mode")
+            logger.warning(f"Jupiter quote API returned {r.status_code} ({auth_note}) — CPAMM-only mode")
     except Exception as e:
         logger.warning(f"Jupiter quote API unavailable: {e} — CPAMM-only mode")
         _jup_available = False
@@ -279,6 +282,7 @@ def get_jupiter_quote(input_mint: str, output_mint: str, sol_in: float) -> dict 
                 "slippageBps": "300",
                 "onlyDirectRoutes": "true",
             },
+            headers=_JUP_HEADERS,
             timeout=JUPITER_TIMEOUT
         )
         if r.status_code != 200:

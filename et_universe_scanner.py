@@ -772,22 +772,27 @@ def scan_and_log():
         ).fetchone()
         _conn_b.close()
         if _last_tick:
-            _last_E = _last_tick[0]
-            _last_tradeable = _last_tick[1]
+            _last_eligible_count = _last_tick[0]   # eligible_count (all lanes)
+            _last_tradeable = _last_tick[1]          # tradeable_set_size = |E|
             _last_block = _last_tick[2] or "none"
             _last_opened = "Y" if _last_tick[3] else "N"
         else:
-            _last_E = _last_tradeable = 0
+            _last_eligible_count = _last_tradeable = 0
             _last_block = "no_ticks_yet"
             _last_opened = "N"
     except Exception as _e:
         n_micro5 = "?"
-        _last_E = _last_tradeable = 0
+        _last_eligible_count = _last_tradeable = 0
         _last_block = f"db_err:{_e}"
         _last_opened = "N"
         query_errors += 1
 
-    micro_missing = (n_eligible_cpamm - n_micro5) if isinstance(n_micro5, int) else "?"
+    # micro_missing: eligible cpamm_valid mints with NO micro data in last 5m
+    # Clamped to 0 — never negative (micro_5m may include recently-rotated mints)
+    if isinstance(n_micro5, int):
+        micro_missing = max(0, n_eligible_cpamm - n_micro5)
+    else:
+        micro_missing = "?"
 
     # ── D: Fail-fast assertions ────────────────────────────────────────────────
     for venue in _EXPECTED_VENUES:
@@ -860,7 +865,8 @@ def scan_and_log():
         f"| A_lane_elig: {lane_elig_str} "
         f"| B_funnel: snapshot_pass={n_snapshot_pass} eligible={n_eligible} "
         f"cpamm_valid={n_eligible_cpamm} micro_5m={n_micro5} "
-        f"last_|E|={_last_E} opened={_last_opened} block={_last_block} "
+        f"last_tradeable_set={_last_tradeable} last_eligible={_last_eligible_count} "
+        f"opened={_last_opened} block={_last_block} "
         f"| C_quality: jup_ok={n_jup_validated} null_age={null_age_count} "
         f"null_pca={null_pca_count} micro_missing={micro_missing} "
         f"sweep_ms={sweep_duration_ms} qerr={query_errors} "

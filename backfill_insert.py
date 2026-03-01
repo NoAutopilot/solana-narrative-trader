@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "data", "solana_trader.db")
 RAW_PATH = os.path.join(os.path.dirname(__file__), "data", "backfill_raw.json")
-WALLET = "D714dunm7nYGz5acTWvHpHqTMzUzh847tRcQ6x7i8rw9"
+WALLET = "<REDACTED_WALLET_PUBKEY>"
 
 
 def main():

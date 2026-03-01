@@ -404,16 +404,18 @@ def fetch_pumpswap_graduated() -> list[dict]:
     return filtered
 
 
-def discover_candidates() -> tuple[list[dict], dict]:
+def discover_candidates() -> tuple[list[dict], dict, dict]:
     """
     Deterministic candidate discovery per DISCOVERY_RULE.
     Two lanes: (1) established top-20 large-cap, (2) pumpswap graduated.
-    Returns (pairs, rejection_counts).
+    Returns (pairs, rejection_counts, raw_venue_counts).
+    raw_venue_counts: {venue: count} of ALL raw pairs before dedup/filter.
     """
     rejection_counts = {
         "pool_type": 0, "quote": 0, "age": 0, "vol": 0, "liq": 0, "ok": 0
     }
     all_pairs = []
+    raw_venue_counts: dict[str, int] = {}
 
     # Fetch top-volume SOL pairs from DexScreener
     # Deterministic discovery: fetch pairs for known high-volume Solana mints
@@ -461,6 +463,11 @@ def discover_candidates() -> tuple[list[dict], dict]:
     pumpswap_pairs = fetch_pumpswap_graduated()
     all_pairs.extend(pumpswap_pairs)
     logger.debug(f"Universe: {len(all_pairs)} total pairs (established + {len(pumpswap_pairs)} pumpswap)")
+
+    # Count raw pairs by venue BEFORE dedup/filter (for sweep header A)
+    for _p in all_pairs:
+        _v = (_p.get("dexId") or "unknown").lower()
+        raw_venue_counts[_v] = raw_venue_counts.get(_v, 0) + 1
 
     now = datetime.now(timezone.utc)
     filtered = []
@@ -517,14 +524,24 @@ def discover_candidates() -> tuple[list[dict], dict]:
         filtered.append(pair)
         rejection_counts["ok"] += 1
 
-    return filtered, rejection_counts
+    return filtered, rejection_counts, raw_venue_counts
+
+# ── Sweep header state (for D: fail-fast venue dropout detection) ─────────────
+_EXPECTED_VENUES = {"raydium", "orca", "pumpswap", "meteora"}
+_venue_zero_streak: dict[str, int] = {}   # venue -> consecutive sweeps with 0 raw pairs
+_VENUE_DROPOUT_WARN_SWEEPS = 5            # warn after this many consecutive 0-count sweeps
+_eligible_floor = 5                       # warn if eligible_snapshot drops below this
+_eligible_floor_streak = 0               # consecutive sweeps below floor
 
 # ── Main scan ─────────────────────────────────────────────────────────────────
 def scan_and_log():
+    global _venue_zero_streak, _eligible_floor_streak
+    sweep_start = time.time()
     snapshot_at = datetime.now(timezone.utc).replace(second=0, microsecond=0).isoformat()
     evaluated_at = datetime.now(timezone.utc).isoformat()
+    query_errors = 0
 
-    pairs, rejections = discover_candidates()
+    pairs, rejections, raw_venue_counts = discover_candidates()
     total_fetched = sum(rejections.values())
 
     snap_rows = []
@@ -708,18 +725,104 @@ def scan_and_log():
         _c2.commit(); _c2.close()
     except Exception as _e:
         pass
-    # Venue breakdown for eligible tokens
-    venue_counts: dict[str, int] = {}
+    sweep_duration_ms = int((time.time() - sweep_start) * 1000)
+
+    # ── Eligible venue breakdown (for A + B) ──────────────────────────────────
+    eligible_venue_counts: dict[str, int] = {}
+    null_age_count = 0
+    null_pca_count = 0
     for row in snap_rows:
         if row[7] == 1:  # eligible=1
-            v = row[5] or "unknown"  # venue
-            venue_counts[v] = venue_counts.get(v, 0) + 1
-    venue_str = "  ".join(f"{v}={n}" for v, n in sorted(venue_counts.items(), key=lambda x: -x[1]))
+            v = row[5] or "unknown"  # venue column
+            eligible_venue_counts[v] = eligible_venue_counts.get(v, 0) + 1
+        if row[31] is None:  # age_hours is None
+            null_age_count += 1
+        if row[30] is None:  # pair_created_at is None
+            null_pca_count += 1
+
+    # ── B: Funnel counts from DB ───────────────────────────────────────────────
+    n_snapshot_pass = len(snap_rows)
+    n_eligible_cpamm = sum(1 for row in snap_rows if row[7] == 1 and row[34] == 1)  # cpamm_valid_flag
+    try:
+        _conn_b = get_conn()
+        _cutoff5 = (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat()
+        n_micro5 = _conn_b.execute(
+            "SELECT COUNT(DISTINCT mint_address) FROM microstructure_log WHERE logged_at >= ?",
+            (_cutoff5,)
+        ).fetchone()[0]
+        # Last selection_tick_log row for |E| and block reason
+        _last_tick = _conn_b.execute(
+            "SELECT eligible_count, tradeable_count, best_block_reason, opened_trade_bool "
+            "FROM selection_tick_log ORDER BY id DESC LIMIT 1"
+        ).fetchone()
+        _conn_b.close()
+        if _last_tick:
+            _last_E = _last_tick[0]
+            _last_tradeable = _last_tick[1]
+            _last_block = _last_tick[2] or "none"
+            _last_opened = "Y" if _last_tick[3] else "N"
+        else:
+            _last_E = _last_tradeable = 0
+            _last_block = "no_ticks_yet"
+            _last_opened = "N"
+    except Exception as _e:
+        n_micro5 = "?"
+        _last_E = _last_tradeable = 0
+        _last_block = f"db_err:{_e}"
+        _last_opened = "N"
+        query_errors += 1
+
+    micro_missing = (n_eligible_cpamm - n_micro5) if isinstance(n_micro5, int) else "?"
+
+    # ── D: Fail-fast assertions ────────────────────────────────────────────────
+    for venue in _EXPECTED_VENUES:
+        raw_n = raw_venue_counts.get(venue, 0)
+        if raw_n == 0:
+            _venue_zero_streak[venue] = _venue_zero_streak.get(venue, 0) + 1
+            if _venue_zero_streak[venue] >= _VENUE_DROPOUT_WARN_SWEEPS:
+                logger.warning(
+                    f"SWEEP_ASSERT: venue coverage dropped: {venue}=0 for "
+                    f"{_venue_zero_streak[venue]} consecutive sweeps"
+                )
+        else:
+            _venue_zero_streak[venue] = 0
+
+    if n_eligible < _eligible_floor:
+        _eligible_floor_streak += 1
+        if _eligible_floor_streak >= 3:
+            top_rej = max(rejections, key=lambda k: rejections[k] if k != "ok" else 0)
+            logger.warning(
+                f"SWEEP_ASSERT: eligible_snapshot={n_eligible} < floor={_eligible_floor} "
+                f"for {_eligible_floor_streak} sweeps | top_rejection={top_rej}={rejections[top_rej]}"
+            )
+    else:
+        _eligible_floor_streak = 0
+
+    # ── A: Source coverage ────────────────────────────────────────────────────
+    raw_total = sum(raw_venue_counts.values())
+    raw_by_venue = "  ".join(
+        f"{v}={raw_venue_counts.get(v, 0)}"
+        for v in ["raydium", "meteora", "orca", "pumpswap"]
+    ) + (
+        "  " + "  ".join(
+            f"{v}={n}" for v, n in sorted(raw_venue_counts.items())
+            if v not in {"raydium", "meteora", "orca", "pumpswap"}
+        ) if any(v not in {"raydium", "meteora", "orca", "pumpswap"} for v in raw_venue_counts) else ""
+    )
+    elig_by_venue = "  ".join(
+        f"{v}={n}" for v, n in sorted(eligible_venue_counts.items(), key=lambda x: -x[1])
+    )
+
     logger.info(
-        f"Scan complete: {total_fetched} fetched | eligible_snapshot={n_eligible} | "
-        f"rejected: pool_type={rejections['pool_type']} quote={rejections['quote']} "
-        f"age={rejections['age']} vol={rejections['vol']} liq={rejections['liq']} | "
-        f"jup_validated={n_jup_validated} | venue: {venue_str}"
+        f"SWEEP_HEADER "
+        f"| A_raw: total={raw_total}  {raw_by_venue} "
+        f"| B_funnel: snapshot_pass={n_snapshot_pass} eligible={n_eligible} "
+        f"cpamm_valid={n_eligible_cpamm} micro_5m={n_micro5} "
+        f"last_|E|={_last_E} opened={_last_opened} block={_last_block} "
+        f"| C_quality: jup_ok={n_jup_validated} null_age={null_age_count} "
+        f"null_pca={null_pca_count} micro_missing={micro_missing} "
+        f"sweep_ms={sweep_duration_ms} qerr={query_errors} "
+        f"| elig_venue: {elig_by_venue}"
     )
 
 def run():

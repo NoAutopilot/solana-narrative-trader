@@ -69,7 +69,7 @@ except ImportError:
             return False, f"non_sol_quote:{quote_mint[:8]}"
         return True, "ok"
 
-from config.config import DB_PATH, LOGS_DIR, DATA_DIR
+from config.config import DB_PATH, LOGS_DIR, DATA_DIR, JUPITER_API_KEY
 
 os.makedirs(LOGS_DIR, exist_ok=True)
 
@@ -86,7 +86,9 @@ if not logger.handlers:
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 DEXSCREENER_BASE    = "https://api.dexscreener.com"
-JUPITER_QUOTE_URL   = "https://<REDACTED_JUP>/swap/v1/quote"
+JUPITER_QUOTE_URL   = "https://lite-api.jup.ag/swap/v1/quote"
+# Auth header for Jupiter — sent on every request; empty dict if key not configured
+_JUP_HEADERS: dict = ({"x-api-key": JUPITER_API_KEY} if JUPITER_API_KEY else {})
 WSOL_MINT           = "So11111111111111111111111111111111111111112"
 DEXSCREENER_TIMEOUT = 12
 JUPITER_TIMEOUT     = 8
@@ -440,13 +442,15 @@ def check_jupiter_available() -> bool:
                 "amount": "1000000",
                 "slippageBps": "50",
             },
+            headers=_JUP_HEADERS,
             timeout=JUPITER_TIMEOUT
         )
         _jup_available = r.status_code == 200
+        auth_note = f"  auth={'key_set' if JUPITER_API_KEY else 'no_key'}  status={r.status_code}"
         if _jup_available:
-            logger.info("Jupiter quote API available at <REDACTED_JUP>/swap/v1/quote")
+            logger.info(f"Jupiter quote API available at {JUPITER_QUOTE_URL}{auth_note}")
         else:
-            logger.warning(f"Jupiter quote API returned {r.status_code} — CPAMM-only mode")
+            logger.warning(f"Jupiter quote API returned {r.status_code} — CPAMM-only mode{auth_note}")
     except Exception as e:
         logger.warning(f"Jupiter quote API unavailable: {e} — CPAMM-only mode")
         _jup_available = False
@@ -470,16 +474,20 @@ def get_jupiter_quote(input_mint: str, output_mint: str, sol_in: float) -> dict 
                 "slippageBps": "300",
                 "onlyDirectRoutes": "true",
             },
+            headers=_JUP_HEADERS,
             timeout=JUPITER_TIMEOUT
         )
         if r.status_code != 200:
-            return None
+            logger.debug(f"Jupiter quote HTTP {r.status_code} for {output_mint[:8]}")
+            # Return sentinel so caller can count 401s
+            return {"error": True, "status_code": r.status_code}
         data = r.json()
         out_amount = int(data.get("outAmount", 0))
         price_impact_pct = float(data.get("priceImpactPct", 0))
         return {
             "out_amount_raw": out_amount,
             "price_impact_pct": price_impact_pct,
+            "status_code": 200,
         }
     except Exception:
         return None
@@ -631,6 +639,8 @@ def scan_and_log():
     gate_rows = []
     n_eligible = 0
     n_jup_validated = 0
+    n_jup_401 = 0
+    n_jup_err = 0
 
     for pair in pairs:
         mint = pair.get("baseToken", {}).get("address", "")
@@ -683,12 +693,18 @@ def scan_and_log():
         jup_out = jup_slip = jup_diff = None
         if passes_gate and check_jupiter_available():
             jq = get_jupiter_quote(WSOL_MINT, mint, TRADE_SIZE_SOL)
-            if jq:
+            if jq and not jq.get("error"):
                 jup_out = jq["out_amount_raw"]
                 jup_slip = jq["price_impact_pct"]
                 # Compare Jupiter slippage vs CPAMM model
                 jup_diff = abs(jup_slip - impact_buy * 100)
                 n_jup_validated += 1
+            elif jq and jq.get("error"):
+                jup_status = jq.get("status_code", 0)
+                if jup_status == 401:
+                    n_jup_401 += 1
+                else:
+                    n_jup_err += 1
 
         snap_rows.append((
             snapshot_at, evaluated_at, mint, symbol,
@@ -759,7 +775,7 @@ def scan_and_log():
         f"Scan complete: {total_fetched} fetched | {n_eligible} eligible | "
         f"rejected: pool_type={rejections['pool_type']} quote={rejections['quote']} "
         f"age={rejections['age']} vol={rejections['vol']} liq={rejections['liq']} | "
-        f"jup_validated={n_jup_validated}"
+        f"jup_validated={n_jup_validated} jup_401={n_jup_401} jup_err={n_jup_err}"
     )
 
 def run():

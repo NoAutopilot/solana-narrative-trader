@@ -127,21 +127,19 @@ DASHBOARD_PORT = 5050
 DASHBOARD_HOST = "0.0.0.0"
 
 # Jupiter API
-JUPITER_API_KEY = _os.getenv("JUPITER_API_KEY")
-JUPITER_BASE_URL = "https://<REDACTED_JUP>"
+JUPITER_API_KEY  = os.getenv("JUPITER_API_KEY")
+JUPITER_BASE_URL = "https://lite-api.jup.ag"
 
 # ── Live Trading Credentials (loaded from environment) ──────────────────────
-import os as _os
-
 def _validate_env_vars():
     # These are only required for live trading, not for reporting/analysis
-    if _os.getenv("LIVE_TRADING_ENABLED", "false").lower() == "true":
+    if os.getenv("LIVE_TRADING_ENABLED", "false").lower() == "true":
         required = ["JUPITER_API_KEY", "HELIUS_RPC_URL", "WALLET_PRIVATE_KEY"]
-        missing = [v for v in required if not _os.getenv(v)]
+        missing = [v for v in required if not os.getenv(v)]
         if missing:
             raise ValueError(f"Missing required environment variables for live trading: {', '.join(missing)}")
 
 _validate_env_vars()
-RPC_URL             = _os.getenv("HELIUS_RPC_URL")
-WALLET_PRIVATE_KEY  = _os.getenv("WALLET_PRIVATE_KEY")
-WALLET_PUBKEY       = _os.getenv('WALLET_PUBKEY', '<REDACTED_WALLET_PUBKEY>')
+RPC_URL            = os.getenv("HELIUS_RPC_URL")
+WALLET_PRIVATE_KEY = os.getenv("WALLET_PRIVATE_KEY")
+WALLET_PUBKEY      = os.getenv("WALLET_PUBKEY", "")

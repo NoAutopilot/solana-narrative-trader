@@ -415,7 +415,10 @@ def discover_candidates() -> tuple[list[dict], dict, dict]:
         "pool_type": 0, "quote": 0, "age": 0, "vol": 0, "liq": 0, "ok": 0
     }
     all_pairs = []
-    raw_venue_counts: dict[str, int] = {}
+    raw_venue_counts: dict[str, int] = {}       # pre-dedup, pre-filter
+    postdedup_venue_counts: dict[str, int] = {}  # post-dedup unique mints by venue
+    lane_raw_counts: dict[str, int] = {"large_cap_anchor": 0, "pumpswap_graduated": 0}
+    lane_eligible_counts: dict[str, int] = {"large_cap_anchor": 0, "pumpswap_graduated": 0}
 
     # Fetch top-volume SOL pairs from DexScreener
     # Deterministic discovery: fetch pairs for known high-volume Solana mints
@@ -455,13 +458,19 @@ def discover_candidates() -> tuple[list[dict], dict, dict]:
             if isinstance(pairs, list):
                 # Filter to Solana only
                 sol_pairs = [p for p in pairs if isinstance(p, dict) and p.get("chainId") == "solana"]
+                for _p in sol_pairs:
+                    _p["_discovery_lane"] = "large_cap_anchor"
                 all_pairs.extend(sol_pairs)
+                lane_raw_counts["large_cap_anchor"] += len(sol_pairs)
         except Exception as e:
             logger.debug(f"Discovery fetch error ({url}): {e}")
 
     # Lane 2: PumpSwap graduated tokens (refreshed every 30 min)
     pumpswap_pairs = fetch_pumpswap_graduated()
+    for _p in pumpswap_pairs:
+        _p["_discovery_lane"] = "pumpswap_graduated"
     all_pairs.extend(pumpswap_pairs)
+    lane_raw_counts["pumpswap_graduated"] = len(pumpswap_pairs)
     logger.debug(f"Universe: {len(all_pairs)} total pairs (established + {len(pumpswap_pairs)} pumpswap)")
 
     # Count raw pairs by venue BEFORE dedup/filter (for sweep header A)
@@ -523,8 +532,14 @@ def discover_candidates() -> tuple[list[dict], dict, dict]:
         pair["_age_hours"] = age_hours
         filtered.append(pair)
         rejection_counts["ok"] += 1
+        # Post-dedup venue count
+        _fv = (pair.get("dexId") or "unknown").lower()
+        postdedup_venue_counts[_fv] = postdedup_venue_counts.get(_fv, 0) + 1
+        # Lane attribution
+        _lane = pair.get("_discovery_lane", "large_cap_anchor")
+        lane_eligible_counts[_lane] = lane_eligible_counts.get(_lane, 0) + 1
 
-    return filtered, rejection_counts, raw_venue_counts
+    return filtered, rejection_counts, raw_venue_counts, postdedup_venue_counts, lane_raw_counts, lane_eligible_counts
 
 # ── Sweep header state (for D: fail-fast venue dropout detection) ─────────────
 _EXPECTED_VENUES = {"raydium", "orca", "pumpswap", "meteora"}
@@ -541,7 +556,7 @@ def scan_and_log():
     evaluated_at = datetime.now(timezone.utc).isoformat()
     query_errors = 0
 
-    pairs, rejections, raw_venue_counts = discover_candidates()
+    pairs, rejections, raw_venue_counts, postdedup_venue_counts, lane_raw_counts, lane_eligible_counts = discover_candidates()
     total_fetched = sum(rejections.values())
 
     snap_rows = []
@@ -798,31 +813,59 @@ def scan_and_log():
     else:
         _eligible_floor_streak = 0
 
-    # ── A: Source coverage ────────────────────────────────────────────────────
+    # ── A: Source coverage (pre-dedup and post-dedup) ────────────────────────
     raw_total = sum(raw_venue_counts.values())
+    postdedup_total = sum(postdedup_venue_counts.values())
+    _KEY_VENUES = ["raydium", "meteora", "orca", "pumpswap"]
     raw_by_venue = "  ".join(
         f"{v}={raw_venue_counts.get(v, 0)}"
-        for v in ["raydium", "meteora", "orca", "pumpswap"]
+        for v in _KEY_VENUES
     ) + (
         "  " + "  ".join(
             f"{v}={n}" for v, n in sorted(raw_venue_counts.items())
-            if v not in {"raydium", "meteora", "orca", "pumpswap"}
-        ) if any(v not in {"raydium", "meteora", "orca", "pumpswap"} for v in raw_venue_counts) else ""
+            if v not in set(_KEY_VENUES)
+        ) if any(v not in set(_KEY_VENUES) for v in raw_venue_counts) else ""
     )
-    elig_by_venue = "  ".join(
-        f"{v}={n}" for v, n in sorted(eligible_venue_counts.items(), key=lambda x: -x[1])
+    postdedup_by_venue = "  ".join(
+        f"{v}={postdedup_venue_counts.get(v, 0)}"
+        for v in _KEY_VENUES
+    ) + (
+        "  " + "  ".join(
+            f"{v}={n}" for v, n in sorted(postdedup_venue_counts.items())
+            if v not in set(_KEY_VENUES)
+        ) if any(v not in set(_KEY_VENUES) for v in postdedup_venue_counts) else ""
     )
+
+    # Top-3 venues by eligible count
+    top3_elig_venue = "  ".join(
+        f"{v}={n}" for v, n in sorted(eligible_venue_counts.items(), key=lambda x: -x[1])[:3]
+    )
+
+    # Top-3 rejection reasons (excluding 'ok')
+    rej_sorted = sorted(
+        ((k, v) for k, v in rejections.items() if k != "ok"),
+        key=lambda x: -x[1]
+    )[:3]
+    top3_rej = "  ".join(f"{k}={v}" for k, v in rej_sorted)
+
+    # Lane attribution
+    lane_raw_str = "  ".join(f"{k}={v}" for k, v in sorted(lane_raw_counts.items()))
+    lane_elig_str = "  ".join(f"{k}={v}" for k, v in sorted(lane_eligible_counts.items()))
 
     logger.info(
         f"SWEEP_HEADER "
-        f"| A_raw: total={raw_total}  {raw_by_venue} "
+        f"| A_raw(pre_dedup): total={raw_total}  {raw_by_venue} "
+        f"| A_dedup(post_dedup_unique): total={postdedup_total}  {postdedup_by_venue} "
+        f"| A_lane_raw: {lane_raw_str} "
+        f"| A_lane_elig: {lane_elig_str} "
         f"| B_funnel: snapshot_pass={n_snapshot_pass} eligible={n_eligible} "
         f"cpamm_valid={n_eligible_cpamm} micro_5m={n_micro5} "
         f"last_|E|={_last_E} opened={_last_opened} block={_last_block} "
         f"| C_quality: jup_ok={n_jup_validated} null_age={null_age_count} "
         f"null_pca={null_pca_count} micro_missing={micro_missing} "
         f"sweep_ms={sweep_duration_ms} qerr={query_errors} "
-        f"| elig_venue: {elig_by_venue}"
+        f"| top3_elig_venue: {top3_elig_venue} "
+        f"| top3_rej: {top3_rej}"
     )
 
 def run():

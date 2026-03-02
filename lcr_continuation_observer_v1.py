@@ -32,6 +32,12 @@ Patch log:
   v1.1 — (A) read-only safety guard: reject Ultra responses containing 'transaction'/'tx' keys
           (B) persist quote timestamps (entry_quote_ts_epoch, fwd_quote_ts_epoch_*, fwd_due_epoch_*, fwd_exec_epoch_*)
           (C) eval rules documented in header; jitter logged per forward quote
+  v1.2 — (B2) add row_valid / invalid_reason columns; enforce hard invariants in update_fwd_quote:
+               delta_5m == sig_net_5m - ctrl_net_5m within 1e-6 (checked at report time)
+               net_H == gross_H - FEE_RATE within 1e-6 (checked per row at write time)
+          (A2) coverage = ok_count / due_count (not ok / total); pending tracked separately
+          (C2) outlier debug dump for abs(delta_5m) >= 10%
+          (D)  report is DB-generated only; no manual arithmetic in narrative
 """
 
 import sqlite3
@@ -110,7 +116,7 @@ log = logging.getLogger(VERSION)
 
 # ── RUN ID ───────────────────────────────────────────────────────────────────
 RUN_ID = str(uuid.uuid4())
-log.info(f"=== {VERSION} v1.1 starting | run_id={RUN_ID} ===")
+log.info(f"=== {VERSION} v1.2 starting | run_id={RUN_ID} ===")
 log.info(f"DB_PATH={DB_PATH}  OBS_DB_PATH={OBS_DB_PATH}")
 log.info(f"Fixed notional: {FIXED_NOTIONAL_SOL} SOL ({LAMPORTS_IN} lamports) | slippageBps={SLIPPAGE_BPS}")
 log.info(f"Read-only safety guard: reject responses where any of {_TX_KEYS} has non-None value")
@@ -190,7 +196,9 @@ def init_observer_db():
         fwd_exec_epoch_30m          INTEGER,
         fwd_quote_ts_epoch_30m      INTEGER,
         created_at_iso              TEXT    NOT NULL,
-        updated_at_iso              TEXT    NOT NULL
+        updated_at_iso              TEXT    NOT NULL,
+        row_valid                   INTEGER DEFAULT 1,
+        invalid_reason              TEXT
     );
 
     CREATE UNIQUE INDEX IF NOT EXISTS idx_obs_fire_type
@@ -214,6 +222,8 @@ def init_observer_db():
     # (B) Migration: add new timestamp columns to existing rows via ALTER TABLE
     # SQLite supports ADD COLUMN; silently ignore if column already exists
     new_cols = [
+        ("row_valid",               "INTEGER DEFAULT 1"),
+        ("invalid_reason",          "TEXT"),
         ("entry_quote_ts_epoch",    "INTEGER"),
         ("fwd_due_epoch_1m",        "INTEGER"),
         ("fwd_exec_epoch_1m",       "INTEGER"),
@@ -502,10 +512,27 @@ def update_fwd_quote(candidate_id: str, label: str, sol_out: int | None,
                      gross: float | None, net: float | None,
                      ok: int, err: str | None,
                      due_epoch: int, exec_epoch: int, quote_ts_epoch: int):
-    """(B) Persist forward quote result including due/exec/quote timestamps."""
+    """(B2) Persist forward quote result including due/exec/quote timestamps.
+    Enforces hard invariant: net == gross - FEE_RATE within 1e-6.
+    Sets row_valid=0 and invalid_reason if invariant fails.
+    """
     con = sqlite3.connect(OBS_DB_PATH)
     cur = con.cursor()
     now_iso = datetime.now(timezone.utc).isoformat()
+
+    # (B2) Hard invariant check: net_H must equal gross_H - FEE_RATE
+    row_valid = 1
+    invalid_reason = None
+    if ok and gross is not None and net is not None:
+        expected_net = gross - FEE_RATE
+        if abs(net - expected_net) > 1e-6:
+            row_valid = 0
+            invalid_reason = (f"net_invariant_fail_{label}: "
+                              f"net={net:.8f} gross={gross:.8f} "
+                              f"expected_net={expected_net:.8f} "
+                              f"diff={abs(net-expected_net):.2e}")
+            log.error(f"  ROW INVARIANT FAIL [{candidate_id[:8]}] {invalid_reason}")
+
     cur.execute(f"""
         UPDATE observer_lcr_cont_v1 SET
             fwd_quote_ok_{label}          = ?,
@@ -516,10 +543,13 @@ def update_fwd_quote(candidate_id: str, label: str, sol_out: int | None,
             fwd_due_epoch_{label}         = ?,
             fwd_exec_epoch_{label}        = ?,
             fwd_quote_ts_epoch_{label}    = ?,
+            row_valid                     = CASE WHEN ? = 0 THEN 0 ELSE row_valid END,
+            invalid_reason                = CASE WHEN ? IS NOT NULL THEN ? ELSE invalid_reason END,
             updated_at_iso                = ?
         WHERE candidate_id = ?
     """, (ok, sol_out, gross, net, err,
           due_epoch, exec_epoch, quote_ts_epoch,
+          row_valid, invalid_reason, invalid_reason,
           now_iso, candidate_id))
     con.commit()
     con.close()

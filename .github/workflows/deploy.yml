@@ -42,10 +42,12 @@ jobs:
 
       - name: Verify deployment proof
         run: |
+          echo "=== Deployment Proof ==="
           ssh -i ~/.ssh/deploy_key \
               -o StrictHostKeyChecking=no \
+              -o ConnectTimeout=30 \
               root@142.93.24.227 \
-              "cat /root/solana_trader/deployment_proof.json && echo '' && cat /root/solana_trader/.deployed_sha"
+              "cat /root/solana_trader/deployment_proof.json && echo '' && echo 'SHA:' && cat /root/solana_trader/.deployed_sha && echo '' && echo 'Services:' && systemctl is-active solana-trader.service solana-lcr-cont-observer.service"
 
       - name: Cleanup SSH key
         if: always()

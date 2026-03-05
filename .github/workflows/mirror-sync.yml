@@ -89,14 +89,20 @@ jobs:
           EOF
 
       - name: Push to public mirror
+        env:
+          MIRROR_PUSH_TOKEN: ${{ secrets.MIRROR_PUSH_TOKEN }}
         run: |
           git config user.email "mirror-bot@noautopilot"
           git config user.name "Mirror Bot"
 
-          # MIRROR_PUSH_TOKEN is a PAT with repo+workflow scope — required to push
-          # to a different repo (GITHUB_TOKEN is scoped to the current repo only)
-          MIRROR_URL="https://x-access-token:${{ secrets.MIRROR_PUSH_TOKEN }}@github.com/NoAutopilot/solana-narrative-trader-mirror.git"
-          git remote add mirror "$MIRROR_URL" 2>/dev/null || git remote set-url mirror "$MIRROR_URL"
+          # Use git credential store to inject the PAT without embedding in URL
+          # (GitHub Actions masks secrets in URLs, causing 403 if embedded directly)
+          git config --global credential.helper store
+          echo "https://NoAutopilot:${MIRROR_PUSH_TOKEN}@github.com" > ~/.git-credentials
+          chmod 600 ~/.git-credentials
+
+          git remote add mirror "https://github.com/NoAutopilot/solana-narrative-trader-mirror.git" 2>/dev/null || \
+            git remote set-url mirror "https://github.com/NoAutopilot/solana-narrative-trader-mirror.git"
 
           # Stage all changes (including deletions from strip step)
           git add -A
@@ -104,3 +110,6 @@ jobs:
 
           # Force push to mirror (mirror is always a one-way sync from canonical)
           git push mirror HEAD:master --force
+
+          # Clean up credentials
+          rm -f ~/.git-credentials

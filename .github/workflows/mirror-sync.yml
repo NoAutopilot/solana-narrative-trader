@@ -18,6 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Strip secrets and sensitive files
         run: |
@@ -107,6 +108,9 @@ jobs:
           # Stage all changes (including deletions from strip step)
           git add -A
           git diff --cached --quiet || git commit -m "mirror: sync from private canonical $(git rev-parse --short HEAD)"
+
+          # Remove the extraheader injected by actions/checkout so our credential store is used
+          git config --local --unset-all http.https://github.com/.extraheader || true
 
           # Force push to mirror (mirror is always a one-way sync from canonical)
           git push mirror HEAD:master --force

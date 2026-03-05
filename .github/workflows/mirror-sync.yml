@@ -89,16 +89,14 @@ jobs:
           EOF
 
       - name: Push to public mirror
-        env:
-          MIRROR_PUSH_TOKEN: ${{ secrets.MIRROR_PUSH_TOKEN }}
         run: |
           git config user.email "mirror-bot@noautopilot"
           git config user.name "Mirror Bot"
 
           # MIRROR_PUSH_TOKEN is a PAT with repo+workflow scope — required to push
           # to a different repo (GITHUB_TOKEN is scoped to the current repo only)
-          git remote add mirror "https://x-access-token:${MIRROR_PUSH_TOKEN}@github.com/NoAutopilot/solana-narrative-trader-mirror.git" 2>/dev/null || \
-            git remote set-url mirror "https://x-access-token:${MIRROR_PUSH_TOKEN}@github.com/NoAutopilot/solana-narrative-trader-mirror.git"
+          MIRROR_URL="https://x-access-token:${{ secrets.MIRROR_PUSH_TOKEN }}@github.com/NoAutopilot/solana-narrative-trader-mirror.git"
+          git remote add mirror "$MIRROR_URL" 2>/dev/null || git remote set-url mirror "$MIRROR_URL"
 
           # Stage all changes (including deletions from strip step)
           git add -A

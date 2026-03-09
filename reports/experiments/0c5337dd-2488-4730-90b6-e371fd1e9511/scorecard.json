@@ -1,0 +1,144 @@
+{
+  "run_id": "0c5337dd-2488-4730-90b6-e371fd1e9511",
+  "observer_name": "lcr_continuation_observer_v1",
+  "decision_threshold": 50,
+  "generated_at": "2026-03-09T15:28:11Z",
+  "all_completed_view": {
+    "health": {
+      "n_fires_total": 124,
+      "n_entry_ok_pairs": 123,
+      "n_due_5m": 122,
+      "n_pairs_complete_5m": 122,
+      "n_fail_5m": 0,
+      "entry_quote_coverage_pct": 99.19,
+      "conditional_5m_coverage_pct": 100.0,
+      "unconditional_5m_completion_pct": 98.39,
+      "row_valid_signal": 122,
+      "row_invalid_signal": 0,
+      "row_valid_control": 122,
+      "row_invalid_control": 0,
+      "invalid_reason_summary": {},
+      "http_429_signal": 0,
+      "http_429_control": 0,
+      "other_fail_signal": 2,
+      "other_fail_control": 2,
+      "jitter_1m": {
+        "p50": 5,
+        "p95": 9,
+        "max": 11
+      },
+      "jitter_5m": {
+        "p50": 4,
+        "p95": 9,
+        "max": 10
+      },
+      "dt_from_entry_1m": {
+        "p50": 60,
+        "p95": 61,
+        "max": 62
+      },
+      "dt_from_entry_5m": {
+        "p50": 301,
+        "p95": 302,
+        "max": 303
+      }
+    },
+    "performance": {
+      "n": 122,
+      "mean_delta_5m": 0.001227,
+      "median_delta_5m": 0.001031,
+      "pct_delta_positive": 68.03,
+      "std_delta_5m": 0.003951,
+      "ci_95_t": [
+        0.000512,
+        0.001942
+      ],
+      "ci_95_bootstrap_mean": [
+        0.000505,
+        0.001964
+      ],
+      "ci_95_bootstrap_median": [
+        0.000354,
+        0.002503
+      ],
+      "sign_test_p_value": 0.0001,
+      "mean_signal_net_5m": -0.012407,
+      "mean_control_net_5m": -0.013634,
+      "outlier_count": 0,
+      "top_contributor_share": 0.0319,
+      "trimmed_mean_delta_5m": 0.001326,
+      "winsorized_mean_delta_5m": 0.0012
+    },
+    "classification": "SUPPORTED AS RANKING FEATURE / NOT PROMOTABLE",
+    "classification_reason": "mean>0, median>0, CI_lo>0, but signal net <=0"
+  },
+  "timing_valid_view": {
+    "health": {
+      "n_fires_total": 124,
+      "n_entry_ok_pairs": 123,
+      "n_due_5m": 122,
+      "n_pairs_complete_5m": 122,
+      "n_fail_5m": 0,
+      "entry_quote_coverage_pct": 99.19,
+      "conditional_5m_coverage_pct": 100.0,
+      "unconditional_5m_completion_pct": 98.39,
+      "row_valid_signal": 122,
+      "row_invalid_signal": 0,
+      "row_valid_control": 122,
+      "row_invalid_control": 0,
+      "invalid_reason_summary": {},
+      "http_429_signal": 0,
+      "http_429_control": 0,
+      "other_fail_signal": 2,
+      "other_fail_control": 2,
+      "jitter_1m": {
+        "p50": 5,
+        "p95": 9,
+        "max": 11
+      },
+      "jitter_5m": {
+        "p50": 4,
+        "p95": 9,
+        "max": 10
+      },
+      "dt_from_entry_1m": {
+        "p50": 60,
+        "p95": 61,
+        "max": 62
+      },
+      "dt_from_entry_5m": {
+        "p50": 301,
+        "p95": 302,
+        "max": 303
+      }
+    },
+    "performance": {
+      "n": 122,
+      "mean_delta_5m": 0.001227,
+      "median_delta_5m": 0.001031,
+      "pct_delta_positive": 68.03,
+      "std_delta_5m": 0.003951,
+      "ci_95_t": [
+        0.000512,
+        0.001942
+      ],
+      "ci_95_bootstrap_mean": [
+        0.000505,
+        0.001964
+      ],
+      "ci_95_bootstrap_median": [
+        0.000354,
+        0.002503
+      ],
+      "sign_test_p_value": 0.0001,
+      "mean_signal_net_5m": -0.012407,
+      "mean_control_net_5m": -0.013634,
+      "outlier_count": 0,
+      "top_contributor_share": 0.0319,
+      "trimmed_mean_delta_5m": 0.001326,
+      "winsorized_mean_delta_5m": 0.0012
+    },
+    "classification": "SUPPORTED AS RANKING FEATURE / NOT PROMOTABLE",
+    "classification_reason": "mean>0, median>0, CI_lo>0, but signal net <=0"
+  }
+}

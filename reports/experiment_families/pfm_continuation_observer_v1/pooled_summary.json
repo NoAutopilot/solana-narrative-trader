@@ -1,0 +1,67 @@
+{
+  "family_name": "pfm_continuation_observer_v1",
+  "observer_name": "pfm_continuation_observer_v1",
+  "generated_at": "2026-03-09T15:28:31Z",
+  "valid_run_ids": [
+    "1677a7da",
+    "2a439616",
+    "2ce4ff81"
+  ],
+  "all_run_ids": [
+    "1677a7da",
+    "2a439616",
+    "2ce4ff81"
+  ],
+  "pooled_metrics": {
+    "n_valid_runs": 3,
+    "n_pairs_complete_5m": 232,
+    "mean_delta_5m": 0.005715,
+    "median_delta_5m": 5.7e-05,
+    "pct_delta_positive": 50.0,
+    "ci_95_t": [
+      -0.009181,
+      0.02061
+    ],
+    "ci_95_bootstrap_mean": [
+      -0.008169,
+      0.020132
+    ],
+    "mean_signal_net_5m": -0.023268,
+    "mean_control_net_5m": -0.028983,
+    "outlier_count": 64,
+    "outlier_rate_pct": 27.59,
+    "top_contributor_share": 0.0339
+  },
+  "per_run": [
+    {
+      "run_id": "1677a7da",
+      "n": 212,
+      "mean_delta_5m": 0.007804,
+      "median_delta_5m": 5.7e-05,
+      "pct_delta_positive": 50.0,
+      "mean_signal_net_5m": -0.022255,
+      "health_status": "VALID",
+      "classification": "FRAGILE / INCONCLUSIVE"
+    },
+    {
+      "run_id": "2a439616",
+      "n": 15,
+      "mean_delta_5m": -0.002,
+      "median_delta_5m": 0.002413,
+      "pct_delta_positive": 53.33,
+      "mean_signal_net_5m": -0.039936,
+      "health_status": "VALID",
+      "classification": ""
+    },
+    {
+      "run_id": "2ce4ff81",
+      "n": 5,
+      "mean_delta_5m": -0.05972,
+      "median_delta_5m": -0.023238,
+      "pct_delta_positive": 40.0,
+      "mean_signal_net_5m": -0.016217,
+      "health_status": "VALID",
+      "classification": ""
+    }
+  ]
+}

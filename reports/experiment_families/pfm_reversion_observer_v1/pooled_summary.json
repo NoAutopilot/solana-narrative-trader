@@ -1,0 +1,43 @@
+{
+  "family_name": "pfm_reversion_observer_v1",
+  "observer_name": "pfm_reversion_observer_v1",
+  "generated_at": "2026-03-09T15:28:30Z",
+  "valid_run_ids": [
+    "99ed0fd1"
+  ],
+  "all_run_ids": [
+    "99ed0fd1"
+  ],
+  "pooled_metrics": {
+    "n_valid_runs": 1,
+    "n_pairs_complete_5m": 20,
+    "mean_delta_5m": 0.003549,
+    "median_delta_5m": 0.0002,
+    "pct_delta_positive": 50.0,
+    "ci_95_t": [
+      -0.030554,
+      0.037652
+    ],
+    "ci_95_bootstrap_mean": [
+      -0.028121,
+      0.038439
+    ],
+    "mean_signal_net_5m": -0.045398,
+    "mean_control_net_5m": -0.048946,
+    "outlier_count": 2,
+    "outlier_rate_pct": 10.0,
+    "top_contributor_share": 0.1552
+  },
+  "per_run": [
+    {
+      "run_id": "99ed0fd1",
+      "n": 20,
+      "mean_delta_5m": 0.003549,
+      "median_delta_5m": 0.0002,
+      "pct_delta_positive": 50.0,
+      "mean_signal_net_5m": -0.045398,
+      "health_status": "VALID",
+      "classification": "ACCUMULATING"
+    }
+  ]
+}

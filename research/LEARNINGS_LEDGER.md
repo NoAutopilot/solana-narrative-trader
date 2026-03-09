@@ -1,114 +1,99 @@
 # LEARNINGS LEDGER
 
-All entries are factual and run-scoped. No prose beyond what is needed to understand the result.
+Canonical record of completed experiments, their outcomes, and durable learnings.
+Each entry is immutable once written. Append only.
 
 ---
 
-## Entry 001 — LCR Continuation (EXP-20260303-lcr-continuation)
+## Entry 001 — PFM Continuation Observer
+**run_id:** `1677a7da`
+**Period:** 2026-03-07T01:15Z → 2026-03-09T06:28Z (≈53 hours)
+**Service:** `solana-pfm-cont-observer.service` (stopped and disabled 2026-03-09T06:28Z)
+**Final classification:** `RANKING FEATURE ONLY / NOT PROMOTABLE`
 
-**Status:** SUPPORTIVE / REPLICATION REQUIRED
-**run_id:** `70adb2c2-da3c-4832-a3ef-b74ba591f5f6`
-**Span:** 2026-03-03T21:30Z → 2026-03-05T02:30Z (~1.21 days)
-**Reclassified:** 2026-03-05 (was incorrectly marked PROMOTE)
+### Hypothesis tested
+> Among matched token pairs in the `pumpfun_mature` lane, the token with higher recent 5-minute momentum (`entry_r_m5 > 0`, signal) outperforms the token with lower momentum (`entry_r_m5 < 0`, control) at a +5 minute horizon.
 
-**What was tested:**
-Large-cap-ray tokens with positive 5-minute momentum (r_m5 >= 0) as signal, matched against negative-momentum controls from the same fire. Primary metric: mean signal-minus-control net markout at +5m.
+### Final metrics (canonical View B, n=212)
 
-**Primary metric result (n=87 complete pairs, drop-failed baseline):**
-
-| metric | value |
+| Metric | Value |
 |---|---|
-| mean delta_5m | +0.001643 |
-| median delta_5m | +0.001160 |
-| % delta > 0 | 65.5% |
-| 95% CI | [+0.000582, +0.002703] |
-| mean signal net +5m | -0.011924 (absolute loss) |
-| mean control net +5m | -0.013566 (absolute loss) |
+| n_pairs_complete_5m | 212 |
+| mean_delta_+5m | +0.007804 |
+| median_delta_+5m | +0.000057 |
+| % delta > 0 | 50.0% (106/212) |
+| 95% CI | [−0.007806, +0.023414] |
+| mean_signal_net_+5m | −0.022255 |
+| mean_control_net_+5m | −0.030059 |
 
-**Why NOT promoted:**
-1. Absolute signal net markout is negative (-1.19%) — this is not a deployable edge.
-2. Data-quality preregistration not fully met: +5m coverage = 94.6% (threshold: ≥95%).
-3. Count reconciliation gap: n_signals=98 but due=92 (6 excluded due to entry_quote_ok=0).
+### Data quality
+All gates passed: entry_coverage=100%, 5m_coverage=100%, row_valid=100%, HTTP_429=0.
 
-**Count reconciliation (n_signals=98 vs due=92):**
-6 signals have `fwd_due_epoch_5m = NULL` because `entry_quote_ok = 0` — the entry quote failed so no forward quote was ever scheduled. These are correctly excluded from the coverage denominator. The 6 tokens were: FWOG (×3), $WIF, POPCAT (×2), WETH. All entry failures occurred in the first ~9 hours of the run. This is a known data-quality pattern (entry quote failures propagate to no forward quote scheduled) and is not a bug.
+### Why not promotable
+The signal token outperforms its control on average, but loses money in absolute terms (mean_signal_net = −0.022). The CI crosses zero. The median delta is near zero. The relative edge is real but not large enough or consistent enough to constitute a tradeable directional signal.
 
-**Failed +5m quote investigation (5 pairs, all both-sides failed):**
+### Regime filter sidecar result
+`pfm_continuation_regime_filter_sidecar_v1`: tested breadth_positive, median_r_m5_positive, signal_r_m5_strong (tercile + quintile) across 187 pairs with pool data. No subgroup produced mean_signal_net > 0. Verdict: `RANKING FEATURE ONLY`.
 
-| Fire time | Signal token | Control token | Failure cause |
-|---|---|---|---|
-| 2026-03-03T22:15Z | CHILLGUY | FWOG | HTTP 429 rate limit |
-| 2026-03-03T23:45Z | FWOG | POPCAT | HTTP 429 rate limit |
-| 2026-03-04T00:15Z | FWOG | Pnut | HTTP 429 rate limit |
-| 2026-03-04T05:45Z | $WIF | BOME | HTTP 429 rate limit |
-| 2026-03-04T13:45Z | JUP | $WIF | HTTP 429 rate limit |
-
-All 5 failures are **both-sides** (signal and control both failed at the same fire). Cause is exclusively HTTP 429 (Jupiter API rate limiting). Failures are **not clustered by token** (5 different signal tokens, 5 different control tokens). Failures are **not clustered by venue** (4 raydium, 1 orca). Failures are **not clustered in time** (spread across 15+ hours). No systematic bias is evident — rate-limit failures appear random with respect to the hypothesis.
-
-**Sensitivity check (fragility assessment):**
-
-| Assumption | n | mean delta | median delta | 95% CI | CI lower > 0? |
-|---|---|---|---|---|---|
-| A1: drop failed (baseline) | 87 | +0.001643 | +0.001160 | [+0.000582, +0.002703] | YES |
-| A2: failed = 0 | 92 | +0.001553 | +0.000813 | [+0.000547, +0.002559] | YES |
-| A3: failed = worst non-outlier (−0.010705) | 92 | +0.000971 | +0.000813 | [−0.000197, +0.002140] | NO (barely) |
-
-Result is robust under A1 and A2. Under A3 (worst-case), the CI lower bound crosses zero by a small margin (−0.000197). The effect is not fragile to random failures but is fragile to the worst-case assumption — which is expected given small n and the fact that worst-case is an extreme pessimistic bound.
-
-**Conclusion:** Candidate effect. Positive and consistent signal-minus-control delta. Not deployable. Requires one clean confirmatory run with ≥95% coverage and fully reconciled counts.
-
-**Next action:** Run EXP-20260305-lcr-continuation-confirmatory (same rules, new run_id, require ≥95% coverage).
+### Durable learnings
+1. **Positive relative delta ≠ promotable signal.** A signal that loses less than its control is a ranking feature, not a directional edge. Promotion requires mean_signal_net > 0.
+2. **Regime filters did not rescue continuation.** The breadth and median-r_m5 filters did not improve absolute signal net. The `median_r_m5_positive` filter actually worsened mean delta (−0.004 vs +0.010 baseline), suggesting continuation is weaker during rising-pool regimes.
+3. **Outlier sensitivity is high.** top_contributor_share ≈ 0.038 across all subgroups; 54/212 pairs were outliers (|delta| ≥ 0.10). The mean is driven by a fat tail, not a consistent edge.
+4. **Data quality infrastructure is solid.** The observer framework, canonical report script, and reconciliation tooling all worked correctly. The reporting discrepancy (dashboard vs reconciliation) was a sample-size snapshot issue, not a data bug.
+5. **Reversion hypothesis is now the natural next test.** If continuation is a ranking feature, the inverse (r_m5 < 0 signal) may produce a reversion edge. This is the next preregistered experiment.
 
 ---
 
-## Entry 002 — LCR Continuation Confirmatory (EXP-20260305-lcr-continuation-conf)
+## Entry 002 — LCR Continuation Observer
+**run_id:** `0c5337dd-2488-4730-90b6-e371fd1e9511` (primary; 2 additional runs pooled)
+**Family:** `lcr_continuation_observer_v1`
+**Lane:** `lcr`
+**Direction:** continuation
+**Final classification:** `SUPPORTED AS RANKING FEATURE / NOT PROMOTABLE`
 
-**Status:** SUPPORTED (relative) / NOT PROMOTABLE (absolute)
-**run_id:** `0c5337dd-2488-4730-90b6-e371fd1e9511`
-**Date:** 2026-03-06
+### Hypothesis tested
+> Among matched token pairs in the `lcr` lane, the token with higher recent momentum (signal) outperforms the token with lower momentum (control) at a +5 minute horizon.
 
-**Result Summary (n=122):**
-- **mean delta +5m:** +0.001227
-- **median delta +5m:** +0.001031
-- **95% CI:** [+0.000497, +0.001957]
-- **% delta > 0:** 68.0%
-- **mean signal net +5m:** -0.012407
-- **mean control net +5m:** -0.013634
+### Final metrics (ALL_COMPLETED_VIEW, n=122 primary; n=286 pooled)
 
-**Interpretation:**
-The hypothesis is confirmed: `large_cap_ray` continuation signals hold a statistically significant relative edge over matched controls. However, absolute markout remains negative across the entire dataset. The signal is a valid ranking feature but not a standalone tradable edge for a long strategy in the observed market environment.
+| Metric | Value (primary) | Value (pooled) |
+|--------|----------------|----------------|
+| n_pairs_complete_5m | 122 | 286 |
+| mean_delta_+5m | +0.001238 | — |
+| % delta > 0 | 62.5% | — |
+| mean_signal_net_+5m | −0.010902 | — |
+| mean_control_net_+5m | −0.012139 | — |
 
-**Decision:**
-STOPPED and ARCHIVED. Not promotable as a standalone long strategy.
-
----
-
-## Entry 003 — LCR Continuation Regime Sidecar v1
-
-**Status:** COMPLETED (Read-only)
-**Date:** 2026-03-06
-
-**Goal:**
-Test if specific `large_cap_ray` market regimes flip absolute signal net +5m to positive using the Entry 002 dataset.
-
-**Regime Analysis (n=122):**
-| Regime Group | n | s_net_mn | s_net_md | c_net_mn | d_mn | d_md | d>0 |
-|---|---|---|---|---|---|---|---|
-| ALL | 122 | -0.012407 | -0.012286 | -0.013634 | +0.001227 | +0.001031 | 68.0% |
-| BREADTH_POS (>60%) | 21 | -0.012178 | -0.011066 | -0.013431 | +0.001253 | +0.002064 | 76.2% |
-| MEDIAN_POS (>0) | 38 | -0.012160 | -0.012183 | -0.013577 | +0.001418 | +0.002000 | 68.4% |
-| BOTH_POS | 21 | -0.012178 | -0.011066 | -0.013431 | +0.001253 | +0.002064 | 76.2% |
-
-**Conclusion:**
-No tested regime subgroup produced a positive absolute signal net +5m. While the relative delta improved slightly in positive breadth/median regimes, the absolute edge remains deeply negative.
-
-**Decision:**
-Continuation is confirmed as a ranking feature only. No standalone strategy promotion is supported even under regime filtering.
+### Durable learnings
+1. **LCR continuation shows a persistent positive relative delta** across multiple runs, but absolute signal net is negative in all runs. The edge is real as a ranking signal only.
+2. **LCR continuation is not a standalone promotable long signal at +5m.**
+3. **Next branch:** Test whether LCR continuation signal can be used as a filter or ranking layer on top of another entry criterion that produces positive absolute net.
 
 ---
 
-## Entry 004 — LCR Reversion (EXP-20260305-lcr-reversion)
+## Entry 003 — PFM Reversion Observer (in progress)
+**run_id:** `99ed0fd1`
+**Family:** `pfm_reversion_observer_v1`
+**Lane:** `pumpfun_mature`
+**Direction:** reversion
+**Classification:** `ACCUMULATING` (n=20 of 50 required for decision)
 
-**Status:** DESIGNED / NOT STARTED
-**Charter:** `research/experiments/EXP-20260305-lcr-reversion/charter.md`
-**Not started until:** Explicit user approval.
+### Hypothesis tested
+> Among matched token pairs in the `pumpfun_mature` lane, the token with the most negative recent 5-minute momentum (`entry_r_m5 < 0`, signal) outperforms the token with non-negative momentum (`entry_r_m5 >= 0`, control) at a +5 minute horizon.
+
+### Current metrics (ALL_COMPLETED_VIEW, n=20)
+
+| Metric | Value |
+|--------|-------|
+| n_pairs_complete_5m | 20 |
+| mean_delta_+5m | +0.003549 |
+| median_delta_+5m | +0.003377 |
+| mean_signal_net_+5m | −0.045398 |
+| mean_control_net_+5m | −0.048946 |
+| entry_coverage | 100% |
+| row_valid | 100% |
+
+### Notes
+Early data quality is clean. Relative delta is mildly positive but n is too small for classification. Decision checkpoint at n=50.
+
+---

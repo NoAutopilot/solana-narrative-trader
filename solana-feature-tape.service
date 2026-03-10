@@ -1,0 +1,16 @@
+[Unit]
+Description=Solana Feature Tape v1 — read-only data collection service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/solana_trader
+ExecStart=/usr/bin/python3 /root/solana_trader/feature_tape_v1.py
+Restart=on-failure
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+[Unit]
+Description=Solana Trader — Daily Restore Drill Timer
+
+[Timer]
+OnCalendar=*-*-* 02:00:00 UTC
+AccuracySec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

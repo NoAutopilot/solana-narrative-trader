@@ -1,0 +1,10 @@
+[Unit]
+Description=Solana Trader — Daily Restore Drill
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/root/solana_trader/ops/restore_test.sh
+StandardOutput=journal
+StandardError=journal

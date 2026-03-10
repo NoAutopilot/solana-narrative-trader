@@ -1,0 +1,10 @@
+[Unit]
+Description=Solana Trader — SQLite Hot Backup
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/root/solana_trader/ops/backup_sqlite.sh 15min
+StandardOutput=journal
+StandardError=journal

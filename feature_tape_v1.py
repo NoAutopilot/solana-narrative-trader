@@ -96,6 +96,8 @@ def ensure_table(conn: sqlite3.Connection):
         order_flow_source       TEXT,
         quote_source            TEXT,
         liq_source              TEXT,
+        pool_size_total         INTEGER,
+        pool_size_with_micro    INTEGER,
         created_at              TEXT NOT NULL
     )
     """)
@@ -240,11 +242,18 @@ def run_fire(fire_time: datetime, conn: sqlite3.Connection) -> dict:
         return {"fire_id": fire_id, "n_candidates": 0, "n_written": 0, "skipped": False}
 
     # ── 3. Breadth / pool-level metrics (derived, no lookahead) ─────────────
-    # Source r_m5 from microstructure_log (not snapshot — snapshot.r_m5 is often NULL).
-    # Collect the most recent micro r_m5 for each eligible candidate within the 60s window.
+    # Source r_m5 from microstructure_log for both pool-level and per-candidate fields.
+    # snapshot.r_m5 is NULL in this deployment; micro is the authoritative source.
     fire_ts_minus_60 = (fire_time - timedelta(seconds=MICRO_LOOKBACK_S)).isoformat()
-    pool_micro_r_m5_rows = conn.execute("""
-        SELECT m.r_m5
+    pool_size_total = len(candidates)
+
+    # Build a dict: mint -> (micro_r_m5, micro_row) for all candidates with a micro row
+    mint_list = [c["mint_address"] for c in candidates]
+    micro_rows_all = conn.execute("""
+        SELECT m.mint_address, m.logged_at, m.r_m5, m.rv_5m, m.range_5m,
+               m.buy_sell_ratio_m5, m.buys_m5, m.sells_m5,
+               m.txn_accel_m5_vs_h1, m.vol_accel_m5_vs_h1,
+               m.avg_trade_usd_m5, m.liq_change_pct
         FROM (
             SELECT mint_address, MAX(logged_at) as latest_at
             FROM microstructure_log
@@ -255,11 +264,16 @@ def run_fire(fire_time: datetime, conn: sqlite3.Connection) -> dict:
         ) best
         JOIN microstructure_log m
           ON m.mint_address = best.mint_address AND m.logged_at = best.latest_at
-        WHERE m.r_m5 IS NOT NULL
-    """.format(",".join("?" * len(candidates))),
-        [fire_ts, fire_ts_minus_60] + [c["mint_address"] for c in candidates]
+    """.format(",".join("?" * len(mint_list))),
+        [fire_ts, fire_ts_minus_60] + mint_list
     ).fetchall()
-    r_m5_vals = [row[0] for row in pool_micro_r_m5_rows if row[0] is not None]
+
+    # Index by mint for O(1) lookup
+    micro_by_mint = {row["mint_address"]: row for row in micro_rows_all}
+    pool_size_with_micro = len(micro_by_mint)
+
+    # Pool-level r_m5 values (from micro, non-null only)
+    r_m5_vals = [row["r_m5"] for row in micro_rows_all if row["r_m5"] is not None]
     breadth_positive_pct = (
         sum(1 for v in r_m5_vals if v > 0) / len(r_m5_vals) * 100
         if r_m5_vals else None
@@ -269,28 +283,19 @@ def run_fire(fire_time: datetime, conn: sqlite3.Connection) -> dict:
         max(r_m5_vals) - min(r_m5_vals) if len(r_m5_vals) >= 2 else None
     )
 
-    # ── 4. Per-candidate micro join ──────────────────────────────────────────
+    # ── 4. Per-candidate micro join (uses pre-fetched micro_by_mint dict) ──────────
     rows_written = 0
     now_utc = datetime.now(timezone.utc).isoformat()
 
     for c in candidates:
         mint = c["mint_address"]
 
-        # Micro row: MAX(logged_at) WHERE logged_at <= fire_time AND >= fire_time-60s
-        micro = conn.execute("""
-            SELECT logged_at, rv_5m, range_5m,
-                   buy_sell_ratio_m5, buys_m5, sells_m5,
-                   txn_accel_m5_vs_h1, vol_accel_m5_vs_h1,
-                   avg_trade_usd_m5, liq_change_pct
-            FROM microstructure_log
-            WHERE mint_address = ?
-              AND logged_at <= ?
-              AND logged_at >= ?
-            ORDER BY logged_at DESC
-            LIMIT 1
-        """, (mint, fire_ts, fire_ts_minus_60)).fetchone()
-
+        # Lookup pre-fetched micro row (already filtered to no-lookahead window)
+        micro = micro_by_mint.get(mint)
         micro_ts = micro["logged_at"] if micro else None
+
+        # Per-candidate r_m5: sourced from micro (authoritative); snapshot.r_m5 is NULL
+        per_candidate_r_m5 = micro["r_m5"] if micro else None
 
         # Derived: signed_flow_m5 = (buys_m5 - sells_m5) / (buys_m5 + sells_m5)
         signed_flow_m5 = None
@@ -300,7 +305,7 @@ def run_fire(fire_time: datetime, conn: sqlite3.Connection) -> dict:
                 signed_flow_m5 = ((micro["buys_m5"] or 0) - (micro["sells_m5"] or 0)) / total
 
         # Source flags
-        r_m5_source = "snapshot" if c["r_m5"] is not None else "missing"
+        r_m5_source = "microstructure_log" if per_candidate_r_m5 is not None else "missing"
         order_flow_source = "micro" if micro else "missing"
         quote_source = "snapshot" if c["jup_vs_cpamm_diff_pct"] is not None else "missing"
         liq_source = "micro" if (micro and micro["liq_change_pct"] is not None) else "missing"
@@ -320,9 +325,10 @@ def run_fire(fire_time: datetime, conn: sqlite3.Connection) -> dict:
                 liq_change_pct,
                 breadth_positive_pct, median_pool_r_m5, pool_dispersion_r_m5,
                 r_m5_source, order_flow_source, quote_source, liq_source,
+                pool_size_total, pool_size_with_micro,
                 created_at
             ) VALUES (
-                ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+                ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
             )
         """, (
             fire_id, fire_ts, fire_epoch,
@@ -331,7 +337,7 @@ def run_fire(fire_time: datetime, conn: sqlite3.Connection) -> dict:
             c["lane"], c["venue"], c["pumpfun_origin"],
             c["age_hours"], c["liq_usd"], c["vol_h1"],
             micro["rv_5m"] if micro else None,
-            c["r_m5"],
+            per_candidate_r_m5,
             micro["range_5m"] if micro else None,
             micro["buy_sell_ratio_m5"] if micro else None,
             signed_flow_m5,
@@ -347,6 +353,7 @@ def run_fire(fire_time: datetime, conn: sqlite3.Connection) -> dict:
             median_pool_r_m5,
             pool_dispersion_r_m5,
             r_m5_source, order_flow_source, quote_source, liq_source,
+            pool_size_total, pool_size_with_micro,
             now_utc
         ))
         rows_written += 1

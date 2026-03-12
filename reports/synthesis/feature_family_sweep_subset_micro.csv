@@ -1,0 +1,8 @@
+feature,track,total_rows,present,coverage_pct,best_bucket_gross_mean,best_bucket_net_mean,best_bucket_gross_median,tercile_diff_gross,tercile_diff_net,quintile_top_gross,quintile_bot_gross,quintile_top_net,quintile_bot_net,outlier_top_share,outlier_risk,recommendation
+r_m5,B,3774,2964,78.5,0.008241,0.003045,0.0,0.012216,0.012259,0.013254,-0.003716,0.008021,-0.008998,0.0269,LOW,CANDIDATE
+buy_sell_ratio_m5,B,3774,2677,70.9,0.004333,-0.000862,0.0,-0.000803,-0.000768,0.001973,0.000786,-0.003163,-0.004408,0.0273,LOW,SKIP
+signed_flow_m5,B,3774,2677,70.9,0.004333,-0.000862,0.0,-0.000803,-0.000768,0.001973,0.000786,-0.003163,-0.004408,0.0273,LOW,SKIP
+txn_accel_m5_vs_h1,B,3774,2964,78.5,0.006158,0.001014,0.0,0.009541,0.0096,0.005967,-0.002793,0.000826,-0.007986,0.0269,LOW,CANDIDATE
+vol_accel_m5_vs_h1,B,3774,2964,78.5,0.007059,0.001916,0.0,0.010787,0.01083,0.004725,-0.002467,-0.000414,-0.007611,0.0269,LOW,CANDIDATE
+avg_trade_usd_m5,B,3774,2677,70.9,0.004693,-0.000394,0.0,0.006233,0.006412,0.002294,0.000366,-0.002761,-0.004868,0.0273,LOW,SKIP
+liq_change_pct,B,3774,2958,78.4,0.003892,-0.001281,0.0,0.006539,0.00655,0.00609,-0.004389,0.000894,-0.009584,0.0269,LOW,SKIP

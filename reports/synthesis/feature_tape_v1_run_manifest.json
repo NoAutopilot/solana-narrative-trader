@@ -1,0 +1,19 @@
+{
+  "run_id": "feature_tape_v1_2026_03_11",
+  "status": "COMPLETE",
+  "stopped_at": "2026-03-12T06:24:17.268211+00:00",
+  "fires_collected": 100,
+  "rows_collected": 4081,
+  "first_fire_utc": "2026-03-11T00:45:00+00:00",
+  "last_fire_utc": "2026-03-12T06:15:00+00:00",
+  "labeled_rows": 4007,
+  "disk_gap_rows": 38,
+  "label_source": "universe_snapshot",
+  "label_horizons": [
+    "+5m",
+    "+15m",
+    "+30m"
+  ],
+  "final_verdict": "NO NEW LIVE OBSERVER",
+  "closure_memo": "reports/synthesis/feature_tape_v1_closure_memo.md"
+}

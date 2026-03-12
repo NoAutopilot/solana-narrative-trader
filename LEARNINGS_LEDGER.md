@@ -235,3 +235,39 @@ Early data quality is clean. Relative delta is mildly positive but n is too smal
 6. Feature acquisition is the next priority: buy/sell imbalance, transaction acceleration, average trade size are not currently stored in observer rows.
 
 ---
+
+## Entry 008 — Feature Tape v1 / Public-Data Long-Only Selection Line
+
+**run_id:** `feature_tape_v1_2026_03_11`  
+**Family:** `feature_tape_v1` (public-data long-only selection)  
+**Direction:** long-only selection (no matched-pair control)  
+**Final classification:** `CLOSED — NO NEW LIVE OBSERVER`  
+**Date:** 2026-03-12
+
+### Hypothesis tested
+
+> Pre-fire features derived from public on-chain data (liquidity, volume, microstructure, quote/route quality, pool composition) can identify candidate tokens with positive net-proxy returns at +5m, +15m, or +30m horizons.
+
+### Final metrics (96 fires, 4,081 rows, 3,943 analysis rows after disk-gap exclusion)
+
+| Track | Features | Horizons | Best net mean (winsorized) | Best net median | Verdict |
+|-------|---------|---------|---------------------------|-----------------|---------|
+| A (full-sample) | 10 features, 100% coverage | +5m, +15m, +30m | +0.910% (breadth, +30m) | −0.400% | ALL SKIP |
+| B (subset-only) | 7 features, ~78% coverage | +5m, +15m, +30m | +4.815% (r_m5, +30m, winsorized) | +1.440% | SKIP — subset-only, momentum-adjacent, CI uncomputed |
+
+### Why not promotable
+
+Track A fails at all horizons. Round-trip transaction costs (~0.51%) consume all gross alpha. Gross return distributions are right-skewed: means are positive in the best bucket for some features, but medians are uniformly zero or negative, indicating the mean is driven by rare large-move events rather than a consistent per-trade edge.
+
+Track B contains one combination — `r_m5` at +30m (winsorized) — with both positive mean and positive median net-proxy. However, this result is subset-only (Orca/Meteora excluded, ~22% of universe missing non-randomly), momentum-adjacent (same structural family as the abandoned momentum observer), and the bootstrap CI was not computed for the winsorized run. This is insufficient evidence for a new live observer.
+
+An extreme outlier (FURY token, +34,070% at +15m) dominated raw means at +15m and +30m, confirming that the median gate is essential and that the market's return distribution is highly fat-tailed.
+
+### Durable learnings
+
+1. **Round-trip cost is the binding constraint at short horizons.** At ~0.51% round-trip (CPAMM-based), a feature must produce a best-bucket gross mean well above 0.51% *and* a positive gross median to survive to a positive net-proxy median. No feature in the current family achieves this consistently.
+2. **Median is the correct primary gate, not mean.** The gross return distribution in this market is highly right-skewed. A positive mean net-proxy with a zero or negative median indicates an outlier-driven effect, not a deployable edge.
+3. **Non-random missingness in Track B invalidates generalisation.** The Orca/Meteora micro coverage gap is correlated with pool type and liquidity tier. Results from the micro-derived subset cannot be generalised to the full candidate universe without first closing the coverage gap.
+4. **The momentum/direction family is exhausted.** Continuation, reversion, age-conditioned, rank-lift, and feature-tape-based momentum variants have all been tested. None produced a deployable edge. This family is permanently closed.
+5. **The infrastructure built is durable.** The observer framework, feature tape pipeline, label derivation system, backup/compression/retention stack, dashboard sync policy, and GitHub workflow are all production-quality and reusable for any future feature acquisition effort.
+6. **Winsorization is mandatory for fat-tailed distributions.** Raw means at +15m and +30m were dominated by a single 340x event. All future retrospective sweeps must report both raw and winsorized (p1/p99) statistics, with the winsorized result as the primary decision input.

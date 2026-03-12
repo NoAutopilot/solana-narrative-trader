@@ -14,6 +14,7 @@ Status values: ACTIVE | ARCHIVED | PREREGISTERED | ABANDONED
 | 005 | lcr_continuation_observer_v1 (primary) | `0c5337dd` | ARCHIVED | 2026-02-xx | 2026-03-06T21:15Z | 248 | RANKING FEATURE ONLY / NOT PROMOTABLE | `momentum_direction_family_FINAL_closure.md` |
 | 006 | lcr_rank_lift_sidecar_v1 | `bb7244cd` | ARCHIVED | 2026-03-10T16:30Z | 2026-03-10T21:00Z | 19 | NON-BINDING / LOW INCREMENTAL VALUE | `lcr_rank_lift_sidecar_v1_closure_memo.md` |
 | 007 | age_conditioned_continuation (retrospective) | — | ARCHIVED | 2026-03-10 | 2026-03-10 | 71 | NO-GO — OUTLIER-DRIVEN / NOT STRONG ENOUGH | `momentum_direction_family_FINAL_closure.md` |
+| 008 | feature_tape_v1 (public-data long-only sweep) | `feature_tape_v1_2026_03_11` | ARCHIVED | 2026-03-11T00:45Z | 2026-03-12T06:15Z | 4,081 rows / 100 fires | CLOSED — NO NEW LIVE OBSERVER | `feature_tape_v1_closure_memo.md` |
 
 ---
 
@@ -31,12 +32,18 @@ Status values: ACTIVE | ARCHIVED | PREREGISTERED | ABANDONED
 | Family | Branches | Status | Final Verdict | Memo |
 |---|---|---|---|---|
 | Momentum / Direction | LCR Cont, PFM Cont, PFM Rev, LCR Rank-Lift, Age-Conditioned Retro | **ABANDONED** | No new live observers will be launched from this family | `momentum_direction_family_FINAL_closure.md` |
+| Public-Data Long-Only Selection | Feature Tape v1 (17 features, +5m/+15m/+30m) | **ABANDONED** | No new live observers from current dataset or feature family | `feature_tape_v1_closure_memo.md` |
 
 ---
 
 ## Next Phase
 
-**Feature Acquisition** — collecting missing pre-fire features for a genuinely new information family.  
-See: `reports/synthesis/next_family_feature_acquisition_plan.md`
+**Decision pending** — see `reports/synthesis/next_phase_decision.md`.
+
+Two paths:
+
+**Path A — Stop Program:** No further work. Current line archived. No justified live observer remains.
+
+**Path B — Feature Acquisition v2:** Build a genuinely new data family only (trade-by-trade order flow / urgency, route/quote quality, or market-state gating). No live observer until retrospective sweep on new family passes all six promotion gates. See `reports/synthesis/feature_acquisition_v2_design_note.md`.
 
 ---

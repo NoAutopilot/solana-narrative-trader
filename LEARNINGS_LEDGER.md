@@ -271,3 +271,71 @@ An extreme outlier (FURY token, +34,070% at +15m) dominated raw means at +15m an
 4. **The momentum/direction family is exhausted.** Continuation, reversion, age-conditioned, rank-lift, and feature-tape-based momentum variants have all been tested. None produced a deployable edge. This family is permanently closed.
 5. **The infrastructure built is durable.** The observer framework, feature tape pipeline, label derivation system, backup/compression/retention stack, dashboard sync policy, and GitHub workflow are all production-quality and reusable for any future feature acquisition effort.
 6. **Winsorization is mandatory for fat-tailed distributions.** Raw means at +15m and +30m were dominated by a single 340x event. All future retrospective sweeps must report both raw and winsorized (p1/p99) statistics, with the winsorized result as the primary decision input.
+
+---
+
+## Entry 009 — Feature Tape v2 / Feature Acquisition v2 Phase Start
+
+**run_id:** `feature_tape_v2_2026_03_12`
+**Family:** `feature_tape_v2` (full-universe collection, eligible-only analysis)
+**Direction:** data collection phase — no live observer
+**Final classification:** `IN PROGRESS — DATA COLLECTION`
+**Date started:** 2026-03-12
+
+### What was built
+
+Feature Tape v2 is a clean rewrite of the v1 tape, fixing all schema bugs identified in the post-v1 audit. It collects 62 columns per fire across the full scanned universe (eligible + ineligible tokens), with eligible-only rows designated as the primary analysis scope.
+
+Key fixes over v1:
+
+| Bug | Fix |
+|-----|-----|
+| `lane` always NULL | Derived at collection time from `eligible + gate_reason + pool_type` |
+| Pool breadth/dispersion wrong | Computed from micro `r_m5`/`rv_5m`, not from snapshot |
+| Micro NULLs stored as 0 | All micro-native fields are NULL when no micro row exists |
+| Timestamp mismatch | Queries use `isoformat()` strings matching `+00:00` format in DB |
+| 9 unavailable 1m-window columns | Removed entirely |
+
+### Semantic rules ratified
+
+1. `lane` = universe_category (not strategy lane)
+2. `eligible` + `gate_reason` are explicit columns
+3. Primary analysis = eligible-only; secondary = full-universe (audit)
+4. Quote nulls are expected for ineligible rows
+5. Market-state field scope split deferred to v3
+
+### Durable learnings
+
+1. **Build all cold-path infra before any data collection.** The v1 tape was collected before holdout design, benchmark pre-registration, or contract tests existed. All v2 infra was built and committed before the first fire.
+2. **Pre-register everything before looking at data.** Holdout split (75/25), promotion gates (8), kill gates (6), and benchmark ceiling are all committed to GitHub before any sweep is run.
+3. **Lane derivation must happen at collection time.** Relying on a source column that is always NULL silently corrupts all downstream stratification.
+4. **Full-universe collection + eligible-only analysis is the correct design.** Collecting ineligible rows costs nothing and enables audit views. Restricting analysis to eligible rows prevents spam/noise from contaminating model discovery.
+
+---
+
+## Entry 010 — Research Memory Layer + Runbook Shipped
+
+**run_id:** `infra_2026_03_13`
+**Family:** `infrastructure`
+**Direction:** documentation + process
+**Final classification:** `COMPLETE`
+**Date:** 2026-03-13
+
+### What was shipped
+
+A complete project runbook and state bundle was built and committed to GitHub.
+
+| File | Purpose |
+|------|---------|
+| `reports/research/CURRENT_STATE.md` | Authoritative current state |
+| `reports/research/OPERATOR_RUNBOOK_v1.md` | Step-by-step procedures |
+| `reports/research/DECISION_TREE_v1.md` | All outcomes and allowed moves |
+| `reports/research/ARTIFACT_MAP_v1.md` | Every file mapped to purpose |
+| `reports/research/COMMAND_INDEX_v1.md` | Exact one-liner commands |
+| `scripts/build_status_packet.py` | Read-only status packet generator |
+
+### Durable learnings
+
+1. **A project without a runbook is not a project — it is a personal notebook.** The runbook is what makes the system transferable and auditable.
+2. **Decision trees prevent scope creep.** Enumerating all allowed next moves in advance makes it impossible to drift into unapproved experiments.
+3. **The artifact map is the most underrated document.** Without it, the repo becomes a graveyard of files with no clear ownership or purpose.

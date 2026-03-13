@@ -15,6 +15,7 @@ Status values: ACTIVE | ARCHIVED | PREREGISTERED | ABANDONED
 | 006 | lcr_rank_lift_sidecar_v1 | `bb7244cd` | ARCHIVED | 2026-03-10T16:30Z | 2026-03-10T21:00Z | 19 | NON-BINDING / LOW INCREMENTAL VALUE | `lcr_rank_lift_sidecar_v1_closure_memo.md` |
 | 007 | age_conditioned_continuation (retrospective) | — | ARCHIVED | 2026-03-10 | 2026-03-10 | 71 | NO-GO — OUTLIER-DRIVEN / NOT STRONG ENOUGH | `momentum_direction_family_FINAL_closure.md` |
 | 008 | feature_tape_v1 (public-data long-only sweep) | `feature_tape_v1_2026_03_11` | ARCHIVED | 2026-03-11T00:45Z | 2026-03-12T06:15Z | 4,081 rows / 100 fires | CLOSED — NO NEW LIVE OBSERVER | `feature_tape_v1_closure_memo.md` |
+| 009 | feature_tape_v2 (full-universe, eligible-only analysis) | `feature_tape_v2_2026_03_12` | **ACTIVE** | 2026-03-12T21:34Z | — | collecting (target: 96 fires) | IN PROGRESS — DATA COLLECTION | — |
 
 ---
 
@@ -33,17 +34,17 @@ Status values: ACTIVE | ARCHIVED | PREREGISTERED | ABANDONED
 |---|---|---|---|---|
 | Momentum / Direction | LCR Cont, PFM Cont, PFM Rev, LCR Rank-Lift, Age-Conditioned Retro | **ABANDONED** | No new live observers will be launched from this family | `momentum_direction_family_FINAL_closure.md` |
 | Public-Data Long-Only Selection | Feature Tape v1 (17 features, +5m/+15m/+30m) | **ABANDONED** | No new live observers from current dataset or feature family | `feature_tape_v1_closure_memo.md` |
+| Feature Acquisition v2 | Feature Tape v2 (62 columns, full-universe, eligible-only analysis) | **ACTIVE** | Collecting — final recommendation pending | `reports/research/CURRENT_STATE.md` |
 
 ---
 
-## Next Phase
+## Current Phase
 
-**Decision pending** — see `reports/synthesis/next_phase_decision.md`.
+**Feature Acquisition v2 — Data Collection** (Path B selected)
 
-Two paths:
+`feature_tape_v2` is actively collecting on VPS. No live observer is approved. The autopilot will run the final sweep after 96 fires + label maturity and produce a PROCEED/PIVOT/STOP recommendation.
 
-**Path A — Stop Program:** No further work. Current line archived. No justified live observer remains.
-
-**Path B — Feature Acquisition v2:** Build a genuinely new data family only (trade-by-trade order flow / urgency, route/quote quality, or market-state gating). No live observer until retrospective sweep on new family passes all six promotion gates. See `reports/synthesis/feature_acquisition_v2_design_note.md`.
+See `reports/research/CURRENT_STATE.md` for authoritative current state.
+See `reports/research/DECISION_TREE_v1.md` for all allowed next moves.
 
 ---

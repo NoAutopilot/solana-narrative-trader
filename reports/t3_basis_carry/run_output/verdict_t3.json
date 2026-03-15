@@ -1,0 +1,16 @@
+{
+  "verdict": "FAIL (KILL CRITERION)",
+  "kill_reason": "Kill 1 triggered: OKX actual median funding = -1.07% ann (< 1.5% threshold). Shorts are paying longs in the current regime (Dec 2025 - Mar 2026).",
+  "pass_counts": {
+    "B1": 6,
+    "B2": 17,
+    "B3": 11
+  },
+  "okx_actual_median_ann_pct": -1.07,
+  "kill1_triggered": true,
+  "kill2_triggered": false,
+  "kill3_triggered": false,
+  "actual_period_B1_median_ann": -5.72,
+  "actual_period_B2_median_ann": 1.57,
+  "actual_period_B3_median_ann": -1.03
+}

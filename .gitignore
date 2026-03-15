@@ -10,3 +10,5 @@ data/
 .env
 
 *.env
+reports/synthesis/feature_tape_v2_frozen_96fires_*.db
+*.bak

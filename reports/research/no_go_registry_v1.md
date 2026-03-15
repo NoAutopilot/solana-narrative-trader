@@ -159,3 +159,36 @@ No feature-horizon combination passes all six promotion gates simultaneously. Th
 - Full-coverage (not subset-only) positive median net-proxy
 - Bootstrap 95% CI lower bound > 0
 - Tested on a holdout set not used during feature development
+
+---
+
+## Entry NG-006 — Feature Acquisition v2 (Full-Universe, Eligible-Only, Multi-Horizon)
+
+**Family / Hypothesis:** An expanded feature set of 42 features derived from universe_snapshot and microstructure_log — including order-flow ratios, trade acceleration, microstructure volatility, Jupiter vs CPAMM spread, round-trip cost, price impact, breadth, and cross-pool dispersion — can identify tokens that will produce positive net returns at +5m, +15m, +30m, +1h, or +4h horizons in a long-only selection framework on Solana memecoins.
+
+**Branches tested:**
+- Feature Tape v2 full-sample sweep: 42 features x 5 horizons = 210 combinations
+- Feature Tape v2 subset-micro sweep: 42 features x 5 horizons = 210 combinations
+- Discovery/holdout split: 72/24 fires (75/25)
+
+**Why it failed:**
+No feature-horizon combination passed all eight promotion gates (G1-G8) in the discovery sample. The dominant failure modes were G2 (median net-proxy negative), G3/G4 (confidence interval crosses zero), and G5 (win rate below threshold). The best-bucket net proxy was consistently negative or near zero across all features and horizons. The median return in the top quintile was indistinguishable from the population median at every horizon. Round-trip cost (~0.51%) continues to consume all gross alpha at short horizons, and no feature identifies tokens with sufficient gross alpha at longer horizons to overcome this cost.
+
+**Exact evidence:**
+- 210 feature-horizon combinations tested, 0 pass all 8 gates
+- Dataset: 4,065 eligible rows across 96 fires (2026-03-12T21:45Z to 2026-03-14T09:30Z)
+- Best result at +5m: r_m5_micro, mean net -0.135%, median net -0.509% — FAIL (G4)
+- Best result at +1h: liquidity_usd, mean net -0.389%, median net -0.517% — FAIL (G4)
+- Best result at +4h: round_trip_pct, mean net -0.389%, median net -0.517% — FAIL (G4)
+- Win rate across all features: 9-13% (well below 20% threshold)
+- jup_vs_cpamm_diff_pct coverage: 64.7% eligible (structural null, not a bug)
+- 12h data gap applied per-horizon exclusions; results unchanged with or without gap rows
+
+**What evidence would be required to reopen:**
+- A genuinely new data source not derived from universe_snapshot or microstructure_log (e.g., wallet-level flow, deployer behavior, social sentiment, cross-chain bridge data)
+- A different market structure (e.g., established tokens with deeper liquidity, not memecoins)
+- Pre-registered hypothesis with theoretical basis for why the new source should predict returns
+- Full-coverage positive median net-proxy in discovery
+- Bootstrap 95% CI lower bound > 0
+- Holdout confirmation on a dataset not used during feature development
+- Do NOT re-run the same 42 features with minor parameter changes

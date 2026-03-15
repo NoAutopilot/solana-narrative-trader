@@ -1,0 +1,10 @@
+{
+  "status": "ALL_PRIMARY_LABELS_MATURE",
+  "detected_at": "2026-03-14T15:01:20Z",
+  "last_fire_time": "2026-03-14T09:30:00Z",
+  "last_fire_epoch": 1773480600.0,
+  "jitter_buffer_s": 300,
+  "horizons_mature": ["5m", "15m", "30m", "1h", "4h"],
+  "horizons_excluded": ["1d"],
+  "db_path": "/root/solana_trader/reports/synthesis/feature_tape_v2_frozen_96fires_20260314T150050Z.db"
+}

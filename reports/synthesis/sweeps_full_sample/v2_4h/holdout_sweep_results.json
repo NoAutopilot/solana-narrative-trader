@@ -1,0 +1,2166 @@
+{
+  "horizon": "4h",
+  "horizon_s": 14400,
+  "n_fires": 96,
+  "n_discovery_fires": 72,
+  "n_holdout_fires": 24,
+  "n_rows_eligible": 4065,
+  "n_rows_discovery": 3038,
+  "n_rows_holdout": 1027,
+  "n_buckets": 5,
+  "n_features_tested": 44,
+  "bonferroni": true,
+  "discovery_results": {
+    "age_hours": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.05728910037224146,
+        "G2_median_net_proxy": -0.034618953992289384,
+        "G3_ci_lower_mean": -0.01805589547262528,
+        "G3_ci_upper_mean": 0.15188225870929314,
+        "G4_ci_lower_median": -0.06880771048384443,
+        "G4_ci_upper_median": 0.026895080910333966,
+        "G5_win_rate": 0.46578947368421053,
+        "G6_top1_share": 0.031420725051896595,
+        "G7_top3_share": 0.09426217515568978,
+        "G8_coverage": 1.0,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 380,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 1,
+        "bucket_boundaries": {
+          "0": {
+            "min": 1.0430704105555555,
+            "max": 16.637864344444445
+          },
+          "1": {
+            "min": 16.783985446944442,
+            "max": 51.67518896722222
+          },
+          "2": {
+            "min": 51.687593516944446,
+            "max": 11765.889358118056
+          },
+          "3": {
+            "min": 11766.139356087777,
+            "max": 17509.039253233335
+          },
+          "4": {
+            "min": 17509.28944849861,
+            "max": 28849.057894859725
+          }
+        }
+      }
+    },
+    "liquidity_usd": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.1359454349087923,
+        "G2_median_net_proxy": 0.00134113281231829,
+        "G3_ci_lower_mean": 0.039609330944122605,
+        "G3_ci_upper_mean": 0.2605159396817595,
+        "G4_ci_lower_median": -0.04796290834655443,
+        "G4_ci_upper_median": 0.042918372067614716,
+        "G5_win_rate": 0.5052631578947369,
+        "G6_top1_share": 0.028932664555344625,
+        "G7_top3_share": 0.08679799366603387,
+        "G8_coverage": 1.0,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 380,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": true,
+          "G3": "True",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 0,
+        "bucket_boundaries": {
+          "0": {
+            "min": 24902.02,
+            "max": 40165.27
+          },
+          "1": {
+            "min": 40254.05,
+            "max": 69511.72
+          },
+          "2": {
+            "min": 69548.09,
+            "max": 364381.45
+          },
+          "3": {
+            "min": 365371.76,
+            "max": 1300868.92
+          },
+          "4": {
+            "min": 1301428.52,
+            "max": 10060746.26
+          }
+        }
+      }
+    },
+    "vol_h1": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.022634346082035024,
+        "G2_median_net_proxy": -0.008398807316035706,
+        "G3_ci_lower_mean": -0.0009306161008675401,
+        "G3_ci_upper_mean": 0.056578902325439426,
+        "G4_ci_lower_median": -0.011556846560846545,
+        "G4_ci_upper_median": -0.001634785688983449,
+        "G5_win_rate": 0.3700787401574803,
+        "G6_top1_share": 0.0552262026175108,
+        "G7_top3_share": 0.1656786078525324,
+        "G8_coverage": 1.0,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 381,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 0,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 6917.21
+          },
+          "1": {
+            "min": 6940.98,
+            "max": 17676.15
+          },
+          "2": {
+            "min": 17719.61,
+            "max": 33720.6
+          },
+          "3": {
+            "min": 33806.1,
+            "max": 83286.01
+          },
+          "4": {
+            "min": 83297.05,
+            "max": 8906734.89
+          }
+        }
+      }
+    },
+    "vol_h24": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": -0.037825817924439925,
+        "G2_median_net_proxy": -0.01131444987363106,
+        "G3_ci_lower_mean": -0.06647809458859437,
+        "G3_ci_upper_mean": -0.009831868064953495,
+        "G4_ci_lower_median": -0.014392765922386138,
+        "G4_ci_upper_median": -0.008065705526555719,
+        "G5_win_rate": 0.28608923884514437,
+        "G6_top1_share": 0.014924158509087855,
+        "G7_top3_share": 0.044772475527263565,
+        "G8_coverage": 1.0,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 381,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": false,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 1,
+        "bucket_boundaries": {
+          "0": {
+            "min": 40579.68,
+            "max": 394868.18
+          },
+          "1": {
+            "min": 395519.03,
+            "max": 751658.7
+          },
+          "2": {
+            "min": 753252.55,
+            "max": 1188484.5
+          },
+          "3": {
+            "min": 1194645.08,
+            "max": 2303703.4
+          },
+          "4": {
+            "min": 2320620.72,
+            "max": 53889426.52
+          }
+        }
+      }
+    },
+    "price_usd": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.142553303731034,
+        "G2_median_net_proxy": -0.0019677911646584813,
+        "G3_ci_lower_mean": 0.044176785914253815,
+        "G3_ci_upper_mean": 0.2668507017157633,
+        "G4_ci_lower_median": -0.023867700429661323,
+        "G4_ci_upper_median": 0.03206299041324142,
+        "G5_win_rate": 0.48947368421052634,
+        "G6_top1_share": 0.030508840136959606,
+        "G7_top3_share": 0.09152652041087882,
+        "G8_coverage": 1.0,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 380,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "True",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 0,
+        "bucket_boundaries": {
+          "0": {
+            "min": 6.02e-06,
+            "max": 0.0002083
+          },
+          "1": {
+            "min": 0.0002094,
+            "max": 0.0004567
+          },
+          "2": {
+            "min": 0.0004571,
+            "max": 0.009087
+          },
+          "3": {
+            "min": 0.009102,
+            "max": 0.168
+          },
+          "4": {
+            "min": 0.1682,
+            "max": 71588.88
+          }
+        }
+      }
+    },
+    "buys_m5": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.01947089957215629,
+        "G2_median_net_proxy": -0.008046907284768258,
+        "G3_ci_lower_mean": -0.02472287664076306,
+        "G3_ci_upper_mean": 0.07177685051228795,
+        "G4_ci_lower_median": -0.02294277747566666,
+        "G4_ci_upper_median": 0.00363241008626408,
+        "G5_win_rate": 0.42386831275720166,
+        "G6_top1_share": 0.033688735050308394,
+        "G7_top3_share": 0.10106620515092518,
+        "G8_coverage": 0.7728768926925609,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 243,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 1,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 1.0
+          },
+          "1": {
+            "min": 2.0,
+            "max": 6.0
+          },
+          "2": {
+            "min": 7.0,
+            "max": 16.0
+          },
+          "3": {
+            "min": 17.0,
+            "max": 48.0
+          },
+          "4": {
+            "min": 49.0,
+            "max": 2894.0
+          }
+        }
+      }
+    },
+    "sells_m5": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.021257857990638656,
+        "G2_median_net_proxy": -0.013182862507571103,
+        "G3_ci_lower_mean": -0.0434883569441647,
+        "G3_ci_upper_mean": 0.1058027247365634,
+        "G4_ci_lower_median": -0.053622356331515644,
+        "G4_ci_upper_median": 0.004427962264151052,
+        "G5_win_rate": 0.4315068493150685,
+        "G6_top1_share": 0.05011554979186921,
+        "G7_top3_share": 0.15034664937560763,
+        "G8_coverage": 0.7728768926925609,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 292,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 2,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 1.0
+          },
+          "1": {
+            "min": 2.0,
+            "max": 5.0
+          },
+          "2": {
+            "min": 6.0,
+            "max": 12.0
+          },
+          "3": {
+            "min": 13.0,
+            "max": 31.0
+          },
+          "4": {
+            "min": 32.0,
+            "max": 434.0
+          }
+        }
+      }
+    },
+    "buys_h1": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.015877263442869986,
+        "G2_median_net_proxy": -0.012350750754838177,
+        "G3_ci_lower_mean": -0.04909327888214746,
+        "G3_ci_upper_mean": 0.10515794063654585,
+        "G4_ci_lower_median": -0.05621440912161649,
+        "G4_ci_upper_median": 0.008439304346385169,
+        "G5_win_rate": 0.45422535211267606,
+        "G6_top1_share": 0.04933672939223869,
+        "G7_top3_share": 0.14801018817671607,
+        "G8_coverage": 0.7728768926925609,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 284,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 2,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 32.0
+          },
+          "1": {
+            "min": 33.0,
+            "max": 120.0
+          },
+          "2": {
+            "min": 121.0,
+            "max": 262.0
+          },
+          "3": {
+            "min": 263.0,
+            "max": 702.0
+          },
+          "4": {
+            "min": 705.0,
+            "max": 12118.0
+          }
+        }
+      }
+    },
+    "sells_h1": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.013990176689800665,
+        "G2_median_net_proxy": -0.006477481481481528,
+        "G3_ci_lower_mean": -0.02782338108644188,
+        "G3_ci_upper_mean": 0.07276167860564212,
+        "G4_ci_lower_median": -0.012120890736342066,
+        "G4_ci_upper_median": 0.002985435016208255,
+        "G5_win_rate": 0.4452296819787986,
+        "G6_top1_share": 0.03821674419719813,
+        "G7_top3_share": 0.11465023259159439,
+        "G8_coverage": 0.7728768926925609,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 283,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 1,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 21.0
+          },
+          "1": {
+            "min": 22.0,
+            "max": 102.0
+          },
+          "2": {
+            "min": 103.0,
+            "max": 186.0
+          },
+          "3": {
+            "min": 187.0,
+            "max": 464.0
+          },
+          "4": {
+            "min": 466.0,
+            "max": 9973.0
+          }
+        }
+      }
+    },
+    "buy_sell_ratio_m5": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.03894181500099409,
+        "G2_median_net_proxy": -0.015532315789473828,
+        "G3_ci_lower_mean": -0.055549323602807836,
+        "G3_ci_upper_mean": 0.1563600051585707,
+        "G4_ci_lower_median": -0.06955533697632053,
+        "G4_ci_upper_median": 0.043992672682526615,
+        "G5_win_rate": 0.46530612244897956,
+        "G6_top1_share": 0.04228814589709571,
+        "G7_top3_share": 0.12686443769128714,
+        "G8_coverage": 0.6882817643186306,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 245,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": false
+        },
+        "all_gates_pass": false,
+        "best_bucket": 2,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 0.3939393939393939
+          },
+          "1": {
+            "min": 0.39705882352941174,
+            "max": 0.5238095238095238
+          },
+          "2": {
+            "min": 0.5240793201133145,
+            "max": 0.6206896551724138
+          },
+          "3": {
+            "min": 0.6210526315789474,
+            "max": 0.7317073170731707
+          },
+          "4": {
+            "min": 0.7318435754189944,
+            "max": 1.0
+          }
+        }
+      }
+    },
+    "buy_sell_ratio_h1": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.0425061010065232,
+        "G2_median_net_proxy": -0.0019905226527584677,
+        "G3_ci_lower_mean": -0.032688312144003515,
+        "G3_ci_upper_mean": 0.1310651194324502,
+        "G4_ci_lower_median": -0.021781725620402773,
+        "G4_ci_upper_median": 0.0227454197871181,
+        "G5_win_rate": 0.48161764705882354,
+        "G6_top1_share": 0.04687446876783784,
+        "G7_top3_share": 0.1406234063035135,
+        "G8_coverage": 0.749835418038183,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 272,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 3,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 0.48
+          },
+          "1": {
+            "min": 0.4803030303030303,
+            "max": 0.5573089700996677
+          },
+          "2": {
+            "min": 0.5573770491803278,
+            "max": 0.6
+          },
+          "3": {
+            "min": 0.6004566210045662,
+            "max": 0.6601815823605707
+          },
+          "4": {
+            "min": 0.660377358490566,
+            "max": 1.0
+          }
+        }
+      }
+    },
+    "buy_count_ratio_m5": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.03894181500099409,
+        "G2_median_net_proxy": -0.015532315789473828,
+        "G3_ci_lower_mean": -0.055549323602807836,
+        "G3_ci_upper_mean": 0.1563600051585707,
+        "G4_ci_lower_median": -0.06955533697632053,
+        "G4_ci_upper_median": 0.043992672682526615,
+        "G5_win_rate": 0.46530612244897956,
+        "G6_top1_share": 0.04228814589709571,
+        "G7_top3_share": 0.12686443769128714,
+        "G8_coverage": 0.6882817643186306,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 245,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": false
+        },
+        "all_gates_pass": false,
+        "best_bucket": 2,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 0.3939393939393939
+          },
+          "1": {
+            "min": 0.39705882352941174,
+            "max": 0.5238095238095238
+          },
+          "2": {
+            "min": 0.5240793201133145,
+            "max": 0.6206896551724138
+          },
+          "3": {
+            "min": 0.6210526315789474,
+            "max": 0.7317073170731707
+          },
+          "4": {
+            "min": 0.7318435754189944,
+            "max": 1.0
+          }
+        }
+      }
+    },
+    "buy_count_ratio_h1": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.0425061010065232,
+        "G2_median_net_proxy": -0.0019905226527584677,
+        "G3_ci_lower_mean": -0.032688312144003515,
+        "G3_ci_upper_mean": 0.1310651194324502,
+        "G4_ci_lower_median": -0.021781725620402773,
+        "G4_ci_upper_median": 0.0227454197871181,
+        "G5_win_rate": 0.48161764705882354,
+        "G6_top1_share": 0.04687446876783784,
+        "G7_top3_share": 0.1406234063035135,
+        "G8_coverage": 0.749835418038183,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 272,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 3,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 0.48
+          },
+          "1": {
+            "min": 0.4803030303030303,
+            "max": 0.5573089700996677
+          },
+          "2": {
+            "min": 0.5573770491803278,
+            "max": 0.6
+          },
+          "3": {
+            "min": 0.6004566210045662,
+            "max": 0.6601815823605707
+          },
+          "4": {
+            "min": 0.660377358490566,
+            "max": 1.0
+          }
+        }
+      }
+    },
+    "avg_trade_usd_m5": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.07344612434788486,
+        "G2_median_net_proxy": -0.014484397793893967,
+        "G3_ci_lower_mean": -0.03268679255131615,
+        "G3_ci_upper_mean": 0.20678353696828095,
+        "G4_ci_lower_median": -0.03214700019299736,
+        "G4_ci_upper_median": -0.0017680780233740032,
+        "G5_win_rate": 0.36693548387096775,
+        "G6_top1_share": 0.06299425773654352,
+        "G7_top3_share": 0.18898277320963056,
+        "G8_coverage": 0.6882817643186306,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 248,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": false
+        },
+        "all_gates_pass": false,
+        "best_bucket": 0,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 29.20712962962963
+          },
+          "1": {
+            "min": 29.241666666666664,
+            "max": 47.31361445783133
+          },
+          "2": {
+            "min": 47.33436363636363,
+            "max": 68.78087301587301
+          },
+          "3": {
+            "min": 68.8722102425876,
+            "max": 103.5308
+          },
+          "4": {
+            "min": 103.57307692307693,
+            "max": 3878.39
+          }
+        }
+      }
+    },
+    "avg_trade_usd_h1": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.07244715802207269,
+        "G2_median_net_proxy": -0.014783759286304122,
+        "G3_ci_lower_mean": -0.031673323834817885,
+        "G3_ci_upper_mean": 0.20539216549992867,
+        "G4_ci_lower_median": -0.0602469098806627,
+        "G4_ci_upper_median": -0.0003835611263462648,
+        "G5_win_rate": 0.391304347826087,
+        "G6_top1_share": 0.051474426979105,
+        "G7_top3_share": 0.154423280937315,
+        "G8_coverage": 0.749835418038183,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 276,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 0,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.046875,
+            "max": 44.47279097387173
+          },
+          "1": {
+            "min": 44.62187850944359,
+            "max": 60.02958540630182
+          },
+          "2": {
+            "min": 60.122549019607845,
+            "max": 76.19833024118739
+          },
+          "3": {
+            "min": 76.22108996539792,
+            "max": 125.50516129032258
+          },
+          "4": {
+            "min": 125.8377922077922,
+            "max": 3671.3250000000003
+          }
+        }
+      }
+    },
+    "vol_accel_m5_vs_h1": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.018999309205565914,
+        "G2_median_net_proxy": -0.0086462980567546,
+        "G3_ci_lower_mean": -0.04653982783535198,
+        "G3_ci_upper_mean": 0.09062043232067603,
+        "G4_ci_lower_median": -0.03637987432023335,
+        "G4_ci_upper_median": 0.009131808284597375,
+        "G5_win_rate": 0.4420289855072464,
+        "G6_top1_share": 0.03196713380158123,
+        "G7_top3_share": 0.09590140140474368,
+        "G8_coverage": 0.749835418038183,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 276,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 3,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 0.16
+          },
+          "1": {
+            "min": 0.16209051888257786,
+            "max": 0.4568713852933076
+          },
+          "2": {
+            "min": 0.4570127536246294,
+            "max": 0.7118005215017407
+          },
+          "3": {
+            "min": 0.71530960683937,
+            "max": 1.2773002828805258
+          },
+          "4": {
+            "min": 1.2778482790075023,
+            "max": 11.800237812128417
+          }
+        }
+      }
+    },
+    "txn_accel_m5_vs_h1": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.012014779812995528,
+        "G2_median_net_proxy": -0.010871247214461362,
+        "G3_ci_lower_mean": -0.048735669511980606,
+        "G3_ci_upper_mean": 0.07546788628541837,
+        "G4_ci_lower_median": -0.04251864198314399,
+        "G4_ci_upper_median": 0.012504205566050912,
+        "G5_win_rate": 0.45652173913043476,
+        "G6_top1_share": 0.020595302395972806,
+        "G7_top3_share": 0.06178590718791842,
+        "G8_coverage": 0.749835418038183,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 276,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 3,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 0.31101511879049676
+          },
+          "1": {
+            "min": 0.3152436916695472,
+            "max": 0.5549132947976878
+          },
+          "2": {
+            "min": 0.5555555555555556,
+            "max": 0.8137535816618912
+          },
+          "3": {
+            "min": 0.8181818181818182,
+            "max": 1.212659633536924
+          },
+          "4": {
+            "min": 1.2173913043478262,
+            "max": 10.116923076923078
+          }
+        }
+      }
+    },
+    "r_m5_micro": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": -0.029741118333647905,
+        "G2_median_net_proxy": -0.06800351583779893,
+        "G3_ci_lower_mean": -0.10710969925276823,
+        "G3_ci_upper_mean": 0.051311162251533836,
+        "G4_ci_lower_median": -0.1443066301687065,
+        "G4_ci_upper_median": -0.004143715265936067,
+        "G5_win_rate": 0.3873239436619718,
+        "G6_top1_share": 0.023387039925150885,
+        "G7_top3_share": 0.07016111977545265,
+        "G8_coverage": 0.7728768926925609,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 284,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": false,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 0,
+        "bucket_boundaries": {
+          "0": {
+            "min": -46.38,
+            "max": -2.28
+          },
+          "1": {
+            "min": -2.27,
+            "max": -0.17
+          },
+          "2": {
+            "min": -0.16,
+            "max": 0.05
+          },
+          "3": {
+            "min": 0.06,
+            "max": 1.85
+          },
+          "4": {
+            "min": 1.87,
+            "max": 51.87
+          }
+        }
+      }
+    },
+    "rv_5m": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": -0.0038903042161156187,
+        "G2_median_net_proxy": -0.00967062828755108,
+        "G3_ci_lower_mean": -0.02818919353646224,
+        "G3_ci_upper_mean": 0.02314037772567531,
+        "G4_ci_lower_median": -0.013070798130046746,
+        "G4_ci_upper_median": -0.002231826733291546,
+        "G5_win_rate": 0.3710247349823322,
+        "G6_top1_share": 0.03764157800327104,
+        "G7_top3_share": 0.11292473400981312,
+        "G8_coverage": 0.7705727452271232,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 283,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": false,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 1,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 0.06919049350979656
+          },
+          "1": {
+            "min": 0.0708843081229036,
+            "max": 0.39964343904407856
+          },
+          "2": {
+            "min": 0.4042004227533532,
+            "max": 0.8575767154594269
+          },
+          "3": {
+            "min": 0.8624455434854286,
+            "max": 1.5899750436592204
+          },
+          "4": {
+            "min": 1.5921868146318507,
+            "max": 10.147866131657016
+          }
+        }
+      }
+    },
+    "rv_1m": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.04770896031928094,
+        "G2_median_net_proxy": -0.028434928258267565,
+        "G3_ci_lower_mean": -0.047928777638917064,
+        "G3_ci_upper_mean": 0.1548276459223185,
+        "G4_ci_lower_median": -0.10030306999487346,
+        "G4_ci_upper_median": 0.05938063800872725,
+        "G5_win_rate": 0.4894366197183099,
+        "G6_top1_share": 0.031476937802573816,
+        "G7_top3_share": 0.09443081340772144,
+        "G8_coverage": 0.7705727452271232,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 284,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 3,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 0.049356726168111785
+          },
+          "1": {
+            "min": 0.05031375213318158,
+            "max": 0.3932026111916421
+          },
+          "2": {
+            "min": 0.39567277822460895,
+            "max": 1.0372054828286392
+          },
+          "3": {
+            "min": 1.0412370023727857,
+            "max": 14.532674810316085
+          }
+        }
+      }
+    },
+    "range_5m": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.015358085698046062,
+        "G2_median_net_proxy": -0.035397802229414715,
+        "G3_ci_lower_mean": -0.04999853974401556,
+        "G3_ci_upper_mean": 0.10479947786713383,
+        "G4_ci_lower_median": -0.07806881037695876,
+        "G4_ci_upper_median": -0.0010438602838404015,
+        "G5_win_rate": 0.4014084507042254,
+        "G6_top1_share": 0.05221266405733689,
+        "G7_top3_share": 0.1566379921720107,
+        "G8_coverage": 0.7705727452271232,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 284,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 2,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 0.30634573304158297
+          },
+          "1": {
+            "min": 0.31024338058304507,
+            "max": 1.6652789342214889
+          },
+          "2": {
+            "min": 1.6836508639787158,
+            "max": 4.178272980501404
+          },
+          "3": {
+            "min": 4.180803327131451,
+            "max": 7.901234567901226
+          },
+          "4": {
+            "min": 7.902973395931142,
+            "max": 61.59522136331693
+          }
+        }
+      }
+    },
+    "buys_m5_snap": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": -0.024322699843560152,
+        "G2_median_net_proxy": -0.011519541381027041,
+        "G3_ci_lower_mean": -0.06058007176161656,
+        "G3_ci_upper_mean": 0.00934687402927684,
+        "G4_ci_lower_median": -0.018160604980599983,
+        "G4_ci_upper_median": -0.0020772289156624525,
+        "G5_win_rate": 0.39095744680851063,
+        "G6_top1_share": 0.0165409214238063,
+        "G7_top3_share": 0.0496227642714189,
+        "G8_coverage": 1.0,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 376,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": false,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 3,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 1.0
+          },
+          "1": {
+            "min": 2.0,
+            "max": 6.0
+          },
+          "2": {
+            "min": 7.0,
+            "max": 17.0
+          },
+          "3": {
+            "min": 18.0,
+            "max": 44.0
+          },
+          "4": {
+            "min": 45.0,
+            "max": 788.0
+          }
+        }
+      }
+    },
+    "sells_m5_snap": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.0218650162315925,
+        "G2_median_net_proxy": -0.005513446673339395,
+        "G3_ci_lower_mean": -0.020077373275617733,
+        "G3_ci_upper_mean": 0.06584079851790912,
+        "G4_ci_lower_median": -0.013171004868862267,
+        "G4_ci_upper_median": 0.0036274555296813395,
+        "G5_win_rate": 0.45808383233532934,
+        "G6_top1_share": 0.026036731358169633,
+        "G7_top3_share": 0.07811019407450889,
+        "G8_coverage": 1.0,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 334,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 2,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 1.0
+          },
+          "1": {
+            "min": 2.0,
+            "max": 6.0
+          },
+          "2": {
+            "min": 7.0,
+            "max": 13.0
+          },
+          "3": {
+            "min": 14.0,
+            "max": 30.0
+          },
+          "4": {
+            "min": 31.0,
+            "max": 544.0
+          }
+        }
+      }
+    },
+    "buy_count_ratio_m5_snap": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.0028331559873287938,
+        "G2_median_net_proxy": -0.003972540636752013,
+        "G3_ci_lower_mean": -0.039814023481689886,
+        "G3_ci_upper_mean": 0.050710492587730714,
+        "G4_ci_lower_median": -0.015704882022770917,
+        "G4_ci_upper_median": 0.018620879410862278,
+        "G5_win_rate": 0.47076023391812866,
+        "G6_top1_share": 0.019262651478386798,
+        "G7_top3_share": 0.057787954435160396,
+        "G8_coverage": 0.9048716260697828,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 342,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 3,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 0.3333333333333333
+          },
+          "1": {
+            "min": 0.3356401384083045,
+            "max": 0.5116279069767442
+          },
+          "2": {
+            "min": 0.5117370892018779,
+            "max": 0.625
+          },
+          "3": {
+            "min": 0.6268656716417911,
+            "max": 0.75
+          },
+          "4": {
+            "min": 0.7522935779816514,
+            "max": 1.0
+          }
+        }
+      }
+    },
+    "avg_trade_usd_m5_snap": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.028146208740072662,
+        "G2_median_net_proxy": -0.011440306705135295,
+        "G3_ci_lower_mean": -0.04489127092279249,
+        "G3_ci_upper_mean": 0.11887812100972783,
+        "G4_ci_lower_median": -0.02751154817933341,
+        "G4_ci_upper_median": 0.007401604041718572,
+        "G5_win_rate": 0.4437869822485207,
+        "G6_top1_share": 0.036883256548938474,
+        "G7_top3_share": 0.11064976964681542,
+        "G8_coverage": 0.9048716260697828,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 338,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 1,
+        "bucket_boundaries": {
+          "0": {
+            "min": 1.0433333333333332,
+            "max": 30.025337423312884
+          },
+          "1": {
+            "min": 30.089444444444446,
+            "max": 54.14727272727273
+          },
+          "2": {
+            "min": 54.19,
+            "max": 75.81212121212121
+          },
+          "3": {
+            "min": 76.08099999999999,
+            "max": 137.2334426229508
+          },
+          "4": {
+            "min": 138.6795918367347,
+            "max": 5183.568888888889
+          }
+        }
+      }
+    },
+    "jup_vs_cpamm_diff_pct": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": -0.011049176832546706,
+        "G2_median_net_proxy": -0.04015106422018354,
+        "G3_ci_lower_mean": -0.06866366313893929,
+        "G3_ci_upper_mean": 0.05636357666403973,
+        "G4_ci_lower_median": -0.0886344914171726,
+        "G4_ci_upper_median": -0.000551018867924474,
+        "G5_win_rate": 0.4044943820224719,
+        "G6_top1_share": 0.026305283590359656,
+        "G7_top3_share": 0.07891585077107896,
+        "G8_coverage": 0.7735352205398288,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 267,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": false,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 3,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.1365561691784076,
+            "max": 0.25095141246944674
+          },
+          "1": {
+            "min": 0.25095179449207244,
+            "max": 0.2529417459252059
+          },
+          "2": {
+            "min": 0.2529432662323222,
+            "max": 0.25694564032850076
+          },
+          "3": {
+            "min": 0.25697047770445786,
+            "max": 0.2643207223114754
+          },
+          "4": {
+            "min": 0.26438802799333416,
+            "max": 0.304398240028516
+          }
+        }
+      }
+    },
+    "round_trip_pct": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.14238180293252342,
+        "G2_median_net_proxy": 0.0026495079365079083,
+        "G3_ci_lower_mean": 0.03638520085234934,
+        "G3_ci_upper_mean": 0.26039328146379576,
+        "G4_ci_lower_median": -0.03249407317073173,
+        "G4_ci_upper_median": 0.043992672682526615,
+        "G5_win_rate": 0.5145118733509235,
+        "G6_top1_share": 0.028951506772739815,
+        "G7_top3_share": 0.08685452031821944,
+        "G8_coverage": 1.0,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 379,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": true,
+          "G3": "True",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 4,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.004994,
+            "max": 0.005
+          },
+          "1": {
+            "min": 0.005001,
+            "max": 0.005021
+          },
+          "2": {
+            "min": 0.005022,
+            "max": 0.005095
+          },
+          "3": {
+            "min": 0.005096,
+            "max": 0.005168
+          },
+          "4": {
+            "min": 0.005169,
+            "max": 0.005291
+          }
+        }
+      }
+    },
+    "impact_buy_pct": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.14238180293252342,
+        "G2_median_net_proxy": 0.0026495079365079083,
+        "G3_ci_lower_mean": 0.03638520085234934,
+        "G3_ci_upper_mean": 0.26039328146379576,
+        "G4_ci_lower_median": -0.03249407317073173,
+        "G4_ci_upper_median": 0.043992672682526615,
+        "G5_win_rate": 0.5145118733509235,
+        "G6_top1_share": 0.028951506772739815,
+        "G7_top3_share": 0.08685452031821944,
+        "G8_coverage": 1.0,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 379,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": true,
+          "G3": "True",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 4,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.002507,
+            "max": 0.00251
+          },
+          "1": {
+            "min": 0.002511,
+            "max": 0.00252
+          },
+          "2": {
+            "min": 0.002521,
+            "max": 0.002557
+          },
+          "3": {
+            "min": 0.002558,
+            "max": 0.002594
+          },
+          "4": {
+            "min": 0.002595,
+            "max": 0.002656
+          }
+        }
+      }
+    },
+    "impact_sell_pct": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.14238180293252342,
+        "G2_median_net_proxy": 0.0026495079365079083,
+        "G3_ci_lower_mean": 0.03638520085234934,
+        "G3_ci_upper_mean": 0.26039328146379576,
+        "G4_ci_lower_median": -0.03249407317073173,
+        "G4_ci_upper_median": 0.043992672682526615,
+        "G5_win_rate": 0.5145118733509235,
+        "G6_top1_share": 0.028951506772739815,
+        "G7_top3_share": 0.08685452031821944,
+        "G8_coverage": 1.0,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 379,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": true,
+          "G3": "True",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 4,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0025,
+            "max": 0.002503
+          },
+          "1": {
+            "min": 0.002504,
+            "max": 0.002514
+          },
+          "2": {
+            "min": 0.002515,
+            "max": 0.002551
+          },
+          "3": {
+            "min": 0.002552,
+            "max": 0.002587
+          },
+          "4": {
+            "min": 0.002588,
+            "max": 0.002649
+          }
+        }
+      }
+    },
+    "impact_asymmetry_pct": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": -0.02680975564399264,
+        "G2_median_net_proxy": -0.00851744077852274,
+        "G3_ci_lower_mean": -0.046340466339070775,
+        "G3_ci_upper_mean": -0.00969397929641216,
+        "G4_ci_lower_median": -0.011424183920877795,
+        "G4_ci_upper_median": -0.005409631063545162,
+        "G5_win_rate": 0.3690773067331671,
+        "G6_top1_share": 0.00927919302582987,
+        "G7_top3_share": 0.027837579077489606,
+        "G8_coverage": 1.0,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 802,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": false,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 0,
+        "bucket_boundaries": {
+          "0": {
+            "min": 5.999999999999929e-06,
+            "max": 6.999999999999628e-06
+          },
+          "1": {
+            "min": 7.000000000000062e-06,
+            "max": 7.000000000000062e-06
+          },
+          "2": {
+            "min": 7.99999999999976e-06,
+            "max": 8.000000000000194e-06
+          }
+        }
+      }
+    },
+    "liq_change_pct": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.00478890469570341,
+        "G2_median_net_proxy": -0.010882685858642046,
+        "G3_ci_lower_mean": -0.021983537249177818,
+        "G3_ci_upper_mean": 0.035048698805919286,
+        "G4_ci_lower_median": -0.014704737864077555,
+        "G4_ci_upper_median": -0.006017678125872348,
+        "G5_win_rate": 0.4096774193548387,
+        "G6_top1_share": 0.007199004669195258,
+        "G7_top3_share": 0.021597014007585777,
+        "G8_coverage": 0.7705727452271232,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 1240,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 0,
+        "bucket_boundaries": {
+          "0": {
+            "min": -0.9714823520344877,
+            "max": 0.0
+          },
+          "1": {
+            "min": 2.4397200272699596e-06,
+            "max": 34.04759749615196
+          }
+        }
+      }
+    },
+    "liq_cliff_flag": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": -0.0034441499539032334,
+        "G2_median_net_proxy": -0.011094529921701358,
+        "G3_ci_lower_mean": -0.02750962965592175,
+        "G3_ci_upper_mean": 0.021793502718456936,
+        "G4_ci_lower_median": -0.0150448586066092,
+        "G4_ci_upper_median": -0.006727346940962175,
+        "G5_win_rate": 0.4090267983074753,
+        "G6_top1_share": 0.005499216452796323,
+        "G7_top3_share": 0.01649764935838897,
+        "G8_coverage": 0.7728768926925609,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 1418,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": false,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 0,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.0,
+            "max": 1.0
+          }
+        }
+      }
+    },
+    "breadth_positive_pct": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": -0.009518295016198912,
+        "G2_median_net_proxy": -0.009656870237188057,
+        "G3_ci_lower_mean": -0.04598250330097113,
+        "G3_ci_upper_mean": 0.03543136415649569,
+        "G4_ci_lower_median": -0.013857088953387752,
+        "G4_ci_upper_median": -0.004362495060963996,
+        "G5_win_rate": 0.3817204301075269,
+        "G6_top1_share": 0.02588777263690248,
+        "G7_top3_share": 0.07766331791070744,
+        "G8_coverage": 0.9858459512837393,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 372,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": false,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 4,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.2413793103448276,
+            "max": 0.34285714285714286
+          },
+          "1": {
+            "min": 0.34375,
+            "max": 0.3939393939393939
+          },
+          "2": {
+            "min": 0.40625,
+            "max": 0.4444444444444444
+          },
+          "3": {
+            "min": 0.4482758620689655,
+            "max": 0.4838709677419355
+          },
+          "4": {
+            "min": 0.4864864864864865,
+            "max": 0.5882352941176471
+          }
+        }
+      }
+    },
+    "breadth_negative_pct": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.0020771842850141374,
+        "G2_median_net_proxy": -0.01169204153275587,
+        "G3_ci_lower_mean": -0.04305465395846025,
+        "G3_ci_upper_mean": 0.04954322979269398,
+        "G4_ci_lower_median": -0.015154628366208555,
+        "G4_ci_upper_median": -0.007749906317564652,
+        "G5_win_rate": 0.3457142857142857,
+        "G6_top1_share": 0.0231473572257815,
+        "G7_top3_share": 0.06944207167734451,
+        "G8_coverage": 0.9858459512837393,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 350,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 4,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.29411764705882354,
+            "max": 0.40625
+          },
+          "1": {
+            "min": 0.4117647058823529,
+            "max": 0.4411764705882353
+          },
+          "2": {
+            "min": 0.4444444444444444,
+            "max": 0.4722222222222222
+          },
+          "3": {
+            "min": 0.48484848484848486,
+            "max": 0.5454545454545454
+          },
+          "4": {
+            "min": 0.5625,
+            "max": 0.6
+          }
+        }
+      }
+    },
+    "median_pool_r_m5": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": -0.011024380175847523,
+        "G2_median_net_proxy": -0.008423071220681446,
+        "G3_ci_lower_mean": -0.04712406398605403,
+        "G3_ci_upper_mean": 0.023567459669643666,
+        "G4_ci_lower_median": -0.012157979635043833,
+        "G4_ci_upper_median": -0.0014192359346642276,
+        "G5_win_rate": 0.4059701492537313,
+        "G6_top1_share": 0.02379652748441532,
+        "G7_top3_share": 0.07138958245324596,
+        "G8_coverage": 0.9858459512837393,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 335,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": false,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 2,
+        "bucket_boundaries": {
+          "0": {
+            "min": -0.56,
+            "max": -0.16
+          },
+          "1": {
+            "min": -0.145,
+            "max": 0.0
+          },
+          "2": {
+            "min": 0.01,
+            "max": 0.215
+          }
+        }
+      }
+    },
+    "pool_dispersion_r_m5": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": -0.007463861179480276,
+        "G2_median_net_proxy": -0.007234552185076806,
+        "G3_ci_lower_mean": -0.043129109304008914,
+        "G3_ci_upper_mean": 0.031912311843084296,
+        "G4_ci_lower_median": -0.012429574408295327,
+        "G4_ci_upper_median": 3.796911716830815e-05,
+        "G5_win_rate": 0.4214659685863874,
+        "G6_top1_share": 0.023285991314363652,
+        "G7_top3_share": 0.06985797394309096,
+        "G8_coverage": 0.9858459512837393,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 382,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": false,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 1,
+        "bucket_boundaries": {
+          "0": {
+            "min": 3.5174685117542697,
+            "max": 6.080370802090041
+          },
+          "1": {
+            "min": 6.141641973367729,
+            "max": 7.068271013907887
+          },
+          "2": {
+            "min": 7.2992116691455795,
+            "max": 8.064966590824238
+          },
+          "3": {
+            "min": 8.118367198206316,
+            "max": 11.364147825434133
+          },
+          "4": {
+            "min": 11.573138124375944,
+            "max": 51.61011071472081
+          }
+        }
+      }
+    },
+    "median_pool_rv5m": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.0052103392571896615,
+        "G2_median_net_proxy": -0.009648200602052147,
+        "G3_ci_lower_mean": -0.0426881881452876,
+        "G3_ci_upper_mean": 0.057409558591062004,
+        "G4_ci_lower_median": -0.01447493316174283,
+        "G4_ci_upper_median": -0.0023099571689548025,
+        "G5_win_rate": 0.37566137566137564,
+        "G6_top1_share": 0.025140466466894187,
+        "G7_top3_share": 0.07542139940068256,
+        "G8_coverage": 0.9858459512837393,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 378,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 1,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.1815404530245947,
+            "max": 0.6020063953815433
+          },
+          "1": {
+            "min": 0.6028110216054434,
+            "max": 0.7014883281081805
+          },
+          "2": {
+            "min": 0.7015445234061111,
+            "max": 0.8065021855307266
+          },
+          "3": {
+            "min": 0.8067849798987491,
+            "max": 0.9613154341438774
+          },
+          "4": {
+            "min": 0.9815022043357671,
+            "max": 1.254838752078678
+          }
+        }
+      }
+    },
+    "pool_liquidity_median": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.0011147243057836004,
+        "G2_median_net_proxy": -0.009476745366585642,
+        "G3_ci_lower_mean": -0.04431601716965005,
+        "G3_ci_upper_mean": 0.051337811927701656,
+        "G4_ci_lower_median": -0.016057294509151294,
+        "G4_ci_upper_median": 0.0008596738233818235,
+        "G5_win_rate": 0.4263392857142857,
+        "G6_top1_share": 0.024292981655827477,
+        "G7_top3_share": 0.07287894496748243,
+        "G8_coverage": 1.0,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 448,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 0,
+        "bucket_boundaries": {
+          "0": {
+            "min": 54249.45,
+            "max": 68083.305
+          },
+          "1": {
+            "min": 68769.81,
+            "max": 71112.54000000001
+          },
+          "2": {
+            "min": 71140.85500000001,
+            "max": 74453.2
+          },
+          "3": {
+            "min": 75842.85,
+            "max": 91082.285
+          },
+          "4": {
+            "min": 91148.87,
+            "max": 150819.08500000002
+          }
+        }
+      }
+    },
+    "pool_vol_h1_median": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.06878929960200623,
+        "G2_median_net_proxy": -0.004542151637387668,
+        "G3_ci_lower_mean": 0.0010450175321309024,
+        "G3_ci_upper_mean": 0.15822814601801058,
+        "G4_ci_lower_median": -0.011809767600418429,
+        "G4_ci_upper_median": -0.00017546466694460587,
+        "G5_win_rate": 0.41237113402061853,
+        "G6_top1_share": 0.045704014840192854,
+        "G7_top3_share": 0.13711204452057857,
+        "G8_coverage": 1.0,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 388,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "True",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 1,
+        "bucket_boundaries": {
+          "0": {
+            "min": 14778.65,
+            "max": 19737.364999999998
+          },
+          "1": {
+            "min": 19754.690000000002,
+            "max": 21846.42
+          },
+          "2": {
+            "min": 21919.239999999998,
+            "max": 27029.705
+          },
+          "3": {
+            "min": 27612.77,
+            "max": 34980.46
+          },
+          "4": {
+            "min": 35417.44,
+            "max": 44832.07
+          }
+        }
+      }
+    },
+    "pool_size_total": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.04687783895216852,
+        "G2_median_net_proxy": -0.0038565387033614156,
+        "G3_ci_lower_mean": -0.015031296152925193,
+        "G3_ci_upper_mean": 0.12538286140821917,
+        "G4_ci_lower_median": -0.011080668114682803,
+        "G4_ci_upper_median": 0.0003781343283580643,
+        "G5_win_rate": 0.4316546762589928,
+        "G6_top1_share": 0.04507640219768805,
+        "G7_top3_share": 0.13522920659306414,
+        "G8_coverage": 1.0,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 417,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 1,
+        "bucket_boundaries": {
+          "0": {
+            "min": 38.0,
+            "max": 42.0
+          },
+          "1": {
+            "min": 43.0,
+            "max": 43.0
+          },
+          "2": {
+            "min": 44.0,
+            "max": 44.0
+          },
+          "3": {
+            "min": 45.0,
+            "max": 45.0
+          },
+          "4": {
+            "min": 46.0,
+            "max": 48.0
+          }
+        }
+      }
+    },
+    "pool_size_with_micro": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.03681162850791581,
+        "G2_median_net_proxy": -0.003108946232346201,
+        "G3_ci_lower_mean": -0.01042171683267503,
+        "G3_ci_upper_mean": 0.09865828023535553,
+        "G4_ci_lower_median": -0.00955162839820305,
+        "G4_ci_upper_median": 0.002539202355496749,
+        "G5_win_rate": 0.4509090909090909,
+        "G6_top1_share": 0.03212287078253396,
+        "G7_top3_share": 0.09636861234760188,
+        "G8_coverage": 1.0,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 550,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 1,
+        "bucket_boundaries": {
+          "0": {
+            "min": 27.0,
+            "max": 32.0
+          },
+          "1": {
+            "min": 33.0,
+            "max": 34.0
+          },
+          "2": {
+            "min": 35.0,
+            "max": 35.0
+          },
+          "3": {
+            "min": 36.0,
+            "max": 39.0
+          }
+        }
+      }
+    },
+    "coverage_ratio_micro": {
+      "status": "FAIL",
+      "metrics": {
+        "G1_mean_net_proxy": 0.039719534496218956,
+        "G2_median_net_proxy": -0.0014139771495288401,
+        "G3_ci_lower_mean": -0.011884576370192029,
+        "G3_ci_upper_mean": 0.09792604211001067,
+        "G4_ci_lower_median": -0.005514982867044183,
+        "G4_ci_upper_median": 0.004793784079686051,
+        "G5_win_rate": 0.47653429602888087,
+        "G6_top1_share": 0.04147926254238999,
+        "G7_top3_share": 0.12443778762716998,
+        "G8_coverage": 1.0,
+        "alpha_used": 0.0011363636363636365,
+        "n_bucket": 277,
+        "n_eligible": 3038,
+        "gates": {
+          "G1": true,
+          "G2": false,
+          "G3": "False",
+          "G4": "False",
+          "G5": false,
+          "G6": true,
+          "G7": true,
+          "G8": true
+        },
+        "all_gates_pass": false,
+        "best_bucket": 2,
+        "bucket_boundaries": {
+          "0": {
+            "min": 0.6904761904761905,
+            "max": 0.7441860465116279
+          },
+          "1": {
+            "min": 0.7446808510638298,
+            "max": 0.7619047619047619
+          },
+          "2": {
+            "min": 0.7674418604651163,
+            "max": 0.7727272727272727
+          },
+          "3": {
+            "min": 0.7804878048780488,
+            "max": 0.7906976744186046
+          },
+          "4": {
+            "min": 0.7954545454545454,
+            "max": 0.8125
+          }
+        }
+      }
+    }
+  },
+  "promoted_features": [],
+  "holdout_results": {},
+  "validation": {
+    "n_fires_total": 96,
+    "n_fires_discovery": 72,
+    "n_fires_holdout": 24,
+    "n_rows_discovery": 3038,
+    "n_rows_holdout": 1027,
+    "n_micro_holdout": 815,
+    "checks": {
+      "discovery_rows": true,
+      "holdout_rows": true,
+      "discovery_fires": true,
+      "holdout_fires": true,
+      "micro_holdout": true
+    },
+    "all_valid": true
+  },
+  "timestamp": "2026-03-15T02:19:39.857802+00:00"
+}

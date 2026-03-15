@@ -1,0 +1,40 @@
+{
+  "manifest_version": "2.0",
+  "generated_at": "2026-03-15T02:21:54.528362+00:00",
+  "run_type": "final_sweep",
+  "code": {
+    "github_repo": "NoAutopilot/solana-narrative-trader",
+    "github_commit": "734ec8b2480095c0d6fcf207b6937e470772b2ef",
+    "github_branch": "master",
+    "script_path": "scripts/final_sweep_v2.py",
+    "script_sha256": "1b9ba52bae2dec33116d98b1b77ded1dc6e77169591474b885af796408aadaf6"
+  },
+  "data": {
+    "db_path": "/root/solana_trader/reports/synthesis/feature_tape_v2_frozen_96fires_20260314T150050Z.db",
+    "table_name": "feature_tape_v2",
+    "fire_log_table": "feature_tape_v2_fire_log",
+    "n_rows_total": 4222,
+    "n_rows_eligible": 4065,
+    "n_rows_ineligible": 157,
+    "n_fires": 96,
+    "first_fire_id": "4578ac6b",
+    "first_fire_time": "2026-03-12T21:45:00Z",
+    "last_fire_id": "e178538c",
+    "last_fire_time": "2026-03-14T09:30:00Z",
+    "db_size_bytes": 162762752
+  },
+  "collection": {
+    "service_name": "solana-feature-tape-v2",
+    "collection_script": "feature_tape_v2.py",
+    "collection_script_sha256": "bdeab4771d70f733151c5da5ddac16095e9eb4410ddf80cb27e965b2b4015445"
+  },
+  "analysis": {
+    "view": "primary",
+    "horizon": "all"
+  },
+  "sample_definition": {
+    "filter": "eligible = 1",
+    "time_range": "2026-03-12T21:45:00Z to 2026-03-14T09:30:00Z",
+    "exclusions": "none"
+  }
+}

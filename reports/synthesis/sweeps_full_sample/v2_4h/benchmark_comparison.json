@@ -1,0 +1,1199 @@
+{
+  "horizon": "4h",
+  "features": {
+    "age_hours": {
+      "novelty": {
+        "novel": false,
+        "family": "static_fundamentals",
+        "entries": [
+          "NG-006",
+          "NG-007"
+        ],
+        "reason": "Static fundamentals family exhausted. Median = 0 at all horizons."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "liquidity_usd": {
+      "novelty": {
+        "novel": false,
+        "family": "static_fundamentals",
+        "entries": [
+          "NG-006",
+          "NG-007"
+        ],
+        "reason": "Static fundamentals family exhausted. Median = 0 at all horizons."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": true,
+        "exceeds_win_rate": true,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": true
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": true,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "vol_h1": {
+      "novelty": {
+        "novel": false,
+        "family": "static_fundamentals",
+        "entries": [
+          "NG-006",
+          "NG-007"
+        ],
+        "reason": "Static fundamentals family exhausted. Median = 0 at all horizons."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "vol_h24": {
+      "novelty": {
+        "novel": false,
+        "family": "static_fundamentals",
+        "entries": [
+          "NG-006",
+          "NG-007"
+        ],
+        "reason": "Static fundamentals family exhausted. Median = 0 at all horizons."
+      },
+      "improvement": {
+        "exceeds_mean": false,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": false,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "price_usd": {
+      "novelty": {
+        "novel": false,
+        "family": "static_fundamentals",
+        "entries": [
+          "NG-006",
+          "NG-007"
+        ],
+        "reason": "Static fundamentals family exhausted. Median = 0 at all horizons."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "buys_m5": {
+      "novelty": {
+        "novel": false,
+        "family": "aggregated_order_flow",
+        "entries": [
+          "NG-002",
+          "NG-003",
+          "NG-004"
+        ],
+        "reason": "Aggregated order-flow family exhausted. Mean is outlier-driven, median = 0."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "sells_m5": {
+      "novelty": {
+        "novel": false,
+        "family": "aggregated_order_flow",
+        "entries": [
+          "NG-002",
+          "NG-003",
+          "NG-004"
+        ],
+        "reason": "Aggregated order-flow family exhausted. Mean is outlier-driven, median = 0."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "buys_h1": {
+      "novelty": {
+        "novel": false,
+        "family": "aggregated_order_flow",
+        "entries": [
+          "NG-002",
+          "NG-003",
+          "NG-004"
+        ],
+        "reason": "Aggregated order-flow family exhausted. Mean is outlier-driven, median = 0."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "sells_h1": {
+      "novelty": {
+        "novel": false,
+        "family": "aggregated_order_flow",
+        "entries": [
+          "NG-002",
+          "NG-003",
+          "NG-004"
+        ],
+        "reason": "Aggregated order-flow family exhausted. Mean is outlier-driven, median = 0."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "buy_sell_ratio_m5": {
+      "novelty": {
+        "novel": false,
+        "family": "aggregated_order_flow",
+        "entries": [
+          "NG-002",
+          "NG-003",
+          "NG-004"
+        ],
+        "reason": "Aggregated order-flow family exhausted. Mean is outlier-driven, median = 0."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": false
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "buy_sell_ratio_h1": {
+      "novelty": {
+        "novel": false,
+        "family": "aggregated_order_flow",
+        "entries": [
+          "NG-002",
+          "NG-003",
+          "NG-004"
+        ],
+        "reason": "Aggregated order-flow family exhausted. Mean is outlier-driven, median = 0."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "buy_count_ratio_m5": {
+      "novelty": {
+        "novel": false,
+        "family": "aggregated_order_flow",
+        "entries": [
+          "NG-002",
+          "NG-003",
+          "NG-004"
+        ],
+        "reason": "Aggregated order-flow family exhausted. Mean is outlier-driven, median = 0."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": false
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "buy_count_ratio_h1": {
+      "novelty": {
+        "novel": false,
+        "family": "aggregated_order_flow",
+        "entries": [
+          "NG-002",
+          "NG-003",
+          "NG-004"
+        ],
+        "reason": "Aggregated order-flow family exhausted. Mean is outlier-driven, median = 0."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "avg_trade_usd_m5": {
+      "novelty": {
+        "novel": true,
+        "family": null,
+        "entries": [],
+        "reason": null
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": false
+        }
+      },
+      "overall_verdict": "NOVEL_BUT_NOT_IMPROVED"
+    },
+    "avg_trade_usd_h1": {
+      "novelty": {
+        "novel": true,
+        "family": null,
+        "entries": [],
+        "reason": null
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOVEL_BUT_NOT_IMPROVED"
+    },
+    "vol_accel_m5_vs_h1": {
+      "novelty": {
+        "novel": false,
+        "family": "aggregated_order_flow",
+        "entries": [
+          "NG-002",
+          "NG-003",
+          "NG-004"
+        ],
+        "reason": "Aggregated order-flow family exhausted. Mean is outlier-driven, median = 0."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "txn_accel_m5_vs_h1": {
+      "novelty": {
+        "novel": false,
+        "family": "aggregated_order_flow",
+        "entries": [
+          "NG-002",
+          "NG-003",
+          "NG-004"
+        ],
+        "reason": "Aggregated order-flow family exhausted. Mean is outlier-driven, median = 0."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "r_m5_micro": {
+      "novelty": {
+        "novel": false,
+        "family": "momentum_direction",
+        "entries": [
+          "NG-001",
+          "NG-008",
+          "NG-009",
+          "NG-010"
+        ],
+        "reason": "Momentum/direction family exhausted. Median = 0 at all horizons."
+      },
+      "improvement": {
+        "exceeds_mean": false,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": false,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "rv_5m": {
+      "novelty": {
+        "novel": true,
+        "family": null,
+        "entries": [],
+        "reason": null
+      },
+      "improvement": {
+        "exceeds_mean": false,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": false,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOVEL_BUT_NOT_IMPROVED"
+    },
+    "rv_1m": {
+      "novelty": {
+        "novel": true,
+        "family": null,
+        "entries": [],
+        "reason": null
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOVEL_BUT_NOT_IMPROVED"
+    },
+    "range_5m": {
+      "novelty": {
+        "novel": true,
+        "family": null,
+        "entries": [],
+        "reason": null
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOVEL_BUT_NOT_IMPROVED"
+    },
+    "buys_m5_snap": {
+      "novelty": {
+        "novel": false,
+        "family": "aggregated_order_flow",
+        "entries": [
+          "NG-002",
+          "NG-003",
+          "NG-004"
+        ],
+        "reason": "Aggregated order-flow family exhausted. Mean is outlier-driven, median = 0."
+      },
+      "improvement": {
+        "exceeds_mean": false,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": false,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "sells_m5_snap": {
+      "novelty": {
+        "novel": false,
+        "family": "aggregated_order_flow",
+        "entries": [
+          "NG-002",
+          "NG-003",
+          "NG-004"
+        ],
+        "reason": "Aggregated order-flow family exhausted. Mean is outlier-driven, median = 0."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "buy_count_ratio_m5_snap": {
+      "novelty": {
+        "novel": false,
+        "family": "aggregated_order_flow",
+        "entries": [
+          "NG-002",
+          "NG-003",
+          "NG-004"
+        ],
+        "reason": "Aggregated order-flow family exhausted. Mean is outlier-driven, median = 0."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": false,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "avg_trade_usd_m5_snap": {
+      "novelty": {
+        "novel": true,
+        "family": null,
+        "entries": [],
+        "reason": null
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOVEL_BUT_NOT_IMPROVED"
+    },
+    "jup_vs_cpamm_diff_pct": {
+      "novelty": {
+        "novel": false,
+        "family": "execution_quality",
+        "entries": [
+          "NG-005"
+        ],
+        "reason": "Execution quality family exhausted. Near-zero tercile differentiation."
+      },
+      "improvement": {
+        "exceeds_mean": false,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": false,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "round_trip_pct": {
+      "novelty": {
+        "novel": false,
+        "family": "execution_quality",
+        "entries": [
+          "NG-005"
+        ],
+        "reason": "Execution quality family exhausted. Near-zero tercile differentiation."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": true,
+        "exceeds_win_rate": true,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": true
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": true,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "impact_buy_pct": {
+      "novelty": {
+        "novel": false,
+        "family": "execution_quality",
+        "entries": [
+          "NG-005"
+        ],
+        "reason": "Execution quality family exhausted. Near-zero tercile differentiation."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": true,
+        "exceeds_win_rate": true,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": true
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": true,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "impact_sell_pct": {
+      "novelty": {
+        "novel": false,
+        "family": "execution_quality",
+        "entries": [
+          "NG-005"
+        ],
+        "reason": "Execution quality family exhausted. Near-zero tercile differentiation."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": true,
+        "exceeds_win_rate": true,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": true
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": true,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "impact_asymmetry_pct": {
+      "novelty": {
+        "novel": false,
+        "family": "execution_quality",
+        "entries": [
+          "NG-005"
+        ],
+        "reason": "Execution quality family exhausted. Near-zero tercile differentiation."
+      },
+      "improvement": {
+        "exceeds_mean": false,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": false,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "liq_change_pct": {
+      "novelty": {
+        "novel": true,
+        "family": null,
+        "entries": [],
+        "reason": null
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": false,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOVEL_BUT_NOT_IMPROVED"
+    },
+    "liq_cliff_flag": {
+      "novelty": {
+        "novel": true,
+        "family": null,
+        "entries": [],
+        "reason": null
+      },
+      "improvement": {
+        "exceeds_mean": false,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": false,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOVEL_BUT_NOT_IMPROVED"
+    },
+    "breadth_positive_pct": {
+      "novelty": {
+        "novel": false,
+        "family": "momentum_direction",
+        "entries": [
+          "NG-001",
+          "NG-008",
+          "NG-009",
+          "NG-010"
+        ],
+        "reason": "Momentum/direction family exhausted. Median = 0 at all horizons."
+      },
+      "improvement": {
+        "exceeds_mean": false,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": false,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "breadth_negative_pct": {
+      "novelty": {
+        "novel": false,
+        "family": "momentum_direction",
+        "entries": [
+          "NG-001",
+          "NG-008",
+          "NG-009",
+          "NG-010"
+        ],
+        "reason": "Momentum/direction family exhausted. Median = 0 at all horizons."
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": false,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "median_pool_r_m5": {
+      "novelty": {
+        "novel": false,
+        "family": "momentum_direction",
+        "entries": [
+          "NG-001",
+          "NG-008",
+          "NG-009",
+          "NG-010"
+        ],
+        "reason": "Momentum/direction family exhausted. Median = 0 at all horizons."
+      },
+      "improvement": {
+        "exceeds_mean": false,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": false,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "pool_dispersion_r_m5": {
+      "novelty": {
+        "novel": false,
+        "family": "momentum_direction",
+        "entries": [
+          "NG-001",
+          "NG-008",
+          "NG-009",
+          "NG-010"
+        ],
+        "reason": "Momentum/direction family exhausted. Median = 0 at all horizons."
+      },
+      "improvement": {
+        "exceeds_mean": false,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": false,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOT_NOVEL"
+    },
+    "median_pool_rv5m": {
+      "novelty": {
+        "novel": true,
+        "family": null,
+        "entries": [],
+        "reason": null
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOVEL_BUT_NOT_IMPROVED"
+    },
+    "pool_liquidity_median": {
+      "novelty": {
+        "novel": true,
+        "family": null,
+        "entries": [],
+        "reason": null
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": false,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOVEL_BUT_NOT_IMPROVED"
+    },
+    "pool_vol_h1_median": {
+      "novelty": {
+        "novel": true,
+        "family": null,
+        "entries": [],
+        "reason": null
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOVEL_BUT_NOT_IMPROVED"
+    },
+    "pool_size_total": {
+      "novelty": {
+        "novel": true,
+        "family": null,
+        "entries": [],
+        "reason": null
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOVEL_BUT_NOT_IMPROVED"
+    },
+    "pool_size_with_micro": {
+      "novelty": {
+        "novel": true,
+        "family": null,
+        "entries": [],
+        "reason": null
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOVEL_BUT_NOT_IMPROVED"
+    },
+    "coverage_ratio_micro": {
+      "novelty": {
+        "novel": true,
+        "family": null,
+        "entries": [],
+        "reason": null
+      },
+      "improvement": {
+        "exceeds_mean": true,
+        "exceeds_median": false,
+        "exceeds_win_rate": false,
+        "v1_bench_mean": 0.00051,
+        "v1_bench_median": 0.0,
+        "v1_bench_win_rate": 0.5,
+        "exceeds_all": false
+      },
+      "structural_distinction": {
+        "addresses_any": true,
+        "constraints": {
+          "C1": true,
+          "C2": false,
+          "C3": true
+        }
+      },
+      "overall_verdict": "NOVEL_BUT_NOT_IMPROVED"
+    }
+  }
+}

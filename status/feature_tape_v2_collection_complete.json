@@ -1,0 +1,16 @@
+{
+  "status": "COLLECTION_COMPLETE",
+  "detected_at": "2026-03-14T09:31:19+00:00",
+  "n_fires": 96,
+  "target_fires": 96,
+  "n_rows_total": 4222,
+  "n_rows_eligible": 4065,
+  "first_fire_id": "4578ac6b",
+  "first_fire_time": "2026-03-12T21:45:00Z",
+  "last_fire_id": "e178538c",
+  "last_fire_time": "2026-03-14T09:30:00Z",
+  "gap_fires": 0,
+  "db_path": "/root/solana_trader/data/solana_trader.db",
+  "collector_stopped": false,
+  "notes": "Collector NOT stopped. Watcher exited cleanly."
+}

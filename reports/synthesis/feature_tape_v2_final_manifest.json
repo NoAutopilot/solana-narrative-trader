@@ -1,0 +1,55 @@
+{
+  "manifest_version": "2.0",
+  "generated_at": "2026-03-14T15:02:08Z",
+  "run_type": "dataset_freeze_96fires",
+  "freeze_scope": "first_96_successful_fires",
+  "code": {
+    "vps_commit": "e0b7beccdbc93b33a7ddd6df53618fbe4e32bd9a",
+    "collection_script": "ops/feature_tape_v2.py",
+    "collection_script_sha256": "301f82edf505fe752e5878058b87ab4ce2317023554dfcd4d8b0c79f7fcdba92"
+  },
+  "data": {
+    "live_db_path": "/root/solana_trader/data/solana_trader.db",
+    "live_db_size_bytes": 631091200,
+    "frozen_db_path": "/root/solana_trader/reports/synthesis/feature_tape_v2_frozen_96fires_20260314T150050Z.db",
+    "frozen_csv_path": "/root/solana_trader/reports/synthesis/feature_tape_v2_frozen_96fires_20260314T150050Z.csv",
+    "table_name": "feature_tape_v2",
+    "n_fires": 96,
+    "n_rows_total": 4222,
+    "n_rows_eligible": 4065,
+    "n_rows_ineligible": 157,
+    "first_fire_id": "4578ac6b",
+    "first_fire_time": "2026-03-12T21:45:00Z",
+    "last_fire_id": "e178538c",
+    "last_fire_time": "2026-03-14T09:30:00Z",
+    "last_fire_epoch": 1773480600.0,
+    "micro_coverage_total": 3182,
+    "micro_coverage_eligible": 3163,
+    "quote_coverage_eligible": 2629,
+    "gap_fires_excluded": 1,
+    "gap_fire_id": "dc1485fe",
+    "gap_fire_time": "2026-03-13T06:30:00Z",
+    "gap_fire_treatment": "borderline_all_horizons=1, excluded from primary analysis"
+  },
+  "label_coverage_pct": {
+    "5m": 97.0,
+    "15m": 94.9,
+    "30m": 91.1,
+    "1h": 84.8,
+    "4h": 68.2,
+    "1d": "EXCLUDED_FROM_PRIMARY"
+  },
+  "collection": {
+    "service_name": "solana-feature-tape-v2",
+    "collector_stopped": true,
+    "collector_stopped_at": "2026-03-14T15:02:08Z",
+    "total_fires_at_stop": 118
+  },
+  "sample_definition": {
+    "primary_filter": "eligible = 1",
+    "secondary_filter": "full universe (eligible + ineligible)",
+    "time_range": "2026-03-12T21:45:00Z to 2026-03-14T09:30:00Z",
+    "gap_exclusion_ref": "reports/ops/feature_tape_v2_gap_note.md"
+  },
+  "label_coverage_note": "Coverage from prepopulated r_forward_* columns using epoch-based universe_snapshot lookup with +/-120s window. +4h reduced due to 12h gap window."
+}

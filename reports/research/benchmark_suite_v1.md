@@ -149,3 +149,18 @@ A new live observer is approved only if all of the following are satisfied:
 6. Coverage is non-random (not subset-only due to scope gap)
 
 No branch in this suite passes all six gates.
+
+
+---
+
+## Feature Acquisition v2 — Full-Universe Sweep (Added 2026-03-15)
+
+| run_id | Family | Horizon | N | Mean Net | Median Net | Win Rate | CI | Classification |
+|--------|--------|---------|---|----------|------------|----------|----|----------------|
+| feature_tape_v2 | feature_acquisition_v2 | +5m | 4,065 | negative | negative | 9-13% | crosses zero | CLOSED |
+| feature_tape_v2 | feature_acquisition_v2 | +15m | 4,065 | negative | negative | 9-13% | crosses zero | CLOSED |
+| feature_tape_v2 | feature_acquisition_v2 | +30m | 4,065 | negative | negative | 9-13% | crosses zero | CLOSED |
+| feature_tape_v2 | feature_acquisition_v2 | +1h | 4,065 | negative | negative | 9-13% | crosses zero | CLOSED |
+| feature_tape_v2 | feature_acquisition_v2 | +4h | 4,065 | negative | negative | 9-13% | crosses zero | CLOSED |
+
+42 features tested per horizon (210 total combinations). 0 passed discovery gates. See `feature_tape_v2_FINAL_closure.md` for full details.

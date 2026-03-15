@@ -339,3 +339,47 @@ A complete project runbook and state bundle was built and committed to GitHub.
 1. **A project without a runbook is not a project — it is a personal notebook.** The runbook is what makes the system transferable and auditable.
 2. **Decision trees prevent scope creep.** Enumerating all allowed next moves in advance makes it impossible to drift into unapproved experiments.
 3. **The artifact map is the most underrated document.** Without it, the repo becomes a graveyard of files with no clear ownership or purpose.
+
+---
+
+## Entry 011 — Feature Tape v2 / Feature Acquisition v2 — FINAL Closure
+
+**run_id:** `feature_tape_v2_2026_03_12`
+**Family:** `feature_acquisition_v2`
+**Direction:** long-only selection
+**Final classification:** `CLOSED — NO NEW LIVE OBSERVER`
+**Date:** 2026-03-15
+
+### Hypothesis tested
+
+An expanded feature set of 42 features derived from public on-chain data (universe_snapshot + microstructure_log) — covering order flow, trade acceleration, microstructure volatility, Jupiter routing quality, price impact, breadth, and cross-pool dispersion — can identify tokens with positive forward returns at horizons from +5m to +4h.
+
+### Final metrics (96 fires, 4,065 eligible rows, 210 feature-horizon combinations)
+
+| Metric | Value |
+|--------|-------|
+| Features tested | 42 (of 62 columns; 2 skipped) |
+| Horizons tested | +5m, +15m, +30m, +1h, +4h |
+| Feature-horizon combinations | 210 |
+| Discovery passes | 0 |
+| Holdout passes | 0 |
+| Best win rate (any feature, any horizon) | ~13% |
+| Median net-proxy (top quintile, typical) | -0.5% |
+
+### Why not promotable
+
+The signal is fundamentally weak. No feature separates future winners from the population at any horizon. The top-quintile bucket for every feature has a negative or zero median net-proxy. Round-trip cost (~0.51%) consumes all gross alpha at short horizons, and no feature identifies tokens with sufficient gross alpha at longer horizons.
+
+### Durable learnings
+
+1. **The public on-chain feature space is exhausted for memecoin long-only selection.** Three separate programs (momentum observers, feature tape v1, feature tape v2) have now tested overlapping and distinct features from the same two source tables. The consistent result is no viable signal. This is not a sample size issue — it is a fundamental absence of predictive power in the available data.
+
+2. **Expanding the feature set from 17 to 42 features did not help.** Adding microstructure features (rv_5m, rv_1m, range_5m), Jupiter routing quality (jup_vs_cpamm_diff_pct), price impact (impact_buy_pct, impact_sell_pct), breadth (breadth_positive_pct), and cross-pool dispersion (pool_dispersion_r_m5) produced no improvement over the simpler v1 feature set. The additional complexity added noise, not signal.
+
+3. **Extending horizons from +5m/+15m/+30m to include +1h and +4h did not help.** Longer horizons did not reveal hidden signal. The +4h results are weaker than +5m, not stronger, suggesting that the noise-to-signal ratio increases with time in this market.
+
+4. **Full-universe collection with eligible-only analysis is confirmed as the correct design.** The 157 ineligible rows (3.7%) were correctly excluded from primary analysis. No signal was hiding in the ineligible population.
+
+5. **Automated pipeline infrastructure (autopilot, freeze, sweep scripts) works but requires operational attention.** The autopilot did not complete autonomously due to the scanner gap. Manual intervention was required. The sweep scripts had timestamp format bugs (datetime() vs epoch) and column name mismatches (mint vs mint_address). Future programs should include integration tests against a frozen test DB before deployment.
+
+6. **Disk management must be part of the operational plan.** Backup accumulation filled the disk to 100% within 24 hours of the 96-fire threshold. Retention policies must be configured and tested before any multi-day collection run.

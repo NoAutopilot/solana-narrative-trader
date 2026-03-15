@@ -1,0 +1,230 @@
+Loading feature_tape_v2 from /root/solana_trader/reports/synthesis/feature_tape_v2_frozen_96fires_20260314T150050Z.db ...
+  Loaded 4065 eligible rows
+  96 unique fires
+
+  Validation:
+    discovery_rows: PASS (?)
+    holdout_rows: PASS (?)
+    discovery_fires: PASS (?)
+    holdout_fires: PASS (?)
+    micro_holdout: PASS (815)
+
+  Running discovery sweep on 3038 rows, 18 features...
+    buys_m5: FAIL (G2, G3, G4, G5)
+    sells_m5: FAIL (G2, G3, G4, G5)
+    buys_h1: FAIL (G1, G2, G3, G4, G5)
+    sells_h1: FAIL (G1, G2, G3, G4, G5)
+    buy_sell_ratio_m5: FAIL (G1, G2, G3, G4, G5, G8)
+    buy_sell_ratio_h1: FAIL (G1, G2, G3, G4, G5)
+    buy_count_ratio_m5: FAIL (G1, G2, G3, G4, G5, G8)
+    buy_count_ratio_h1: FAIL (G1, G2, G3, G4, G5)
+    avg_trade_usd_m5: FAIL (G2, G3, G4, G5, G8)
+    avg_trade_usd_h1: FAIL (G1, G2, G3, G4, G5)
+    vol_accel_m5_vs_h1: FAIL (G2, G3, G4, G5)
+    txn_accel_m5_vs_h1: FAIL (G2, G3, G4, G5)
+    r_m5_micro: FAIL (G2, G3, G4, G5)
+    rv_5m: FAIL (G1, G2, G3, G4, G5)
+    rv_1m: FAIL (G1, G2, G3, G4, G5)
+    range_5m: FAIL (G2, G3, G4, G5)
+    liq_change_pct: FAIL (G1, G2, G3, G4, G5)
+    liq_cliff_flag: FAIL (G1, G2, G3, G4, G5)
+
+  Discovery complete: 0/18 features promoted
+
+  No features promoted from discovery. Holdout evaluation skipped.
+
+  Report written to reports/synthesis/sweeps_subset_micro/v2_5m/holdout_sweep_report.md
+  Results JSON written to reports/synthesis/sweeps_subset_micro/v2_5m/holdout_sweep_results.json
+Benchmark comparison written to reports/synthesis/sweeps_subset_micro/v2_5m/benchmark_comparison.md
+JSON written to reports/synthesis/sweeps_subset_micro/v2_5m/benchmark_comparison.json
+Loading feature_tape_v2 from /root/solana_trader/reports/synthesis/feature_tape_v2_frozen_96fires_20260314T150050Z.db ...
+  Loaded 4065 eligible rows
+  96 unique fires
+
+  Validation:
+    discovery_rows: PASS (?)
+    holdout_rows: PASS (?)
+    discovery_fires: PASS (?)
+    holdout_fires: PASS (?)
+    micro_holdout: PASS (815)
+
+  Running discovery sweep on 3038 rows, 18 features...
+    buys_m5: FAIL (G2, G3, G4, G5)
+    sells_m5: FAIL (G2, G3, G4, G5)
+    buys_h1: FAIL (G2, G3, G4, G5)
+    sells_h1: FAIL (G2, G3, G4, G5)
+    buy_sell_ratio_m5: FAIL (G2, G3, G4, G5, G8)
+    buy_sell_ratio_h1: FAIL (G2, G3, G4, G5)
+    buy_count_ratio_m5: FAIL (G2, G3, G4, G5, G8)
+    buy_count_ratio_h1: FAIL (G2, G3, G4, G5)
+    avg_trade_usd_m5: FAIL (G2, G3, G4, G5, G8)
+    avg_trade_usd_h1: FAIL (G2, G3, G4, G5)
+    vol_accel_m5_vs_h1: FAIL (G2, G4, G5)
+    txn_accel_m5_vs_h1: FAIL (G2, G3, G4, G5)
+    r_m5_micro: FAIL (G2, G4, G5)
+    rv_5m: FAIL (G2, G3, G4, G5)
+    rv_1m: FAIL (G2, G3, G4, G5)
+    range_5m: FAIL (G2, G3, G4, G5)
+    liq_change_pct: FAIL (G1, G2, G3, G4, G5)
+    liq_cliff_flag: FAIL (G1, G2, G3, G4, G5)
+
+  Discovery complete: 0/18 features promoted
+
+  No features promoted from discovery. Holdout evaluation skipped.
+
+  Report written to reports/synthesis/sweeps_subset_micro/v2_15m/holdout_sweep_report.md
+  Results JSON written to reports/synthesis/sweeps_subset_micro/v2_15m/holdout_sweep_results.json
+Benchmark comparison written to reports/synthesis/sweeps_subset_micro/v2_15m/benchmark_comparison.md
+JSON written to reports/synthesis/sweeps_subset_micro/v2_15m/benchmark_comparison.json
+Loading feature_tape_v2 from /root/solana_trader/reports/synthesis/feature_tape_v2_frozen_96fires_20260314T150050Z.db ...
+  Loaded 4065 eligible rows
+  96 unique fires
+
+  Validation:
+    discovery_rows: PASS (?)
+    holdout_rows: PASS (?)
+    discovery_fires: PASS (?)
+    holdout_fires: PASS (?)
+    micro_holdout: PASS (815)
+
+  Running discovery sweep on 3038 rows, 18 features...
+    buys_m5: FAIL (G3, G4, G5)
+    sells_m5: FAIL (G3, G4, G5)
+    buys_h1: FAIL (G2, G3, G4, G5)
+    sells_h1: FAIL (G2, G3, G4, G5)
+    buy_sell_ratio_m5: FAIL (G2, G3, G4, G5, G8)
+    buy_sell_ratio_h1: FAIL (G2, G3, G4, G5)
+    buy_count_ratio_m5: FAIL (G2, G3, G4, G5, G8)
+    buy_count_ratio_h1: FAIL (G2, G3, G4, G5)
+    avg_trade_usd_m5: FAIL (G2, G3, G4, G5, G8)
+    avg_trade_usd_h1: FAIL (G2, G3, G4, G5)
+    vol_accel_m5_vs_h1: FAIL (G2, G4, G5)
+    txn_accel_m5_vs_h1: FAIL (G2, G3, G4, G5)
+    r_m5_micro: PROMOTED (all 8 gates pass)
+    rv_5m: FAIL (G2, G3, G4, G5)
+    rv_1m: FAIL (G3, G4, G5)
+    range_5m: FAIL (G2, G3, G4, G5)
+    liq_change_pct: FAIL (G2, G3, G4, G5)
+    liq_cliff_flag: FAIL (G1, G2, G3, G4, G5)
+
+  Discovery complete: 1/18 features promoted
+
+  Running holdout evaluation on 1027 rows, 1 features...
+    r_m5_micro: HOLDOUT PASS — PROMOTED TO LIVE OBSERVER DESIGN
+
+  Report written to reports/synthesis/sweeps_subset_micro/v2_30m/holdout_sweep_report.md
+  Results JSON written to reports/synthesis/sweeps_subset_micro/v2_30m/holdout_sweep_results.json
+Benchmark comparison written to reports/synthesis/sweeps_subset_micro/v2_30m/benchmark_comparison.md
+JSON written to reports/synthesis/sweeps_subset_micro/v2_30m/benchmark_comparison.json
+Loading feature_tape_v2 from /root/solana_trader/reports/synthesis/feature_tape_v2_frozen_96fires_20260314T150050Z.db ...
+  Loaded 4065 eligible rows
+  96 unique fires
+
+  Validation:
+    discovery_rows: PASS (?)
+    holdout_rows: PASS (?)
+    discovery_fires: PASS (?)
+    holdout_fires: PASS (?)
+    micro_holdout: PASS (815)
+
+  Running discovery sweep on 3038 rows, 18 features...
+    buys_m5: FAIL (G2, G3, G4, G5)
+    sells_m5: FAIL (G2, G3, G4, G5)
+    buys_h1: FAIL (G2, G3, G4, G5)
+    sells_h1: FAIL (G2, G3, G4, G5)
+    buy_sell_ratio_m5: FAIL (G2, G3, G4, G5, G8)
+    buy_sell_ratio_h1: FAIL (G2, G3, G4, G5)
+    buy_count_ratio_m5: FAIL (G2, G3, G4, G5, G8)
+    buy_count_ratio_h1: FAIL (G2, G3, G4, G5)
+    avg_trade_usd_m5: FAIL (G2, G3, G4, G5, G8)
+    avg_trade_usd_h1: FAIL (G2, G4, G5)
+    vol_accel_m5_vs_h1: FAIL (G2, G4, G5)
+    txn_accel_m5_vs_h1: FAIL (G2, G3, G4, G5)
+    r_m5_micro: FAIL (G2, G4, G5)
+    rv_5m: FAIL (G2, G3, G4, G5)
+    rv_1m: FAIL (G2, G3, G4, G5)
+    range_5m: FAIL (G2, G3, G4, G5)
+    liq_change_pct: FAIL (G2, G3, G4, G5)
+    liq_cliff_flag: FAIL (G2, G3, G4, G5)
+
+  Discovery complete: 0/18 features promoted
+
+  No features promoted from discovery. Holdout evaluation skipped.
+
+  Report written to reports/synthesis/sweeps_subset_micro/v2_1h/holdout_sweep_report.md
+  Results JSON written to reports/synthesis/sweeps_subset_micro/v2_1h/holdout_sweep_results.json
+Benchmark comparison written to reports/synthesis/sweeps_subset_micro/v2_1h/benchmark_comparison.md
+JSON written to reports/synthesis/sweeps_subset_micro/v2_1h/benchmark_comparison.json
+Loading feature_tape_v2 from /root/solana_trader/reports/synthesis/feature_tape_v2_frozen_96fires_20260314T150050Z.db ...
+  Loaded 4065 eligible rows
+  96 unique fires
+
+  Validation:
+    discovery_rows: PASS (?)
+    holdout_rows: PASS (?)
+    discovery_fires: PASS (?)
+    holdout_fires: PASS (?)
+    micro_holdout: PASS (815)
+
+  Running discovery sweep on 3038 rows, 18 features...
+    buys_m5: FAIL (G2, G3, G4, G5)
+    sells_m5: FAIL (G2, G3, G4, G5)
+    buys_h1: FAIL (G2, G3, G4, G5)
+    sells_h1: FAIL (G2, G3, G4, G5)
+    buy_sell_ratio_m5: FAIL (G2, G3, G4, G5, G8)
+    buy_sell_ratio_h1: FAIL (G2, G3, G4, G5)
+    buy_count_ratio_m5: FAIL (G2, G3, G4, G5, G8)
+    buy_count_ratio_h1: FAIL (G2, G3, G4, G5)
+    avg_trade_usd_m5: FAIL (G2, G3, G4, G5, G8)
+    avg_trade_usd_h1: FAIL (G2, G3, G4, G5)
+    vol_accel_m5_vs_h1: FAIL (G2, G3, G4, G5)
+    txn_accel_m5_vs_h1: FAIL (G2, G3, G4, G5)
+    r_m5_micro: FAIL (G1, G2, G3, G4, G5)
+    rv_5m: FAIL (G1, G2, G3, G4, G5)
+    rv_1m: FAIL (G2, G3, G4, G5)
+    range_5m: FAIL (G2, G3, G4, G5)
+    liq_change_pct: FAIL (G2, G3, G4, G5)
+    liq_cliff_flag: FAIL (G1, G2, G3, G4, G5)
+
+  Discovery complete: 0/18 features promoted
+
+  No features promoted from discovery. Holdout evaluation skipped.
+
+  Report written to reports/synthesis/sweeps_subset_micro/v2_4h/holdout_sweep_report.md
+  Results JSON written to reports/synthesis/sweeps_subset_micro/v2_4h/holdout_sweep_results.json
+Benchmark comparison written to reports/synthesis/sweeps_subset_micro/v2_4h/benchmark_comparison.md
+JSON written to reports/synthesis/sweeps_subset_micro/v2_4h/benchmark_comparison.json
+Final Sweep v2 — 5 horizons
+DB: /root/solana_trader/reports/synthesis/feature_tape_v2_frozen_96fires_20260314T150050Z.db
+Output: reports/synthesis/sweeps_subset_micro
+
+============================================================
+  HORIZON: +5m
+============================================================
+
+============================================================
+  HORIZON: +15m
+============================================================
+
+============================================================
+  HORIZON: +30m
+============================================================
+
+============================================================
+  HORIZON: +1h
+============================================================
+
+============================================================
+  HORIZON: +4h
+============================================================
+
+Unified report written to reports/synthesis/sweeps_subset_micro/unified_sweep_report.md
+
+============================================================
+  FINAL SWEEP COMPLETE
+============================================================
+  +5m: COMPLETE
+  +15m: COMPLETE
+  +30m: COMPLETE
+  +1h: COMPLETE
+  +4h: COMPLETE

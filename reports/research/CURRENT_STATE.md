@@ -1,19 +1,22 @@
 # Current State — Solana Narrative Trader
 
-**Last updated:** 2026-03-13
-**Phase:** Feature Acquisition v2 — Data Collection
+**Last updated:** 2026-03-15
+**Phase:** Program Closed — Awaiting Decision
 
 ---
 
-## What Is Active Right Now
+## What Is Running
 
-| Service | Location | Status | Purpose |
-|---------|----------|--------|---------|
-| `feature_tape_v2.py` | VPS `/root/solana_trader/` | **RUNNING** | Collects 15-min fire snapshots (full-universe) |
-| `solana-feature-tape-v2.service` | VPS systemd | **ENABLED** | Keeps collector alive across reboots |
-| `feature_tape_v2_autopilot.sh` | VPS (pending pull) | **NOT YET LAUNCHED** | Waits for 96 fires + label maturity, then runs final sweep |
+Nothing. All services related to Feature Acquisition v2 have been stopped.
 
-The collector fires every 15 minutes at :00, :15, :30, :45 UTC. It writes to `/root/solana_trader/data/solana_trader.db`, tables `feature_tape_v2` and `feature_tape_v2_fire_log`. No live observer is running. No live trading is active.
+| Service | Status | Since |
+|---------|--------|-------|
+| `solana-feature-tape-v2.service` | STOPPED | 2026-03-14T15:00Z |
+| `solana-trader.service` (supervisor) | RUNNING | 2026-03-13T18:43Z |
+| `solana-backup-sqlite.timer` | ACTIVE | continuous |
+| `solana-restore-test.timer` | ACTIVE | continuous |
+
+The upstream scanner (`et_universe_scanner.py`) and supervisor continue running because they serve other purposes. The feature tape collector is the only component that was stopped.
 
 ---
 
@@ -25,62 +28,51 @@ The collector fires every 15 minutes at :00, :15, :30, :45 UTC. It writes to `/r
 | Observer `pfm_1677a7da` | VPS (stopped) | **ARCHIVED** — failed, reconciled |
 | Momentum sweep v1 (11 features) | `reports/synthesis/` | **CLOSED** — all 11 entered no-go registry |
 | Feature tape v1 closure memo | `reports/synthesis/feature_tape_v1_closure_memo.md` | **FINAL** |
+| Feature tape v2 closure memo | `reports/synthesis/feature_tape_v2_FINAL_closure.md` | **FINAL** |
+| Feature tape v2 final recommendation | `reports/synthesis/feature_family_sweep_v2_final_recommendation.md` | **FINAL** |
 
 ---
 
 ## What Is Frozen
 
-Nothing is frozen yet. The dataset freeze happens automatically when the autopilot detects 96+ fires and label maturity. The freeze creates:
-
-- `artifacts/feature_tape_v2_frozen_YYYYMMDD_HHMMSS.db`
-- `artifacts/feature_tape_v2_frozen_YYYYMMDD_HHMMSS.csv`
-- `reports/synthesis/feature_tape_v2_final_manifest.json`
+| Artifact | Path |
+|----------|------|
+| Frozen 96-fire DB | `reports/synthesis/feature_tape_v2_frozen_96fires_20260314T150050Z.db` |
+| Frozen 96-fire CSV | `reports/synthesis/feature_tape_v2_frozen_96fires_20260314T150050Z.csv` |
+| Manifest | `reports/synthesis/feature_tape_v2_final_manifest.json` |
 
 ---
 
 ## Current Phase
 
-**Phase:** Feature Acquisition v2 — Data Collection
+**Program Closed — Awaiting Decision**
 
-The system is in a passive collection phase. The only active process is the collector. All analysis, sweeps, and decisions are deferred until the autopilot completes. No human action is required during this phase.
+All three research lines have been exhausted:
 
-**Collection scope:** Full universe (all scanned tokens, eligible and ineligible).
-**Analysis scope:** Eligible-only (primary), full-universe (audit only).
+| Line | Experiments | Verdict |
+|------|------------|---------|
+| Momentum / Direction | 001-007 | No viable signal |
+| Public-Data Long-Only (v1) | 008 | No viable signal |
+| Feature Acquisition v2 | 009 | No viable signal |
 
----
-
-## Next Automatic Milestone
-
-| Milestone | Trigger | ETA |
-|-----------|---------|-----|
-| **10-fire health checkpoint** | 10 fires in `feature_tape_v2_fire_log` | ~2h after service start |
-| **96-fire completion** | 96 fires collected | ~24h after service start |
-| **Label maturity** | Last fire epoch + 4h + 2m buffer | ~28h after service start |
-| **Dataset freeze** | Autopilot detects maturity | ~28h after service start |
-| **Final sweep** | Immediately after freeze | ~28-30h after service start |
-| **Final recommendation** | Sweep completes | `reports/synthesis/feature_family_sweep_v2_final_recommendation.md` |
+The public on-chain feature space (universe_snapshot + microstructure_log) does not contain a signal strong enough to overcome round-trip costs in a long-only token selection framework on Solana memecoins.
 
 ---
 
-## Next Possible Decisions
+## Allowed Next Moves
 
-The final recommendation will contain exactly one of three verdicts:
+See `reports/synthesis/post_v2_options.md` for the three allowed options:
 
-| Verdict | Meaning | Next Action |
-|---------|---------|-------------|
-| **PROCEED** | A candidate family passed all 8 promotion gates and the red-team battery | Launch live observer for that family |
-| **PIVOT** | No family passed; large-cap swing study is viable | Execute Stage B of large-cap swing study |
-| **STOP** | No viable edge found; program is not viable at current scale | Pause program; design Feature Acquisition v3 or product pivot |
+| Option | Description |
+|--------|-------------|
+| A | Stop the program entirely |
+| B | Start a new program around wallet/deployer/"who" data |
+| C | Start a new program around large-cap swing / different market |
 
-No other decisions are permitted. No observer may be launched before the final recommendation is produced and reviewed.
+No re-runs of existing features are permitted. No live observer may be launched from the current feature space. The no-go registry (NG-001 through NG-006) is authoritative.
 
 ---
 
-## What Must NOT Change During Collection
+## What Must NOT Change
 
-- `feature_tape_v2.py` — frozen
-- `feature_tape_v2` table schema — frozen
-- Label derivation semantics — frozen
-- Source table schemas (`universe_snapshot`, `microstructure_log`) — frozen
-- No-go registry — frozen (additions only, no removals)
-- Benchmark suite v1 — frozen
+The no-go registry is append-only. No entries may be removed. No feature from the current public on-chain feature space may be re-tested without a fundamentally new data source or market structure.

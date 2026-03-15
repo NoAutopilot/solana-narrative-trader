@@ -205,3 +205,26 @@ Battery FAIL after initial PROCEED
 - Modifying the collector, schema, or labels during collection
 - Removing entries from the no-go registry
 - Running a second observer in parallel with the first
+
+
+---
+
+## Section 7: Post-Feature-Acquisition-v2 Closure (Added 2026-03-15)
+
+The final recommendation was **STOP**. Per Section 4 of this decision tree, the program enters review.
+
+```
+Final recommendation: STOP
+└── Feature Acquisition v2 line is CLOSED
+    ├── Option A: Stop the program entirely
+    │   └── No further action. Archive everything.
+    ├── Option B: New program — wallet/deployer/"who" data
+    │   └── Requires: new data source, new hypothesis, new no-go check
+    │       └── Must NOT reuse universe_snapshot / microstructure_log features
+    └── Option C: New program — large-cap swing / different market
+        └── Requires: new market definition, new data source, new hypothesis
+            └── Must NOT reuse memecoin long-only selection framework
+```
+
+**Current state:** Awaiting human decision among options A, B, or C.
+See `reports/synthesis/post_v2_options.md` for details.

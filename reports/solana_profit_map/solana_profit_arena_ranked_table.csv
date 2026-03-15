@@ -1,0 +1,11 @@
+Rank,Arena,Profit Path Clarity,Speed Requirement,Capital Requirement,Private Data Requirement,Engineering Burden,Time to First Dollar,Fit With My Strengths,Drift Risk,Defensibility,Overall Verdict
+1,Research / Falsification / Anti-Bullshit Engine,MEDIUM,LOW,LOW,LOW,LOW,MEDIUM,HIGH,MEDIUM,MEDIUM,BEST FIT
+2,Protocol / Ecosystem Consulting,MEDIUM,LOW,LOW,LOW,LOW,LOW-MEDIUM,HIGH,LOW,MEDIUM,GOOD FIT
+3,Data / Monitoring / Alerts (Niche),MEDIUM,LOW-MEDIUM,LOW,LOW,MEDIUM,LOW-MEDIUM,MEDIUM,MEDIUM,LOW,POSSIBLE
+4,Launch / Token Diligence / Risk Filtering,LOW-MEDIUM,MEDIUM,LOW,MEDIUM,MEDIUM,MEDIUM,MEDIUM,HIGH,LOW,MARGINAL
+5,Sniper / Copy-Trade Bot Product,HIGH,HIGH,LOW-MEDIUM,LOW,MEDIUM-HIGH,MEDIUM,LOW,LOW,LOW,BAD FIT
+6,Wallet / On-Chain Intelligence Product,MEDIUM,MEDIUM,LOW-MEDIUM,HIGH,HIGH,HIGH,LOW-MEDIUM,HIGH,HIGH,BAD FIT
+7,LP / Liquidity Provision / Market-Making,HIGH,HIGH,HIGH,MEDIUM,HIGH,MEDIUM,LOW,HIGH (passive) / LOW (active),HIGH (active) / LOW (passive),BAD FIT
+8,Routing / Quote-Quality / Execution Tooling,MEDIUM,HIGH,LOW,MEDIUM,HIGH,HIGH,LOW,MEDIUM,HIGH,BAD FIT
+9,Cross-Chain / Cross-Venue Tooling,MEDIUM,HIGH,HIGH,MEDIUM,HIGH,HIGH,LOW,LOW,MEDIUM,BAD FIT
+10,Searcher / Low-Latency / Bundle Business,HIGH,HIGH,MEDIUM,HIGH,HIGH,HIGH,LOW,LOW,MEDIUM,BAD FIT

@@ -417,3 +417,16 @@ The "who" family (deployer recidivism, early-buyer overlap, smart-money concentr
 **Finding:** Drift SOL-PERP funding rate z-scores, mark-oracle TWAP spreads, and liquidation clusters do not produce a cost-adjusted edge at +15m, +1h, or +4h horizons. Funding dislocation predicts continuation (not reversion) but the effect is too small to trade. Mark-oracle spread is structurally one-directional (persistent discount), not a tradable dislocation. Liquidation data from the Drift API is limited to ~12 hours of history, making H3 structurally untestable without a custom indexer.
 
 **Implication:** Derivatives market structure on Drift does not offer a simple state-based signal any more than spot microstructure did. The research program has now tested spot momentum, spot microstructure, spot swing, wallet/deployer, and perps state — all NO-GO. The Solana token trading signal search is exhausted across all tested families.
+
+---
+
+## Entry 015 -- Meteora LP State Study Stage A
+
+**Date:** 2026-03-15
+**Program:** meteora_lp_state_stageA
+
+**Finding:** H2 toxic flow filter at +4h passes all gates (N=844, wins_mean=+1.033%). Fee income exceeds IL proxy in 68.7% of toxic-flow events. Launch pools (H3) are systematically bad for LPs. Median LP proxy is negative in most non-toxic states.
+
+**Key learning:** Median is the right primary metric for LP proxy studies. The toxic-flow filter is counterintuitive but mechanically sound: large price moves generate large volume, which generates large fee income.
+
+**Action:** Stage B requires exact LP PnL data (Helius/Bitquery paid API). Do not act on Stage A proxy result alone.

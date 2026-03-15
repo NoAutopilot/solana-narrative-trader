@@ -1,23 +1,20 @@
 # Current Research State
 
-**Updated:** 2026-03-15
-**Status:** ALL PROGRAMS CLOSED
+**Last updated:** 2026-03-15
+**Status:** One open conditional program
 
-## Programs Evaluated
+## Closed Programs (No-Go)
+1. Momentum/Reversion -- NO-GO
+2. Feature Acquisition v2 -- NO-GO (0/210 features passed)
+3. Large-Cap Swing Stage A -- NO-GO (0/18 combinations)
+4. Who Family Pilot v1 -- NO-GO (anti-signal, z=-3.12)
+5. Drift Perps State Stage A -- NO-GO (0/27 combinations)
 
-| # | Program | Family | Verdict | Date |
-|---|---------|--------|---------|------|
-| 1 | Momentum/Reversion | Spot price patterns | NO-GO | 2026-03 |
-| 2 | Feature Acquisition v2 | Spot microstructure | NO-GO | 2026-03-14 |
-| 3 | Large-Cap Swing A | Spot swing signals | NO-GO | 2026-03-15 |
-| 4 | Who Family Pilot v1 | Wallet/deployer | NO-GO | 2026-03-15 |
-| 5 | Drift Perps State A | Derivatives state | NO-GO | 2026-03-15 |
+## Open / Conditional Programs
+6. **Meteora LP State Stage A -- CONDITIONAL GO**
+   - H2 toxic flow filter at +4h passes all gates
+   - Stage B requires Helius/Bitquery paid API for exact LP PnL
+   - Do not deploy capital until Stage B confirms
 
-## Active Research Lines
-
-None. All candidate programs have been evaluated and closed.
-
-## Remaining Options
-
-A) Stop all research
-B) Propose an entirely new market or asset class (outside Solana meme/perps)
+## Next Decision Required
+Authorize Stage B for Meteora LP State Study (requires paid API access) or stop all programs.

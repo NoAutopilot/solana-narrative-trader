@@ -240,3 +240,21 @@ No feature-horizon combination passed all eight promotion gates (G1-G8) in the d
 | Best Result | H3 +4h: +0.567% net, but N=4 and top-1=49% |
 | Kill Reason | No edge in adequately-powered hypotheses (H1, H2). H3 underpowered (N=4) with extreme concentration. |
 | Artifacts | reports/new_programs/drift_perps_state_stageA_*.md |
+
+---
+
+## NG-010 — Meteora LP State Study Stage A (CONDITIONAL GO — Stage B Pending)
+
+**Date:** 2026-03-15
+**Experiment:** 013
+**Program:** meteora_lp_state_stageA
+**Verdict:** CONDITIONAL GO (1/18 combinations passed all gates)
+
+**Passing result:** H2 toxic flow filter at +4h (N=844, wins_mean=+1.033%, median=+0.080%, CI=[+0.580%, +2.909%])
+
+**Mechanism:** Fee income (base_fee x volume / TVL x 4h) exceeds IL proxy in 68.7% of toxic-flow events. Not a mean-reversion artifact.
+
+**Stage B required before actionable.** Key concerns: proxy accuracy, Memehouse-SOL concentration, pool coverage (15/60 pools).
+
+**Stage B data requirement:** Helius or Bitquery paid API for exact LP PnL.
+

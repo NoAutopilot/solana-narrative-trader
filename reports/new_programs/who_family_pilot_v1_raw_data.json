@@ -1,0 +1,1549 @@
+[
+  {
+    "symbol": "MEMECARD",
+    "mint": "ACc3ZBq1c9h7pofwn2J8b8bvRHvqMFwynVg8neLZpump",
+    "group": "stronger",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "999998750666661",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [],
+    "n_early_buyers": 0,
+    "first_10_buyers": [],
+    "first_20_buyers": []
+  },
+  {
+    "symbol": "NEO",
+    "mint": "HL8i2d74iFZQGkpZ1eBzJQWbkU6bBmRUVJgMF2b6pump",
+    "group": "stronger",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "945839090663069",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [],
+    "n_early_buyers": 0,
+    "first_10_buyers": [],
+    "first_20_buyers": []
+  },
+  {
+    "symbol": "SMITH",
+    "mint": "9e1wtawpbkrJGq3vLbPGBvpQFLfsPFtjai4D9eo9pump",
+    "group": "stronger",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "952536903063415",
+    "decimals": 6,
+    "total_sigs_found": 0,
+    "parsed_txns": 0,
+    "early_buyers": [],
+    "n_early_buyers": 0,
+    "first_10_buyers": [],
+    "first_20_buyers": []
+  },
+  {
+    "symbol": "HAMSTER",
+    "mint": "CXjctbA7ENQgZf1FnMLJJUGKp92gAJdMcyEhXeZppump",
+    "group": "stronger",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "999996740947146",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [],
+    "n_early_buyers": 0,
+    "first_10_buyers": [],
+    "first_20_buyers": []
+  },
+  {
+    "symbol": "EXPRESSION",
+    "mint": "3VgL5HHqhmPJM1BJjZLo1e2CosM233zcL3HB3PiKpump",
+    "group": "stronger",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "999994285629005",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [
+      {
+        "wallet": "4XxAY2UXgX4Zta5J2vq6qmXxkGMqR9hgqfXZQ4dHYHR1",
+        "timestamp": 1773505025,
+        "amount": 3212592.036558,
+        "txn_type": "SWAP",
+        "fee_payer": "5pfr8DXqbaESfEcb4LofKk2zEw6MV736aoxWsWSkL6R6",
+        "signature": "3z1r2F9YE1xzTB4G36nrFxyjYPRnAJHTFm317MwphgVNWTWZ5Nxb6Yjg1i9ePqFcH66AVgmocWqPTZcSYSzpXefy"
+      },
+      {
+        "wallet": "5jsW3Uz2GGzErpVqEEgQ8YaQJRw9HwBa5jfZhSrbXUDD",
+        "timestamp": 1773505033,
+        "amount": 3592503.699466,
+        "txn_type": "SWAP",
+        "fee_payer": "79UNQjhd9cPEjo9fA8cBUGVULUbxbiRBNLMNspPDNggh",
+        "signature": "tAoxD7VBWXBzaY2KWsBjMoWgYrSJTqaEoodF6tJ5Mf5oydvzdCAG558SHQDwVz2uVRJUWS9fBkQ3naVfMiK4KUp"
+      },
+      {
+        "wallet": "8L2y55D11k63CAftvW7uMM2mBhtMxLoLnivG9uY2bt8j",
+        "timestamp": 1773505034,
+        "amount": 223.12824,
+        "txn_type": "SWAP",
+        "fee_payer": "8L2y55D11k63CAftvW7uMM2mBhtMxLoLnivG9uY2bt8j",
+        "signature": "isJpT8bznXTPtyVeU62hqdcRGkxQ3afeVjDKGc9XUg64nzp2WUcPnLEQhKTo3bdxsabZtXVbu3f181RHakfXdu8"
+      },
+      {
+        "wallet": "9v3xeLZiWPevBN8ydoDdc7W6KRofScFKYsnizD9WZCmp",
+        "timestamp": 1773505034,
+        "amount": 717821.046343,
+        "txn_type": "SWAP",
+        "fee_payer": "9v3xeLZiWPevBN8ydoDdc7W6KRofScFKYsnizD9WZCmp",
+        "signature": "4w2pYtmpuQDp9UDcs53JzPGVuNyZNEFhRTcL5WqNKiivXR5j1nHTh3Fekrp942GSPbs2gGtLkqPGYntvvhhn8XGA"
+      },
+      {
+        "wallet": "8389ChJYujRA84m6zedav87hnR2P3i137dLYjWLFrsMr",
+        "timestamp": 1773505042,
+        "amount": 2279852.742723,
+        "txn_type": "SWAP",
+        "fee_payer": "3vCP2S51mt2j97fyLxvnpQSjGQhAq4sssgpmGPfuWSVq",
+        "signature": "41XDGpd3csQQYMimGs5qFao9zFfx3pAgrorNvyh3Mu53V7hrDuCDDzn2LhhbVJeMeSvAF79Su4esRGkXppE2yUPH"
+      },
+      {
+        "wallet": "ArPkFh28ftME5VH1TZ6rS5CCs62ZGLdyV8EoMjUJ6CNW",
+        "timestamp": 1773505046,
+        "amount": 432.652924,
+        "txn_type": "SWAP",
+        "fee_payer": "ArPkFh28ftME5VH1TZ6rS5CCs62ZGLdyV8EoMjUJ6CNW",
+        "signature": "5kfRMiRGw1g3FzLkxXtgfuUtbFd9fVNdpxFDC82swdJDCXBqfYtJCsWwTjtPoq3h5FvsEA95sabj2wNrA9MZsHun"
+      },
+      {
+        "wallet": "J8VbTsSu3GPU6tQa6iQ9RK3HCRqjZFMbbQNg4av7jFNr",
+        "timestamp": 1773505063,
+        "amount": 139806.747241,
+        "txn_type": "SWAP",
+        "fee_payer": "8bQ4DTx54y9D9zF71DVvfmw1LtFUdVsnyXNEXAx8XkKZ",
+        "signature": "4nNwhLSL7cTPwbng2dCzVXJAudWAy8SRHQaiaeK8j3u5o7YLM6MqYt2vQE9oPnxsHbXUnuhz2AGtRWSYCmx8XwZx"
+      }
+    ],
+    "n_early_buyers": 7,
+    "first_10_buyers": [
+      "4XxAY2UXgX4Zta5J2vq6qmXxkGMqR9hgqfXZQ4dHYHR1",
+      "5jsW3Uz2GGzErpVqEEgQ8YaQJRw9HwBa5jfZhSrbXUDD",
+      "8L2y55D11k63CAftvW7uMM2mBhtMxLoLnivG9uY2bt8j",
+      "9v3xeLZiWPevBN8ydoDdc7W6KRofScFKYsnizD9WZCmp",
+      "8389ChJYujRA84m6zedav87hnR2P3i137dLYjWLFrsMr",
+      "ArPkFh28ftME5VH1TZ6rS5CCs62ZGLdyV8EoMjUJ6CNW",
+      "J8VbTsSu3GPU6tQa6iQ9RK3HCRqjZFMbbQNg4av7jFNr"
+    ],
+    "first_20_buyers": [
+      "4XxAY2UXgX4Zta5J2vq6qmXxkGMqR9hgqfXZQ4dHYHR1",
+      "5jsW3Uz2GGzErpVqEEgQ8YaQJRw9HwBa5jfZhSrbXUDD",
+      "8L2y55D11k63CAftvW7uMM2mBhtMxLoLnivG9uY2bt8j",
+      "9v3xeLZiWPevBN8ydoDdc7W6KRofScFKYsnizD9WZCmp",
+      "8389ChJYujRA84m6zedav87hnR2P3i137dLYjWLFrsMr",
+      "ArPkFh28ftME5VH1TZ6rS5CCs62ZGLdyV8EoMjUJ6CNW",
+      "J8VbTsSu3GPU6tQa6iQ9RK3HCRqjZFMbbQNg4av7jFNr"
+    ]
+  },
+  {
+    "symbol": "LUFFY",
+    "mint": "AZCyNKNLoEn4NCVr3NEReUFqTFjvC9ZgK6jk2SRnpump",
+    "group": "stronger",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "999936371207420",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [],
+    "n_early_buyers": 0,
+    "first_10_buyers": [],
+    "first_20_buyers": []
+  },
+  {
+    "symbol": "SHEEPAGENT",
+    "mint": "Ec8w8C6ih21zhmFC4Qu1pD1UcAqgNuacGPoHNoM2pump",
+    "group": "stronger",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "999958176188070",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [
+      {
+        "wallet": "EAPwigzRK5vnEscKjA8yh3XsnPBmqnoHvcia1ecBnWHx",
+        "timestamp": 1773461761,
+        "amount": 3191291.38186,
+        "txn_type": "SWAP",
+        "fee_payer": "FUHmjhMzAuzuJE8PNpgcU3TSgSEwPUC3arkaEWo7VBWc",
+        "signature": "5qFmCoSZvzMcTRBv5zdnExu9a2Z8JGRy9FbJoLKQin29Hhc9Z46u3UgLCeei5w4wYvoAo7iJrTK6BRbnRL1W2mqy"
+      }
+    ],
+    "n_early_buyers": 1,
+    "first_10_buyers": [
+      "EAPwigzRK5vnEscKjA8yh3XsnPBmqnoHvcia1ecBnWHx"
+    ],
+    "first_20_buyers": [
+      "EAPwigzRK5vnEscKjA8yh3XsnPBmqnoHvcia1ecBnWHx"
+    ]
+  },
+  {
+    "symbol": "MACROHARD",
+    "mint": "DVZMdNkcET3852usHEi1e6WB9ShffZsxbkbW55eEpump",
+    "group": "stronger",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "999915343995998",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [],
+    "n_early_buyers": 0,
+    "first_10_buyers": [],
+    "first_20_buyers": []
+  },
+  {
+    "symbol": "Snorp",
+    "mint": "4xJxk2RoT5i4zJGzu68Xwvke3EDvGbL5MadP9QiEpump",
+    "group": "stronger",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "991489796447444",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [
+      {
+        "wallet": "2heabgWobxiYtvvg7WkSSMvwLjpBixxXvspQyXfCmKkc",
+        "timestamp": 1773408749,
+        "amount": 1074409.185148,
+        "txn_type": "SWAP",
+        "fee_payer": "2heabgWobxiYtvvg7WkSSMvwLjpBixxXvspQyXfCmKkc",
+        "signature": "3Ee5mRSSYYLNvWYrm7GJYuBLGuBxU2yWJ5yHgsTMXtWiNWpoJCx79ARttkKYUF1D7GdQb56YQ8MSUCykvm4xEwGm"
+      },
+      {
+        "wallet": "nonofjCpDeEbRWnA82HENffi74FEGo4XTn41v2XWiJh",
+        "timestamp": 1773408749,
+        "amount": 1392134.338001,
+        "txn_type": "SWAP",
+        "fee_payer": "nonofjCpDeEbRWnA82HENffi74FEGo4XTn41v2XWiJh",
+        "signature": "65nnf7tAvQbZhHKe7uBZHgv26wLazJEL7YfkzD5iqu4LMCujHi2B9LruZ7niFt7wh2ViT4oYQrzzkgPUtjfqspg7"
+      },
+      {
+        "wallet": "CqF3gUDojKuVdd6zBk2GZBTG84aAQ2b7tYeeyS18Sd2Z",
+        "timestamp": 1773408749,
+        "amount": 1705474.837315,
+        "txn_type": "SWAP",
+        "fee_payer": "CqF3gUDojKuVdd6zBk2GZBTG84aAQ2b7tYeeyS18Sd2Z",
+        "signature": "2KpCdMxZDtcg39WEQHqBJ2x1W7RLZTmtn5hGxjD8w9RVMQ4TXtivGe5cHBKCzzo3h8uq7oq2qtAzF9LgYcCJUK1V"
+      },
+      {
+        "wallet": "2uX7CWCTQCyxDb923tKpRAk5DyLSqR71QRZtNnYQPwMr",
+        "timestamp": 1773408749,
+        "amount": 226799.577843,
+        "txn_type": "SWAP",
+        "fee_payer": "2uX7CWCTQCyxDb923tKpRAk5DyLSqR71QRZtNnYQPwMr",
+        "signature": "3s4HWLkSdSiGyD9LAUiiiP215AJjYe6ToHeebeUa8X18uWiZaFd29HcakkXDJM2as5MdCbF1iVkoqE7H2o1sJtYK"
+      },
+      {
+        "wallet": "SUPErMoycPz71hmZXr78P7cXFYQhdpV39Roeoe2DxUC",
+        "timestamp": 1773408750,
+        "amount": 385.890884,
+        "txn_type": "SWAP",
+        "fee_payer": "SUPErMoycPz71hmZXr78P7cXFYQhdpV39Roeoe2DxUC",
+        "signature": "FDFReJKKvPgCake6Uf1nfc8YPFegaZUidqDMqzJvCsx1cxV9c7dapBomjJGDwkgyg1EH7MRgaUu2afAdiQQxsV3"
+      },
+      {
+        "wallet": "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC",
+        "timestamp": 1773408750,
+        "amount": 385.890884,
+        "txn_type": "SWAP",
+        "fee_payer": "SUPErMoycPz71hmZXr78P7cXFYQhdpV39Roeoe2DxUC",
+        "signature": "FDFReJKKvPgCake6Uf1nfc8YPFegaZUidqDMqzJvCsx1cxV9c7dapBomjJGDwkgyg1EH7MRgaUu2afAdiQQxsV3"
+      },
+      {
+        "wallet": "FvXfCMWiBEsVs69MtnWwAPtFJFyo3pnfrDarzMsWxG5o",
+        "timestamp": 1773408750,
+        "amount": 495.37633,
+        "txn_type": "SWAP",
+        "fee_payer": "FvXfCMWiBEsVs69MtnWwAPtFJFyo3pnfrDarzMsWxG5o",
+        "signature": "41yT3dGMuEJGJze48KZS1fVXSbewVUNZhDvhQRRBmPJ6uSUCc5XgKi3vUhU8dmbuVrnVQLrDGdz3CN44DHNrcsUx"
+      },
+      {
+        "wallet": "63ykyUhnLzFmszxA47eqBJC6oDSKKDo6wRfkRJDn3TV6",
+        "timestamp": 1773408754,
+        "amount": 1000000.628334,
+        "txn_type": "TRANSFER",
+        "fee_payer": "3pTeQw2YhuVRcXnFW1YPL6onMRvN3hVjxzKuvBgXE4rr",
+        "signature": "5Do4gwskXQgEXSDjiufm3KUEVY3rcVPDypfWYGa11sV4cBfPABPxkGELdQLDH2KcqXpCjTADXGhoETP4KeWRE4WV"
+      },
+      {
+        "wallet": "82amLovPCVY7zpWNyPyrHBcKmyF5MqhEyqgqH4j9yq6C",
+        "timestamp": 1773408765,
+        "amount": 53540.798478,
+        "txn_type": "SWAP",
+        "fee_payer": "82amLovPCVY7zpWNyPyrHBcKmyF5MqhEyqgqH4j9yq6C",
+        "signature": "5RmuZoarP71bjUshGkCJyqU5fQjnwkMPNEBdoVgwUfwe6fQKDGUJ6kLvk3Psbw3Xj418KTYbSRPs7ejS9S73yRHi"
+      },
+      {
+        "wallet": "8vaw3ZMJonhZk23kTwtGhfkkYL9pPXnh6QYeC8p1peDR",
+        "timestamp": 1773408765,
+        "amount": 395.55144,
+        "txn_type": "SWAP",
+        "fee_payer": "gasTzr94Pmp4Gf8vknQnqxeYxdgwFjbgdJa4msYRpnB",
+        "signature": "CvKsX3UkcnngNAcFF63fiPRgVzg3GeuiZzngBUWWtmyB38GgAk1qwuSrcfYUNkPt5JpWe6WR7RpiGceJ8EqrjK7"
+      },
+      {
+        "wallet": "6W5k7eo4JJ73Q1LC3XWroNgg8ve4CwanAXizCqCpMDLN",
+        "timestamp": 1773408814,
+        "amount": 79665.066064,
+        "txn_type": "SWAP",
+        "fee_payer": "6W5k7eo4JJ73Q1LC3XWroNgg8ve4CwanAXizCqCpMDLN",
+        "signature": "tUgsFFcTsvrM6qmfdfMbKcWi93jybgwdjSmA18LFhBqKmePkqiKe6AEp2VHoJB2GnXfRiumxkB14athpTFchYeS"
+      },
+      {
+        "wallet": "BCikg3EJveGRg1QbVDayKDpj5qpQDtZVUPidwpBAtWYg",
+        "timestamp": 1773408880,
+        "amount": 450394.138621,
+        "txn_type": "SWAP",
+        "fee_payer": "BCikg3EJveGRg1QbVDayKDpj5qpQDtZVUPidwpBAtWYg",
+        "signature": "32LPJZnTZWeBsDUqCDJZHmVKVWt5B6dDK6Ab14aq7sFJ821uHAnVd23cy4wNq1sya6frE76doaWAtT7wdCZ4thGa"
+      },
+      {
+        "wallet": "2tgUbS9UMoQD6GkDZBiqKYCURnGrSb6ocYwRABrSJUvY",
+        "timestamp": 1773408883,
+        "amount": 83021.155708,
+        "txn_type": "SWAP",
+        "fee_payer": "2tgUbS9UMoQD6GkDZBiqKYCURnGrSb6ocYwRABrSJUvY",
+        "signature": "2tZ5y45jdA6fCf6cEtFhqKgphei1LgCt4Q7yysMgYL4MSXrcGSj6Nwb5gDawn2Xn32cCM5J4fScsBqEHYAAvReiZ"
+      },
+      {
+        "wallet": "ARu4n5mFdZogZAravu7CcizaojWnS6oqka37gdLT5SZn",
+        "timestamp": 1773408962,
+        "amount": 1097.88564,
+        "txn_type": "SWAP",
+        "fee_payer": "8vaw3ZMJonhZk23kTwtGhfkkYL9pPXnh6QYeC8p1peDR",
+        "signature": "HWQuM2rGyPrxs7CfU1wrdZJHnmozHJPn1q64vE5bGsH8tVp4r4D2i3TCvvGuKhyeME7gb3EvitGxJypQ5ektN4e"
+      },
+      {
+        "wallet": "5Nkq61YKMJoUd4SaYbFmNym4NMnDFEkgH8pHgESFsT8w",
+        "timestamp": 1773408971,
+        "amount": 60235.523536,
+        "txn_type": "SWAP",
+        "fee_payer": "5Nkq61YKMJoUd4SaYbFmNym4NMnDFEkgH8pHgESFsT8w",
+        "signature": "3QDVjGi28cTwskXWFAoKyTnk7Nk5YFcQ3PrAoRJ4Pv5UE7N2sw8kXT6H3eS1U2E5YRu9gmtnE7zkKAUAWYfoaVzd"
+      },
+      {
+        "wallet": "EkcvM5Uc1BdQNdLn4SMxq3EbmR167KfubYJ5FuiN16Fb",
+        "timestamp": 1773408977,
+        "amount": 187684.929962,
+        "txn_type": "SWAP",
+        "fee_payer": "EkcvM5Uc1BdQNdLn4SMxq3EbmR167KfubYJ5FuiN16Fb",
+        "signature": "3L1dBCPnYLWgyArYWnpbnegq5qw5E6RNytmMS6FwyBxPTdmvqe1BvRMGZN4u31UNSH586dRbEpDUGyCrXvGJxyyp"
+      },
+      {
+        "wallet": "AEaAiww3j21J9ouBJX7yzRm1jeHoaha7LibjWDsMm6UC",
+        "timestamp": 1773409003,
+        "amount": 853929.452961,
+        "txn_type": "SWAP",
+        "fee_payer": "AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51",
+        "signature": "B9qCML7QQmEC2q6SfqigmZ9Ue4eqZPMk4T13axb4GgVCxnATezPwkS365JJtEnDcecsTmzukYK1swueLY4Fc83W"
+      },
+      {
+        "wallet": "7Cp5VM91qWGMLDtpHj8H99Fzp9UCpP3ZXmQMXy321zfE",
+        "timestamp": 1773409008,
+        "amount": 199825,
+        "txn_type": "SWAP",
+        "fee_payer": "6MrbR9PmpBbrshHZxeJWkn5X3HBKXLJudazt5k4JGeBU",
+        "signature": "3ucu6D6FgcM49jdKurnUi2KCqdwAR5u5jAX5MDUbkqP2n9rNpTyPHwZJGTVdM7pdsD7wCKus18EDYgP8RNuG93DT"
+      }
+    ],
+    "n_early_buyers": 18,
+    "first_10_buyers": [
+      "2heabgWobxiYtvvg7WkSSMvwLjpBixxXvspQyXfCmKkc",
+      "nonofjCpDeEbRWnA82HENffi74FEGo4XTn41v2XWiJh",
+      "CqF3gUDojKuVdd6zBk2GZBTG84aAQ2b7tYeeyS18Sd2Z",
+      "2uX7CWCTQCyxDb923tKpRAk5DyLSqR71QRZtNnYQPwMr",
+      "SUPErMoycPz71hmZXr78P7cXFYQhdpV39Roeoe2DxUC",
+      "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC",
+      "FvXfCMWiBEsVs69MtnWwAPtFJFyo3pnfrDarzMsWxG5o",
+      "63ykyUhnLzFmszxA47eqBJC6oDSKKDo6wRfkRJDn3TV6",
+      "82amLovPCVY7zpWNyPyrHBcKmyF5MqhEyqgqH4j9yq6C",
+      "8vaw3ZMJonhZk23kTwtGhfkkYL9pPXnh6QYeC8p1peDR"
+    ],
+    "first_20_buyers": [
+      "2heabgWobxiYtvvg7WkSSMvwLjpBixxXvspQyXfCmKkc",
+      "nonofjCpDeEbRWnA82HENffi74FEGo4XTn41v2XWiJh",
+      "CqF3gUDojKuVdd6zBk2GZBTG84aAQ2b7tYeeyS18Sd2Z",
+      "2uX7CWCTQCyxDb923tKpRAk5DyLSqR71QRZtNnYQPwMr",
+      "SUPErMoycPz71hmZXr78P7cXFYQhdpV39Roeoe2DxUC",
+      "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC",
+      "FvXfCMWiBEsVs69MtnWwAPtFJFyo3pnfrDarzMsWxG5o",
+      "63ykyUhnLzFmszxA47eqBJC6oDSKKDo6wRfkRJDn3TV6",
+      "82amLovPCVY7zpWNyPyrHBcKmyF5MqhEyqgqH4j9yq6C",
+      "8vaw3ZMJonhZk23kTwtGhfkkYL9pPXnh6QYeC8p1peDR",
+      "6W5k7eo4JJ73Q1LC3XWroNgg8ve4CwanAXizCqCpMDLN",
+      "BCikg3EJveGRg1QbVDayKDpj5qpQDtZVUPidwpBAtWYg",
+      "2tgUbS9UMoQD6GkDZBiqKYCURnGrSb6ocYwRABrSJUvY",
+      "ARu4n5mFdZogZAravu7CcizaojWnS6oqka37gdLT5SZn",
+      "5Nkq61YKMJoUd4SaYbFmNym4NMnDFEkgH8pHgESFsT8w",
+      "EkcvM5Uc1BdQNdLn4SMxq3EbmR167KfubYJ5FuiN16Fb",
+      "AEaAiww3j21J9ouBJX7yzRm1jeHoaha7LibjWDsMm6UC",
+      "7Cp5VM91qWGMLDtpHj8H99Fzp9UCpP3ZXmQMXy321zfE"
+    ]
+  },
+  {
+    "symbol": "SOS",
+    "mint": "DpxKNEi3XVeRByaGqYKvz2w6E2PhPgBAqdayLcQEpump",
+    "group": "stronger",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "999988861307639",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [
+      {
+        "wallet": "Hv4Hkx5dgZtJMDwhoywhE6Wkh6dtbh6EFSpNYUT4VK5t",
+        "timestamp": 1773531425,
+        "amount": 371.706485,
+        "txn_type": "SWAP",
+        "fee_payer": "Hv4Hkx5dgZtJMDwhoywhE6Wkh6dtbh6EFSpNYUT4VK5t",
+        "signature": "3LkEMR7f2gYQzkmswLeZk6T16KN5zkmmh2YAyNnjW2XoNBL2APKpyMcT4NofY1ro6pVunVm8P4d1Tk9po1CCDRn1"
+      },
+      {
+        "wallet": "HCgLqqAphsfte51co86e781viwJj5bawzBWyjuu2on2c",
+        "timestamp": 1773531461,
+        "amount": 12543.209076,
+        "txn_type": "SWAP",
+        "fee_payer": "HCgLqqAphsfte51co86e781viwJj5bawzBWyjuu2on2c",
+        "signature": "7vioiDLzNkXAQpp6J8rHrX6mzUbH9ybpZ8edkRPoCGhKQxiJAb3srS8RVHU3zq4dJK71RCzeEZC179amnoAwEQ4"
+      },
+      {
+        "wallet": "HeekSCpRM5NmUGoqBenEwfCE5txXr8pVv2irTkNvbhR6",
+        "timestamp": 1773531463,
+        "amount": 348.900831,
+        "txn_type": "SWAP",
+        "fee_payer": "HeekSCpRM5NmUGoqBenEwfCE5txXr8pVv2irTkNvbhR6",
+        "signature": "3CQ8EBEQkQbdoUBGv71Kw9VGwoWQAVwycsoTm6mF6whkQypj7EQ5Nmi5pTWM3bBnz1grSLKUyMTzuLh3EFaVpVV9"
+      },
+      {
+        "wallet": "H7BgphvjUPnQnJNSfamgaLRjYW2UYGKNi6pmb9u6vsh8",
+        "timestamp": 1773531467,
+        "amount": 1511.96912,
+        "txn_type": "SWAP",
+        "fee_payer": "H7BgphvjUPnQnJNSfamgaLRjYW2UYGKNi6pmb9u6vsh8",
+        "signature": "2qSRf9zZf1ganPmevxwUCF55nBAgTB4MffX3LS47cs3u8W2bJoZjsmEGXtvpMYSViCytkbsZCSTpncqPcgv1qvMe"
+      },
+      {
+        "wallet": "2Uzsvw96vRWHXjwfUshvhtySXWEEmw3dSG4Fh9mgS6Gv",
+        "timestamp": 1773531468,
+        "amount": 9535.407276,
+        "txn_type": "SWAP",
+        "fee_payer": "2Uzsvw96vRWHXjwfUshvhtySXWEEmw3dSG4Fh9mgS6Gv",
+        "signature": "C1PaC3RCeY3cCBGWMtsXzvWGQogdLcVb64V6waAXshGW5V4PqwPmjWy6abHqfrqCYkf3HSS38HLSG327qpdYdGa"
+      },
+      {
+        "wallet": "GtSKxHBy3V6zy6cgzCdRwfdW5nX8CkxgNeKnpnqHHT4N",
+        "timestamp": 1773531469,
+        "amount": 49351.705176,
+        "txn_type": "SWAP",
+        "fee_payer": "7iVCXQn4u6tiTEfNVqbWSEsRdEi69E9oYsSMiepuECwi",
+        "signature": "TM2A3tJkHiGHsr2LJLNt8hjHiEJLXd4kXrQnoSyvLVLz2SkhwTr7KeNVQUpwXL8SJxfKXWY8wanbh7dkw7CD3Lg"
+      },
+      {
+        "wallet": "Em8J3gBWapfVBGVhVipwQnLrqCvnWBnLajw6XFsFECPF",
+        "timestamp": 1773531502,
+        "amount": 7994.832153,
+        "txn_type": "SWAP",
+        "fee_payer": "Em8J3gBWapfVBGVhVipwQnLrqCvnWBnLajw6XFsFECPF",
+        "signature": "3dHiiw4MAa1dfPTUR5CAhFZaJUSSDh3aHysWW7BoqbrPzDiGZGJ3Zwb94yH7HxhtJ7rogzLYJF88wvm81TPveBwB"
+      },
+      {
+        "wallet": "HRxdmj1TvPxzGCU3GVb8A9pfgixvp5TP76PELiV6k3Ld",
+        "timestamp": 1773531502,
+        "amount": 7994.832153,
+        "txn_type": "SWAP",
+        "fee_payer": "Em8J3gBWapfVBGVhVipwQnLrqCvnWBnLajw6XFsFECPF",
+        "signature": "3dHiiw4MAa1dfPTUR5CAhFZaJUSSDh3aHysWW7BoqbrPzDiGZGJ3Zwb94yH7HxhtJ7rogzLYJF88wvm81TPveBwB"
+      },
+      {
+        "wallet": "BukbBCHELMVwLWp77d9vdayniRSb5Jp2VqD8KkRAxzP4",
+        "timestamp": 1773531530,
+        "amount": 252106.490665,
+        "txn_type": "SWAP",
+        "fee_payer": "7iVCXQn4u6tiTEfNVqbWSEsRdEi69E9oYsSMiepuECwi",
+        "signature": "4C1YREfPAXzwrRMY9NBTSxTTJcJGWmp37QQcPfvaZhz2rp9r3txnBmSbfdKDKC4q7d3bhWoVtWkG15zCyCPzNoQ3"
+      },
+      {
+        "wallet": "7iVCXQn4u6tiTEfNVqbWSEsRdEi69E9oYsSMiepuECwi",
+        "timestamp": 1773531535,
+        "amount": 49246.209483,
+        "txn_type": "SWAP",
+        "fee_payer": "7iVCXQn4u6tiTEfNVqbWSEsRdEi69E9oYsSMiepuECwi",
+        "signature": "4x2xSUGHZC634ViAyQbfohRYUAU7Un8Cp2CBhBarS9fBnJgq1pmJFJTZFpMSq5G5L5xj2FdYmoiwnZS2g2fzqBqx"
+      },
+      {
+        "wallet": "GdDyYFbbzTtaAR5fVrvKiRc3jnHxspocaPXzRWcsTzo6",
+        "timestamp": 1773531535,
+        "amount": 49246.209483,
+        "txn_type": "SWAP",
+        "fee_payer": "7iVCXQn4u6tiTEfNVqbWSEsRdEi69E9oYsSMiepuECwi",
+        "signature": "4x2xSUGHZC634ViAyQbfohRYUAU7Un8Cp2CBhBarS9fBnJgq1pmJFJTZFpMSq5G5L5xj2FdYmoiwnZS2g2fzqBqx"
+      },
+      {
+        "wallet": "2Ekawy8GtvEcroUMjdhthP18fUi1ZGFRkMdwtQrGzrH2",
+        "timestamp": 1773531540,
+        "amount": 86732.282038,
+        "txn_type": "SWAP",
+        "fee_payer": "2Ekawy8GtvEcroUMjdhthP18fUi1ZGFRkMdwtQrGzrH2",
+        "signature": "4Bvphw9aWvTyeSnBiXaqvCZ87vP4MLdWMJx5sjCCUcbG8vM8GWRGf6JwVesy3ZxJuT4DEhpzordVn17UvGN7TDj5"
+      },
+      {
+        "wallet": "35T538QT32hcE3TupsNKruUCJx4UMR9T3J8C8oxeoVic",
+        "timestamp": 1773531551,
+        "amount": 7702.028145,
+        "txn_type": "SWAP",
+        "fee_payer": "35T538QT32hcE3TupsNKruUCJx4UMR9T3J8C8oxeoVic",
+        "signature": "33ENuGjeid6idvGxsKGzMrSL9fED7HHGbkPqS4m3SmBP4QmPuwdD3snWaZmDww9zAXy2WGGg5DLnZscQbPepSfYs"
+      },
+      {
+        "wallet": "BM7Qw7JbGtyLoZw3canKF6Q6EJDp1Q3PYuHQhTNwoq2D",
+        "timestamp": 1773531551,
+        "amount": 7702.028145,
+        "txn_type": "SWAP",
+        "fee_payer": "35T538QT32hcE3TupsNKruUCJx4UMR9T3J8C8oxeoVic",
+        "signature": "33ENuGjeid6idvGxsKGzMrSL9fED7HHGbkPqS4m3SmBP4QmPuwdD3snWaZmDww9zAXy2WGGg5DLnZscQbPepSfYs"
+      },
+      {
+        "wallet": "moat5sFf2DwfL53x8WP8vZCMf5jP6W9k37G9Ex32nXH",
+        "timestamp": 1773531551,
+        "amount": 7700.802745,
+        "txn_type": "SWAP",
+        "fee_payer": "moat5sFf2DwfL53x8WP8vZCMf5jP6W9k37G9Ex32nXH",
+        "signature": "5cWhr84VWfhb7X1Zm4hpRUc2BzMP4GyT9uarT1qqcsd3fQZEryMFKwnU4xsCKoHmg77LCDFyaWvcLJe5XjpJWmZd"
+      },
+      {
+        "wallet": "5d8tDay1ZDV4XVUBtTvFvQiLxDe8dz2ZCdsrkmTDcbm5",
+        "timestamp": 1773531551,
+        "amount": 7742.299326,
+        "txn_type": "SWAP",
+        "fee_payer": "5d8tDay1ZDV4XVUBtTvFvQiLxDe8dz2ZCdsrkmTDcbm5",
+        "signature": "2y5biTnkWNXu2GFKAT8TUGrXqABCvYtDqxUk814ri7BdZsUP8w9NYxJf6x9GfYzHVEHuUq5oeXWoHhhtQcLAKiDF"
+      },
+      {
+        "wallet": "SUPErMoycPz71hmZXr78P7cXFYQhdpV39Roeoe2DxUC",
+        "timestamp": 1773531551,
+        "amount": 11307.963609,
+        "txn_type": "SWAP",
+        "fee_payer": "SUPErMoycPz71hmZXr78P7cXFYQhdpV39Roeoe2DxUC",
+        "signature": "3Uwor4wDrfKPyPqrm1aULoyBebkTJzk7Kkaawx5TourExm2dsBEcAcyL1dXa2FFrfBw9jd1EosM4JZzgHphuFdHn"
+      },
+      {
+        "wallet": "Sh4rK19a9FRgoyc4yq6YvXUy7yM3xqWWrjWcA7xV9zE",
+        "timestamp": 1773531551,
+        "amount": 67774.118134,
+        "txn_type": "SWAP",
+        "fee_payer": "Sh4rK19a9FRgoyc4yq6YvXUy7yM3xqWWrjWcA7xV9zE",
+        "signature": "2J4w1UjY5fE7gLfNz98mvj385SdkaC7dTfZNRSmSVvjut3EhntiNuRWoip1vbf2Vi3PG3BgqmrXxqKgWC1roKrde"
+      },
+      {
+        "wallet": "JBVpuKD4cEVUjZ7conFwKZKzdpY92C1hzwCHYr99L54z",
+        "timestamp": 1773531551,
+        "amount": 7697.026099,
+        "txn_type": "SWAP",
+        "fee_payer": "JBVpuKD4cEVUjZ7conFwKZKzdpY92C1hzwCHYr99L54z",
+        "signature": "269FDovmVdJzdPCmNwba7DLuougrYoy8j94ZWkV6cSxWh6cd5nht5g7ZmcFQEipyXuEDZDVe7EJoAKU4PQdR3q6J"
+      },
+      {
+        "wallet": "HvFdDWS3RqymRAVx1ZdoL2RjiC38r5dtt19Z8op5jqDK",
+        "timestamp": 1773531551,
+        "amount": 10687.010833,
+        "txn_type": "SWAP",
+        "fee_payer": "HvFdDWS3RqymRAVx1ZdoL2RjiC38r5dtt19Z8op5jqDK",
+        "signature": "4Xmbfzu8nBd15YDDFQoi8ghDewSwZqRiZEAe7bZVSqxoCPJPCve2prUYU8HGdDKwW2hyqrV119JJxceyHYsSg5x"
+      },
+      {
+        "wallet": "HuTshmtwcQkWBLzgW3m4uwcmik7Lmz4YFpYcTqMJpXiP",
+        "timestamp": 1773531551,
+        "amount": 2573.20239,
+        "txn_type": "SWAP",
+        "fee_payer": "HuTshmtwcQkWBLzgW3m4uwcmik7Lmz4YFpYcTqMJpXiP",
+        "signature": "5EjZCYLJ6k1zY28jFZseUSET95J4GikkRDEqEyAws9Dtw5ByymjMJfrq2GejjwNcwMatUerqvzLUefAqj22q5PG3"
+      },
+      {
+        "wallet": "GxDC9e7SP9mzhDo4re5HbpLa2RW7gB9DtmThx4i4pXSq",
+        "timestamp": 1773531551,
+        "amount": 24112.715727,
+        "txn_type": "SWAP",
+        "fee_payer": "GxDC9e7SP9mzhDo4re5HbpLa2RW7gB9DtmThx4i4pXSq",
+        "signature": "RFjH3DgwrnkgBtUqCAbydFHMkPDMbPS6qZUx6Pykyjf9gnrCZ7gWKYun9uNbiFYe1qibAYeqj5omQtqAqEUmDKK"
+      },
+      {
+        "wallet": "8L2y55D11k63CAftvW7uMM2mBhtMxLoLnivG9uY2bt8j",
+        "timestamp": 1773531551,
+        "amount": 10223.56158,
+        "txn_type": "SWAP",
+        "fee_payer": "8L2y55D11k63CAftvW7uMM2mBhtMxLoLnivG9uY2bt8j",
+        "signature": "hqpUCAQhsvd1YrG8V9BvKU8HLj28pbmSnMoKHTEGxYJRSuNxMPKmUUWsXua3fMuNdFX7bdbiRjsabR7jqT8Q615"
+      }
+    ],
+    "n_early_buyers": 23,
+    "first_10_buyers": [
+      "Hv4Hkx5dgZtJMDwhoywhE6Wkh6dtbh6EFSpNYUT4VK5t",
+      "HCgLqqAphsfte51co86e781viwJj5bawzBWyjuu2on2c",
+      "HeekSCpRM5NmUGoqBenEwfCE5txXr8pVv2irTkNvbhR6",
+      "H7BgphvjUPnQnJNSfamgaLRjYW2UYGKNi6pmb9u6vsh8",
+      "2Uzsvw96vRWHXjwfUshvhtySXWEEmw3dSG4Fh9mgS6Gv",
+      "GtSKxHBy3V6zy6cgzCdRwfdW5nX8CkxgNeKnpnqHHT4N",
+      "Em8J3gBWapfVBGVhVipwQnLrqCvnWBnLajw6XFsFECPF",
+      "HRxdmj1TvPxzGCU3GVb8A9pfgixvp5TP76PELiV6k3Ld",
+      "BukbBCHELMVwLWp77d9vdayniRSb5Jp2VqD8KkRAxzP4",
+      "7iVCXQn4u6tiTEfNVqbWSEsRdEi69E9oYsSMiepuECwi"
+    ],
+    "first_20_buyers": [
+      "Hv4Hkx5dgZtJMDwhoywhE6Wkh6dtbh6EFSpNYUT4VK5t",
+      "HCgLqqAphsfte51co86e781viwJj5bawzBWyjuu2on2c",
+      "HeekSCpRM5NmUGoqBenEwfCE5txXr8pVv2irTkNvbhR6",
+      "H7BgphvjUPnQnJNSfamgaLRjYW2UYGKNi6pmb9u6vsh8",
+      "2Uzsvw96vRWHXjwfUshvhtySXWEEmw3dSG4Fh9mgS6Gv",
+      "GtSKxHBy3V6zy6cgzCdRwfdW5nX8CkxgNeKnpnqHHT4N",
+      "Em8J3gBWapfVBGVhVipwQnLrqCvnWBnLajw6XFsFECPF",
+      "HRxdmj1TvPxzGCU3GVb8A9pfgixvp5TP76PELiV6k3Ld",
+      "BukbBCHELMVwLWp77d9vdayniRSb5Jp2VqD8KkRAxzP4",
+      "7iVCXQn4u6tiTEfNVqbWSEsRdEi69E9oYsSMiepuECwi",
+      "GdDyYFbbzTtaAR5fVrvKiRc3jnHxspocaPXzRWcsTzo6",
+      "2Ekawy8GtvEcroUMjdhthP18fUi1ZGFRkMdwtQrGzrH2",
+      "35T538QT32hcE3TupsNKruUCJx4UMR9T3J8C8oxeoVic",
+      "BM7Qw7JbGtyLoZw3canKF6Q6EJDp1Q3PYuHQhTNwoq2D",
+      "moat5sFf2DwfL53x8WP8vZCMf5jP6W9k37G9Ex32nXH",
+      "5d8tDay1ZDV4XVUBtTvFvQiLxDe8dz2ZCdsrkmTDcbm5",
+      "SUPErMoycPz71hmZXr78P7cXFYQhdpV39Roeoe2DxUC",
+      "Sh4rK19a9FRgoyc4yq6YvXUy7yM3xqWWrjWcA7xV9zE",
+      "JBVpuKD4cEVUjZ7conFwKZKzdpY92C1hzwCHYr99L54z",
+      "HvFdDWS3RqymRAVx1ZdoL2RjiC38r5dtt19Z8op5jqDK"
+    ]
+  },
+  {
+    "symbol": "NORWOOD",
+    "mint": "5ohCSjq8m9sNZefTPSSxXkQeQqf5RfR7gjJpeEZRpump",
+    "group": "weaker",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "999975002830447",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [
+      {
+        "wallet": "EkjbYAAKQdHgDnchsRt1kLncAkdB5CiKpZX2KbiN2xeC",
+        "timestamp": 1773518058,
+        "amount": 5493784.977307,
+        "txn_type": "SWAP",
+        "fee_payer": "AgmLJBMDCqWynYnQiPCuj9ewsNNsBJXyzoUhD9LJzN51",
+        "signature": "22FTXvRGLYvKXFNNAjhU546ZPtogR81135yr2x5VjV9tZu2gZDWF7oh16xRgZ8HrAjQNhwkZQcVhJ68akcCHfz9j"
+      },
+      {
+        "wallet": "H5VLyesqLczjD1QNKuo4zu6xSskkqpWtPjPDBYM7rakr",
+        "timestamp": 1773518059,
+        "amount": 228.682855,
+        "txn_type": "SWAP",
+        "fee_payer": "H5VLyesqLczjD1QNKuo4zu6xSskkqpWtPjPDBYM7rakr",
+        "signature": "93tnZxJTDW8GQe9qBWo4sFTBDLAvxrsgt5m23UTyUF6wFY5eZMLd4DQSU8Bm3xF4PjyxGbZkD4Rm3gi57madboV"
+      },
+      {
+        "wallet": "4vbA5myvr8qS9HME23k168JyUhdUmnre8pzLbwmw3J7k",
+        "timestamp": 1773518059,
+        "amount": 136847.227313,
+        "txn_type": "SWAP",
+        "fee_payer": "4vbA5myvr8qS9HME23k168JyUhdUmnre8pzLbwmw3J7k",
+        "signature": "67YreeWu6wZPWGZL8rzkkLXFjRwVtsk8GY6MrbynezMjkRZBF2B19fMXVoSyeNB9CUZPMRRvabF9mzhtxhjBGPUZ"
+      },
+      {
+        "wallet": "2tgUbS9UMoQD6GkDZBiqKYCURnGrSb6ocYwRABrSJUvY",
+        "timestamp": 1773518059,
+        "amount": 231430.143698,
+        "txn_type": "SWAP",
+        "fee_payer": "2tgUbS9UMoQD6GkDZBiqKYCURnGrSb6ocYwRABrSJUvY",
+        "signature": "2e1p1oPwx99QWy262ea6ECpkAGJBWXyQZkvhk2LHNLfTciNiJYoQCTjdq8GF33JP9jxro5L1WYRMrU9JL2VhEUv"
+      },
+      {
+        "wallet": "3hABxPaFS81TSFv7E49VwQaGk9Cv5kBunbWdrYFKPP5R",
+        "timestamp": 1773518059,
+        "amount": 1296634.051998,
+        "txn_type": "SWAP",
+        "fee_payer": "3hABxPaFS81TSFv7E49VwQaGk9Cv5kBunbWdrYFKPP5R",
+        "signature": "woCrPPdnoBLxtie7945qK3ztQx1rm3VeCbww6uRGBmXayec54uhBVfZskbHC3mE8NNV847XrMvRXKbrBMEm4DTU"
+      },
+      {
+        "wallet": "HuTshmtwcQkWBLzgW3m4uwcmik7Lmz4YFpYcTqMJpXiP",
+        "timestamp": 1773518059,
+        "amount": 75.927865,
+        "txn_type": "SWAP",
+        "fee_payer": "HuTshmtwcQkWBLzgW3m4uwcmik7Lmz4YFpYcTqMJpXiP",
+        "signature": "BcsoW1jsa8d4JT7adAN4tkM7EEJaMhYTH3CjhkcDsdg7zcztkvaiuwQrwupsUNcwA8tUm1NcMHQXTR2FRiLxShH"
+      },
+      {
+        "wallet": "6AQEpWFegWvFS2pZGzfH8GqAxzooPh9WLQLmD8YSB3WV",
+        "timestamp": 1773518059,
+        "amount": 694113.53622,
+        "txn_type": "SWAP",
+        "fee_payer": "6AQEpWFegWvFS2pZGzfH8GqAxzooPh9WLQLmD8YSB3WV",
+        "signature": "4rbJhqg3cgTAfgVAJ3JZEhuiSqyxJt5WA6Mg1ankVDkA34pSfrfKjJRTnvtRXoT46CMx15vSp4xi3nUhW1Ltdvnz"
+      },
+      {
+        "wallet": "9RHdDbjyinVoh7Fs7EYaiy8fpqNemSLCZPjLY9rQx3ji",
+        "timestamp": 1773518059,
+        "amount": 230429.509566,
+        "txn_type": "SWAP",
+        "fee_payer": "9RHdDbjyinVoh7Fs7EYaiy8fpqNemSLCZPjLY9rQx3ji",
+        "signature": "66eCXDU8nPASDcpcBp5H65fD9wfXfTp4Z7CtYQw2yBVwzpBDmohREGrA7wb2Xvf6n5KA2H98jQP5S2zJTfm52HFs"
+      },
+      {
+        "wallet": "HwqWoDj8q73G3mxcodHBMzYYxcQTiv4nGCDQZwmepU7S",
+        "timestamp": 1773518059,
+        "amount": 637630.933895,
+        "txn_type": "SWAP",
+        "fee_payer": "HwqWoDj8q73G3mxcodHBMzYYxcQTiv4nGCDQZwmepU7S",
+        "signature": "2zZFZv6UWsw7fCH1k4KjVZmzxGTfYaqazSfbeH6ifGPGn9nbEAmtuXgWJCJw8J78BaeeyNcZPdtWrLMJz4M8851n"
+      },
+      {
+        "wallet": "F1aeaWYLWG5tn7NxGq7jCUWctTwFgtjuTCVm5WSvesMm",
+        "timestamp": 1773518059,
+        "amount": 7439.502111,
+        "txn_type": "SWAP",
+        "fee_payer": "F1aeaWYLWG5tn7NxGq7jCUWctTwFgtjuTCVm5WSvesMm",
+        "signature": "2A7m3q49p4p4F2uNS6BvshfVKdrXuy987uxmKK21fP1hKpDgEzfULZcRWjkPCU4c2CJ8gLbN7gL6j5W6GdMM8sxy"
+      },
+      {
+        "wallet": "4SgwtApqXAXmkNSGGBzAvndVjXjnGkk8xS44DHm2as4s",
+        "timestamp": 1773518059,
+        "amount": 5125.582466,
+        "txn_type": "SWAP",
+        "fee_payer": "4SgwtApqXAXmkNSGGBzAvndVjXjnGkk8xS44DHm2as4s",
+        "signature": "2egZca2Si4ngQ41D5onkZ9WDt5gnM1SBG35rBaE1q2bxZtAyfF3gzgW2TcEU4KUv5G8D8aUEXLwWAsMi4FkpJWH"
+      },
+      {
+        "wallet": "CatyeC3LgBxub7HcpW2n7cZZZ66CUKdcZ8DzHucHrSiP",
+        "timestamp": 1773518059,
+        "amount": 11402.940665,
+        "txn_type": "SWAP",
+        "fee_payer": "CatyeC3LgBxub7HcpW2n7cZZZ66CUKdcZ8DzHucHrSiP",
+        "signature": "5XveiZFajHV4hZsVaDVHpsnz14jt9hs3yixaW4m9f7T5oFxPQHNXAp47A4w9KFSsSyGznacGtKSFtZzxXqaDGqes"
+      },
+      {
+        "wallet": "ARqJ18xaBLrEJYARaYHxfRKSi1pB7dZjwq1NW6Fiuieb",
+        "timestamp": 1773518060,
+        "amount": 111717.077023,
+        "txn_type": "SWAP",
+        "fee_payer": "ARqJ18xaBLrEJYARaYHxfRKSi1pB7dZjwq1NW6Fiuieb",
+        "signature": "4B7bEQ8KpzuDFK1Kprs6cCtoWFqYeH7BVWgQtASSEbzEnywmL4FiAwhUSyqq9e79imZmj29i3HLNTeqjLrLKxh1D"
+      },
+      {
+        "wallet": "E61YjMGVtRQf5oDejFYayiH3xXjNFUycxGC9ofkpExnw",
+        "timestamp": 1773518060,
+        "amount": 13588.833779,
+        "txn_type": "SWAP",
+        "fee_payer": "E61YjMGVtRQf5oDejFYayiH3xXjNFUycxGC9ofkpExnw",
+        "signature": "5PSvggUcp2VbqP5eu1a3MT9eE3Nq6NRwQ66KKG37bgo5KUYdm2tujrzvZm6qGq2CemT4mXqMWiKaKKCMsXXNNYNM"
+      },
+      {
+        "wallet": "3gtUpYiFtHEVWL1MaL1azwjJB3zozGBUHrURAsPWqHNU",
+        "timestamp": 1773518061,
+        "amount": 249724.59947,
+        "txn_type": "SWAP",
+        "fee_payer": "RoDpAJU9S81axG1g7e6PPVEZTePEGpgfK9XuoDXoWBh",
+        "signature": "fGPv9SCkFyXTTWrfhLe5RhQsWVKPdfHWSWzWwTavfYJbYFkKHaVKFs8iU8eSnT471jUstWFaugadS7qBh7VBCG6"
+      },
+      {
+        "wallet": "3hs2zxnxHiWVTUgLyyEVUa2VtGGEb298PWb2UqNvdxQY",
+        "timestamp": 1773518061,
+        "amount": 166980.335803,
+        "txn_type": "SWAP",
+        "fee_payer": "3hs2zxnxHiWVTUgLyyEVUa2VtGGEb298PWb2UqNvdxQY",
+        "signature": "4kRb5ziCZbaUjAzX28pMUZgSXLKEBqyksFPHvkAoGT7tvbj6KbczUe6u8dNhVbkdUXc6fKWwqfx11mvcuMqvywe5"
+      },
+      {
+        "wallet": "7XEo2KxFzxrKQnYibhx6PsPgvKewJHsBsSATEaGbfY4P",
+        "timestamp": 1773518061,
+        "amount": 166980.335803,
+        "txn_type": "SWAP",
+        "fee_payer": "7XEo2KxFzxrKQnYibhx6PsPgvKewJHsBsSATEaGbfY4P",
+        "signature": "5wYmL45h8USVzaJjo3MXeFEy4rYdgZGz9uSuCrdyKDmbFc9buKtb5or8F1fTmVaQ8gtBjkaEHifHV8fQN4c4MQFj"
+      },
+      {
+        "wallet": "J1sfMsbxGNXDPMUPXyGs5D6oCEe7fSYgdPMRyVzZuZUW",
+        "timestamp": 1773518061,
+        "amount": 166980.335803,
+        "txn_type": "SWAP",
+        "fee_payer": "J1sfMsbxGNXDPMUPXyGs5D6oCEe7fSYgdPMRyVzZuZUW",
+        "signature": "QMQnhjuEczpARcvSoT6Zcdp4sL5GjKXkZBWdkAsYES6mkdTV27bWcLY9PULLYQK868JsQQWRSrJc8MJqzCQPZaN"
+      },
+      {
+        "wallet": "HT7Dv7dJRsfH43rjVWNnW6339ZjEYidx1SugEDm7NyiR",
+        "timestamp": 1773518061,
+        "amount": 133604.044877,
+        "txn_type": "SWAP",
+        "fee_payer": "HT7Dv7dJRsfH43rjVWNnW6339ZjEYidx1SugEDm7NyiR",
+        "signature": "5VNdut4tpUosfKahmdi5PpPyAXv6YAnXV245bSWjBm7g1MWBNvmGYXgjUM5SYYjhtXHKJ4639EgFjenAtJMmenJL"
+      }
+    ],
+    "n_early_buyers": 19,
+    "first_10_buyers": [
+      "EkjbYAAKQdHgDnchsRt1kLncAkdB5CiKpZX2KbiN2xeC",
+      "H5VLyesqLczjD1QNKuo4zu6xSskkqpWtPjPDBYM7rakr",
+      "4vbA5myvr8qS9HME23k168JyUhdUmnre8pzLbwmw3J7k",
+      "2tgUbS9UMoQD6GkDZBiqKYCURnGrSb6ocYwRABrSJUvY",
+      "3hABxPaFS81TSFv7E49VwQaGk9Cv5kBunbWdrYFKPP5R",
+      "HuTshmtwcQkWBLzgW3m4uwcmik7Lmz4YFpYcTqMJpXiP",
+      "6AQEpWFegWvFS2pZGzfH8GqAxzooPh9WLQLmD8YSB3WV",
+      "9RHdDbjyinVoh7Fs7EYaiy8fpqNemSLCZPjLY9rQx3ji",
+      "HwqWoDj8q73G3mxcodHBMzYYxcQTiv4nGCDQZwmepU7S",
+      "F1aeaWYLWG5tn7NxGq7jCUWctTwFgtjuTCVm5WSvesMm"
+    ],
+    "first_20_buyers": [
+      "EkjbYAAKQdHgDnchsRt1kLncAkdB5CiKpZX2KbiN2xeC",
+      "H5VLyesqLczjD1QNKuo4zu6xSskkqpWtPjPDBYM7rakr",
+      "4vbA5myvr8qS9HME23k168JyUhdUmnre8pzLbwmw3J7k",
+      "2tgUbS9UMoQD6GkDZBiqKYCURnGrSb6ocYwRABrSJUvY",
+      "3hABxPaFS81TSFv7E49VwQaGk9Cv5kBunbWdrYFKPP5R",
+      "HuTshmtwcQkWBLzgW3m4uwcmik7Lmz4YFpYcTqMJpXiP",
+      "6AQEpWFegWvFS2pZGzfH8GqAxzooPh9WLQLmD8YSB3WV",
+      "9RHdDbjyinVoh7Fs7EYaiy8fpqNemSLCZPjLY9rQx3ji",
+      "HwqWoDj8q73G3mxcodHBMzYYxcQTiv4nGCDQZwmepU7S",
+      "F1aeaWYLWG5tn7NxGq7jCUWctTwFgtjuTCVm5WSvesMm",
+      "4SgwtApqXAXmkNSGGBzAvndVjXjnGkk8xS44DHm2as4s",
+      "CatyeC3LgBxub7HcpW2n7cZZZ66CUKdcZ8DzHucHrSiP",
+      "ARqJ18xaBLrEJYARaYHxfRKSi1pB7dZjwq1NW6Fiuieb",
+      "E61YjMGVtRQf5oDejFYayiH3xXjNFUycxGC9ofkpExnw",
+      "3gtUpYiFtHEVWL1MaL1azwjJB3zozGBUHrURAsPWqHNU",
+      "3hs2zxnxHiWVTUgLyyEVUa2VtGGEb298PWb2UqNvdxQY",
+      "7XEo2KxFzxrKQnYibhx6PsPgvKewJHsBsSATEaGbfY4P",
+      "J1sfMsbxGNXDPMUPXyGs5D6oCEe7fSYgdPMRyVzZuZUW",
+      "HT7Dv7dJRsfH43rjVWNnW6339ZjEYidx1SugEDm7NyiR"
+    ]
+  },
+  {
+    "symbol": "Out",
+    "mint": "GM9fN6X2izkr7NjF5esWfMtViJ6aqDKvJRTgfoAGpump",
+    "group": "weaker",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "999945619585120",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [],
+    "n_early_buyers": 0,
+    "first_10_buyers": [],
+    "first_20_buyers": []
+  },
+  {
+    "symbol": "SMORT",
+    "mint": "BwCq8ehGpSgoeipHYd9DYtciNYPsA6k8bBEXNAQSpump",
+    "group": "weaker",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "941263060441387",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [
+      {
+        "wallet": "8L2y55D11k63CAftvW7uMM2mBhtMxLoLnivG9uY2bt8j",
+        "timestamp": 1773459131,
+        "amount": 88913.458073,
+        "txn_type": "SWAP",
+        "fee_payer": "8L2y55D11k63CAftvW7uMM2mBhtMxLoLnivG9uY2bt8j",
+        "signature": "3scN1rypnk64c35Gj6YfjtKto6xASFh7gaH18TxbSsSHjWfdJR6wMcUt5gULLpSa157MR2zwxqX6tPbSCkE9Mn42"
+      },
+      {
+        "wallet": "moat5sFf2DwfL53x8WP8vZCMf5jP6W9k37G9Ex32nXH",
+        "timestamp": 1773459131,
+        "amount": 159564.848582,
+        "txn_type": "SWAP",
+        "fee_payer": "moat5sFf2DwfL53x8WP8vZCMf5jP6W9k37G9Ex32nXH",
+        "signature": "55kcLGqLrAXaFn1o7LySxJu4vVqaYdSRQ6PGXQkYMCg9Ar1cPqtxz1VLe9FktX7a7d8DAX2amipNDcXD6yc1UoJa"
+      },
+      {
+        "wallet": "CQwT1byuHgjKnL6vzmuNaAywKfDBVxDmFVgsQDBWxcWt",
+        "timestamp": 1773459131,
+        "amount": 170676.07547,
+        "txn_type": "SWAP",
+        "fee_payer": "CQwT1byuHgjKnL6vzmuNaAywKfDBVxDmFVgsQDBWxcWt",
+        "signature": "5fSfa6s7y4Byp9DkiRd9SR8cmtJ2YXPf3YEFiXcipAh1iDKWRzLa8faF1Wd1MAJHZYG5dAFmtCLCRrYEphX7L2wK"
+      },
+      {
+        "wallet": "HYEKcrp1WrfpCSSU9TSTmbnGPQZg9WLZE9AT5CShjHHz",
+        "timestamp": 1773459131,
+        "amount": 170676.07547,
+        "txn_type": "SWAP",
+        "fee_payer": "CQwT1byuHgjKnL6vzmuNaAywKfDBVxDmFVgsQDBWxcWt",
+        "signature": "5fSfa6s7y4Byp9DkiRd9SR8cmtJ2YXPf3YEFiXcipAh1iDKWRzLa8faF1Wd1MAJHZYG5dAFmtCLCRrYEphX7L2wK"
+      },
+      {
+        "wallet": "JBVpuKD4cEVUjZ7conFwKZKzdpY92C1hzwCHYr99L54z",
+        "timestamp": 1773459131,
+        "amount": 112177.122324,
+        "txn_type": "SWAP",
+        "fee_payer": "JBVpuKD4cEVUjZ7conFwKZKzdpY92C1hzwCHYr99L54z",
+        "signature": "5cfY89r3ECPiXcps3mAEbeCtTA8rwoLUkzd1HRgQ1CPNe96B2Z2wZYzKCFFpuq664SMdGSG9W6ugwMuu3HCvQy2b"
+      },
+      {
+        "wallet": "CHjngeS7CWm3aSp35J21ZGZuiAN4sqRBKJbYyZcoehjC",
+        "timestamp": 1773459131,
+        "amount": 157633.865002,
+        "txn_type": "SWAP",
+        "fee_payer": "CHjngeS7CWm3aSp35J21ZGZuiAN4sqRBKJbYyZcoehjC",
+        "signature": "gi12Z7Dp1iYfN4QH25BnYnQvhrfWV4pZouUrCqnQ8siz1xMzBLkUdA1aEVaA9YcZtj2MCXZurPy1WNzPurZe7DK"
+      },
+      {
+        "wallet": "ATwfriAhyzH9r3HAnc9ir5qPYhmaiyxxr4GYj9Y6bWEm",
+        "timestamp": 1773459131,
+        "amount": 23915.443214,
+        "txn_type": "SWAP",
+        "fee_payer": "ATwfriAhyzH9r3HAnc9ir5qPYhmaiyxxr4GYj9Y6bWEm",
+        "signature": "4YcGv41vUsMLR1eBD8Mp86mh49RM8J8AZZE4GsEjMB5FvgTgZqyZpfceq7LdnaWpn671exU85Kh317AT5bhK4AS3"
+      },
+      {
+        "wallet": "8pY1AukbuPgUE3EetyLa59rFLMimJGT94ZzbMEZcQF4w",
+        "timestamp": 1773459131,
+        "amount": 15.968059,
+        "txn_type": "SWAP",
+        "fee_payer": "8pY1AukbuPgUE3EetyLa59rFLMimJGT94ZzbMEZcQF4w",
+        "signature": "3LiuwaX1sPY6nHPwL2RUrHaxnVQPHNT1KSHot8sQcr3JDTiiW4bMGhUUZ5GcfKsjJ8B2N4wLFg4v4qdmzo5jt9u3"
+      },
+      {
+        "wallet": "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC",
+        "timestamp": 1773459131,
+        "amount": 15.968059,
+        "txn_type": "SWAP",
+        "fee_payer": "8pY1AukbuPgUE3EetyLa59rFLMimJGT94ZzbMEZcQF4w",
+        "signature": "3LiuwaX1sPY6nHPwL2RUrHaxnVQPHNT1KSHot8sQcr3JDTiiW4bMGhUUZ5GcfKsjJ8B2N4wLFg4v4qdmzo5jt9u3"
+      },
+      {
+        "wallet": "CatyeC3LgBxub7HcpW2n7cZZZ66CUKdcZ8DzHucHrSiP",
+        "timestamp": 1773459131,
+        "amount": 66878.432309,
+        "txn_type": "SWAP",
+        "fee_payer": "CatyeC3LgBxub7HcpW2n7cZZZ66CUKdcZ8DzHucHrSiP",
+        "signature": "5BBdefCfXyDKw48UrWngeQp4LcMd5xQqcVNPMiKWhuV5wU7aS7NUuD5McBS74Xy2n36tApKwCbcaw6WCDcPCZ1NF"
+      },
+      {
+        "wallet": "56dRskiukwYqpiWT2Xt945tb2DQUoHFcjFwxwW4PMWuS",
+        "timestamp": 1773459131,
+        "amount": 66971.106275,
+        "txn_type": "SWAP",
+        "fee_payer": "56dRskiukwYqpiWT2Xt945tb2DQUoHFcjFwxwW4PMWuS",
+        "signature": "GocT5WgrwJvfry5YL6myPSHaeVGQXhtrz1AceByx39JZXg6wpsbvykymhRXJGbZHSNbCY8ande6tNa3yxf1EfYb"
+      },
+      {
+        "wallet": "GaCmqzkvASp783oFM7SD3MS2ES5ZMzX2v1GRmNfzpV19",
+        "timestamp": 1773459131,
+        "amount": 153685.666122,
+        "txn_type": "SWAP",
+        "fee_payer": "GaCmqzkvASp783oFM7SD3MS2ES5ZMzX2v1GRmNfzpV19",
+        "signature": "KE2g83g11KsNaFQQuPUXYcnfuPaxr1DbPRVtqb6aN8M1UkizuAcBat2LfdcoAYnRWML7Z9sehDF9XYTp2tge4pb"
+      },
+      {
+        "wallet": "K1tChn2NETQd9cCHe1UmUyWP3rDA92gP1dH4nNyEJrx",
+        "timestamp": 1773459132,
+        "amount": 76858.702881,
+        "txn_type": "SWAP",
+        "fee_payer": "K1tChn2NETQd9cCHe1UmUyWP3rDA92gP1dH4nNyEJrx",
+        "signature": "gzmgo5aucQ5ru4jeW5xmiJMj1EBKTtmubaPKqX5QervBLFT4s2m4a4XPwmjY41gM8yR6xDUhfRFdBph9P5pkTb7"
+      },
+      {
+        "wallet": "DRaiLH4DpQ2CE4EwtZnhVHF4fM5zFuKoUX3tGXNYxJe5",
+        "timestamp": 1773459132,
+        "amount": 76858.702881,
+        "txn_type": "SWAP",
+        "fee_payer": "K1tChn2NETQd9cCHe1UmUyWP3rDA92gP1dH4nNyEJrx",
+        "signature": "gzmgo5aucQ5ru4jeW5xmiJMj1EBKTtmubaPKqX5QervBLFT4s2m4a4XPwmjY41gM8yR6xDUhfRFdBph9P5pkTb7"
+      },
+      {
+        "wallet": "3bRwd3dbjPUgK8q4HLi9sYBnsp1bzKWNynQFfCkFmVQp",
+        "timestamp": 1773459132,
+        "amount": 49.042988,
+        "txn_type": "SWAP",
+        "fee_payer": "Gjw3pyyhP669KYUdmqJLqWQZ4H7wtdZNqC4hpbAH1yMk",
+        "signature": "3UzT9KySkymwifEwo8A6xvJrbemcL5KCFz6kr3gugxqXqLMow8NwwJrGYaXKhdYXWdsLvRkQQkdiSfHPxm67ogwa"
+      },
+      {
+        "wallet": "9yAx2FRkpncYD9J6aaV45Xqb2y99Zn1uN2hihUmkKnVw",
+        "timestamp": 1773459132,
+        "amount": 1402101.128628,
+        "txn_type": "SWAP",
+        "fee_payer": "9yAx2FRkpncYD9J6aaV45Xqb2y99Zn1uN2hihUmkKnVw",
+        "signature": "rR3dK9eFe1VZ1tSxTUM67sxEufvtp1gazP8MGYvUYVBeXwBPteQ3XEWfkkLvzZiZKBvbrCb4kciU7VbBUYQ3op8"
+      }
+    ],
+    "n_early_buyers": 16,
+    "first_10_buyers": [
+      "8L2y55D11k63CAftvW7uMM2mBhtMxLoLnivG9uY2bt8j",
+      "moat5sFf2DwfL53x8WP8vZCMf5jP6W9k37G9Ex32nXH",
+      "CQwT1byuHgjKnL6vzmuNaAywKfDBVxDmFVgsQDBWxcWt",
+      "HYEKcrp1WrfpCSSU9TSTmbnGPQZg9WLZE9AT5CShjHHz",
+      "JBVpuKD4cEVUjZ7conFwKZKzdpY92C1hzwCHYr99L54z",
+      "CHjngeS7CWm3aSp35J21ZGZuiAN4sqRBKJbYyZcoehjC",
+      "ATwfriAhyzH9r3HAnc9ir5qPYhmaiyxxr4GYj9Y6bWEm",
+      "8pY1AukbuPgUE3EetyLa59rFLMimJGT94ZzbMEZcQF4w",
+      "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC",
+      "CatyeC3LgBxub7HcpW2n7cZZZ66CUKdcZ8DzHucHrSiP"
+    ],
+    "first_20_buyers": [
+      "8L2y55D11k63CAftvW7uMM2mBhtMxLoLnivG9uY2bt8j",
+      "moat5sFf2DwfL53x8WP8vZCMf5jP6W9k37G9Ex32nXH",
+      "CQwT1byuHgjKnL6vzmuNaAywKfDBVxDmFVgsQDBWxcWt",
+      "HYEKcrp1WrfpCSSU9TSTmbnGPQZg9WLZE9AT5CShjHHz",
+      "JBVpuKD4cEVUjZ7conFwKZKzdpY92C1hzwCHYr99L54z",
+      "CHjngeS7CWm3aSp35J21ZGZuiAN4sqRBKJbYyZcoehjC",
+      "ATwfriAhyzH9r3HAnc9ir5qPYhmaiyxxr4GYj9Y6bWEm",
+      "8pY1AukbuPgUE3EetyLa59rFLMimJGT94ZzbMEZcQF4w",
+      "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC",
+      "CatyeC3LgBxub7HcpW2n7cZZZ66CUKdcZ8DzHucHrSiP",
+      "56dRskiukwYqpiWT2Xt945tb2DQUoHFcjFwxwW4PMWuS",
+      "GaCmqzkvASp783oFM7SD3MS2ES5ZMzX2v1GRmNfzpV19",
+      "K1tChn2NETQd9cCHe1UmUyWP3rDA92gP1dH4nNyEJrx",
+      "DRaiLH4DpQ2CE4EwtZnhVHF4fM5zFuKoUX3tGXNYxJe5",
+      "3bRwd3dbjPUgK8q4HLi9sYBnsp1bzKWNynQFfCkFmVQp",
+      "9yAx2FRkpncYD9J6aaV45Xqb2y99Zn1uN2hihUmkKnVw"
+    ]
+  },
+  {
+    "symbol": "WENDYS",
+    "mint": "9xRZgabPKGBteGgnsoMHpXrd3NpKZ1uaYwKTd3gLpump",
+    "group": "weaker",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "999988554285477",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [],
+    "n_early_buyers": 0,
+    "first_10_buyers": [],
+    "first_20_buyers": []
+  },
+  {
+    "symbol": "$2",
+    "mint": "DzMw8nmA5rnoRTTXGHCZaRp9EkMwG2anqY99XxiXpump",
+    "group": "weaker",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "999990486410530",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [
+      {
+        "wallet": "RaVenxw8kykBbW7KGBaBsb7fDkkBYK4uJVDSFun6ZxR",
+        "timestamp": 1773471031,
+        "amount": 111761.714557,
+        "txn_type": "SWAP",
+        "fee_payer": "RaVenxw8kykBbW7KGBaBsb7fDkkBYK4uJVDSFun6ZxR",
+        "signature": "DJjQv68GaRVgXFMMm6EkH4CbmNA2DJQ3UTnEgCNRw828k4fx8mbBJ8rsyZswiWZCDaDFforc6iuGUFwtwQNu11q"
+      },
+      {
+        "wallet": "7dGrdJRYtsNR8UYxZ3TnifXGjGc9eRYLq9sELwYpuuUu",
+        "timestamp": 1773471031,
+        "amount": 98345.322944,
+        "txn_type": "SWAP",
+        "fee_payer": "7dGrdJRYtsNR8UYxZ3TnifXGjGc9eRYLq9sELwYpuuUu",
+        "signature": "4iuzQsf1VqXrXS97VNwxcvLY8VTdTwJ25bbb3BXF7EcnqyEo2Jcq6UBmwXVqjChCkzYYYFKRzh4VXDtAD4fmwgXJ"
+      },
+      {
+        "wallet": "ET3BknNYYm9qjGLWcoFoj6Ebu9rjcQAVPRrdEpkdvBAj",
+        "timestamp": 1773471031,
+        "amount": 98345.322944,
+        "txn_type": "SWAP",
+        "fee_payer": "7dGrdJRYtsNR8UYxZ3TnifXGjGc9eRYLq9sELwYpuuUu",
+        "signature": "4iuzQsf1VqXrXS97VNwxcvLY8VTdTwJ25bbb3BXF7EcnqyEo2Jcq6UBmwXVqjChCkzYYYFKRzh4VXDtAD4fmwgXJ"
+      },
+      {
+        "wallet": "SUPErMoycPz71hmZXr78P7cXFYQhdpV39Roeoe2DxUC",
+        "timestamp": 1773471031,
+        "amount": 15785.309071,
+        "txn_type": "SWAP",
+        "fee_payer": "SUPErMoycPz71hmZXr78P7cXFYQhdpV39Roeoe2DxUC",
+        "signature": "Jvp8EZDFiZbjcphPCeiM3c94Kkq6LDrpECqqf8TD8HuPaRjt1nUL3dyUDXnwBdt2HktP5h3qm8wv1HHbYKQqE6h"
+      },
+      {
+        "wallet": "DTm9A1Mt9q2qexihdVmKoyTPtESpwWJXLPREHYN3uU67",
+        "timestamp": 1773471031,
+        "amount": 99540.991418,
+        "txn_type": "SWAP",
+        "fee_payer": "DTm9A1Mt9q2qexihdVmKoyTPtESpwWJXLPREHYN3uU67",
+        "signature": "4u856Vry3CDHGXreU5SC16CNSRQSFEjBNjzPdbcBF8G5viMWWpuXe9Efrn598qKUVHnkE5dWxC7DLR4VVtC1H8Nf"
+      },
+      {
+        "wallet": "atom2VuiFEhgGSggRokWuXfsZaS6mxHKwKUSFnECshJ",
+        "timestamp": 1773471031,
+        "amount": 93294.317815,
+        "txn_type": "SWAP",
+        "fee_payer": "atom2VuiFEhgGSggRokWuXfsZaS6mxHKwKUSFnECshJ",
+        "signature": "58Vx2XWcLeywCqtrV4mRcncHXhAMJmWCyMkxuD9SrHYbgXjQj47vjtmrdcTe7gv92wG31tXa8gnaqpkPykkBCeyg"
+      },
+      {
+        "wallet": "CatyeC3LgBxub7HcpW2n7cZZZ66CUKdcZ8DzHucHrSiP",
+        "timestamp": 1773471031,
+        "amount": 108557.501192,
+        "txn_type": "SWAP",
+        "fee_payer": "CatyeC3LgBxub7HcpW2n7cZZZ66CUKdcZ8DzHucHrSiP",
+        "signature": "4VtStjGjuQ23RUps3RTqeQkbBCGQTr4e4dsRPhZgtgoUo9yimW7t6gmr7ESvR88CfcCHzjHgjdnWLASz7WGeK6xQ"
+      },
+      {
+        "wallet": "JBVpuKD4cEVUjZ7conFwKZKzdpY92C1hzwCHYr99L54z",
+        "timestamp": 1773471031,
+        "amount": 108595.651008,
+        "txn_type": "SWAP",
+        "fee_payer": "JBVpuKD4cEVUjZ7conFwKZKzdpY92C1hzwCHYr99L54z",
+        "signature": "M9TUQrip8efFRrAoMUqrVSFm25BvdDBC82crScuUfQwbQ8RCxt8n5oDwjKPtgHQgBe4phwCzmTePB9dcRWpcmHm"
+      },
+      {
+        "wallet": "5hmb519hd8948XWWhjBVR5xYjtcy7eyZgXHqUxHonSb6",
+        "timestamp": 1773471031,
+        "amount": 94839.967826,
+        "txn_type": "SWAP",
+        "fee_payer": "5hmb519hd8948XWWhjBVR5xYjtcy7eyZgXHqUxHonSb6",
+        "signature": "5yDPMvmoyWpkRfmbAgrbDquUcv6GvKaenHhhzy6jRjY68csNEkPVK75at8PPYA24LRi3U7tMPraG7toEPGxzMa7u"
+      },
+      {
+        "wallet": "8L2y55D11k63CAftvW7uMM2mBhtMxLoLnivG9uY2bt8j",
+        "timestamp": 1773471031,
+        "amount": 98418.522843,
+        "txn_type": "SWAP",
+        "fee_payer": "8L2y55D11k63CAftvW7uMM2mBhtMxLoLnivG9uY2bt8j",
+        "signature": "AxsvXWrdSGJpLBpZtwdKKUehtiZxqL5ENYgKMNYWWWbH54afqs1Gnb6Um7NtXaAtkNLE8f2eAmyfrEthNkoXBun"
+      },
+      {
+        "wallet": "gtagyESa99t49VmUqnnfsuowYnigSNKuYXdXWyXWNdd",
+        "timestamp": 1773471031,
+        "amount": 104578.723825,
+        "txn_type": "SWAP",
+        "fee_payer": "gtagyESa99t49VmUqnnfsuowYnigSNKuYXdXWyXWNdd",
+        "signature": "3XRdXC1c5Yeyb9nSMVgt11LtskxufYiAGaNh2uiu2fHHE1tssESY5douboqun2J5qhBTrDUL5m2rDKMR9onVkzgT"
+      },
+      {
+        "wallet": "4LeQ2gYL7rv4GBhAJu2kwetbQjbZ3cHPsEwJYwE3CGE4",
+        "timestamp": 1773471032,
+        "amount": 0.012324,
+        "txn_type": "SWAP",
+        "fee_payer": "4LeQ2gYL7rv4GBhAJu2kwetbQjbZ3cHPsEwJYwE3CGE4",
+        "signature": "5rBcCQPRh5jvMn47RGfyvRFpWtTcTXqU1aExvxNiPoEnb34UXUuCXn4ZZVJz8M5Ux6nNRN3MBWj6Uni4Fu19xTQG"
+      },
+      {
+        "wallet": "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC",
+        "timestamp": 1773471032,
+        "amount": 0.012324,
+        "txn_type": "SWAP",
+        "fee_payer": "4LeQ2gYL7rv4GBhAJu2kwetbQjbZ3cHPsEwJYwE3CGE4",
+        "signature": "5rBcCQPRh5jvMn47RGfyvRFpWtTcTXqU1aExvxNiPoEnb34UXUuCXn4ZZVJz8M5Ux6nNRN3MBWj6Uni4Fu19xTQG"
+      },
+      {
+        "wallet": "EkjQP4qkcXzHLqdXW8QVE544Gy2gtTNwpf8tHgo6wZRE",
+        "timestamp": 1773471032,
+        "amount": 1169813.275,
+        "txn_type": "SWAP",
+        "fee_payer": "popo3Rj6arKNttyUFpWfbkv2gG8uS13TGtmH6JPMuHz",
+        "signature": "42Gdekk5v9efJtX9Hb1LXhW3Rzj4SLfT1i7cxM2pWUkvbWRZVKt5uHVnJNPzAeesZiAESNCvLtRBiTsayT8gjYNF"
+      },
+      {
+        "wallet": "76fnMp8FrmWRivX8rwSkydYPmm4ZtduPtAqr46aK4Ctn",
+        "timestamp": 1773471033,
+        "amount": 190000.0538,
+        "txn_type": "SWAP",
+        "fee_payer": "76fnMp8FrmWRivX8rwSkydYPmm4ZtduPtAqr46aK4Ctn",
+        "signature": "2e9tSppfns6cwk2GtespNZXCKRqZip2QnNCRQ7khnhF9oCfd8wkeVhQKoNKf2E3PZejTndqWvdbz7UMZ32kZ3MkD"
+      }
+    ],
+    "n_early_buyers": 15,
+    "first_10_buyers": [
+      "RaVenxw8kykBbW7KGBaBsb7fDkkBYK4uJVDSFun6ZxR",
+      "7dGrdJRYtsNR8UYxZ3TnifXGjGc9eRYLq9sELwYpuuUu",
+      "ET3BknNYYm9qjGLWcoFoj6Ebu9rjcQAVPRrdEpkdvBAj",
+      "SUPErMoycPz71hmZXr78P7cXFYQhdpV39Roeoe2DxUC",
+      "DTm9A1Mt9q2qexihdVmKoyTPtESpwWJXLPREHYN3uU67",
+      "atom2VuiFEhgGSggRokWuXfsZaS6mxHKwKUSFnECshJ",
+      "CatyeC3LgBxub7HcpW2n7cZZZ66CUKdcZ8DzHucHrSiP",
+      "JBVpuKD4cEVUjZ7conFwKZKzdpY92C1hzwCHYr99L54z",
+      "5hmb519hd8948XWWhjBVR5xYjtcy7eyZgXHqUxHonSb6",
+      "8L2y55D11k63CAftvW7uMM2mBhtMxLoLnivG9uY2bt8j"
+    ],
+    "first_20_buyers": [
+      "RaVenxw8kykBbW7KGBaBsb7fDkkBYK4uJVDSFun6ZxR",
+      "7dGrdJRYtsNR8UYxZ3TnifXGjGc9eRYLq9sELwYpuuUu",
+      "ET3BknNYYm9qjGLWcoFoj6Ebu9rjcQAVPRrdEpkdvBAj",
+      "SUPErMoycPz71hmZXr78P7cXFYQhdpV39Roeoe2DxUC",
+      "DTm9A1Mt9q2qexihdVmKoyTPtESpwWJXLPREHYN3uU67",
+      "atom2VuiFEhgGSggRokWuXfsZaS6mxHKwKUSFnECshJ",
+      "CatyeC3LgBxub7HcpW2n7cZZZ66CUKdcZ8DzHucHrSiP",
+      "JBVpuKD4cEVUjZ7conFwKZKzdpY92C1hzwCHYr99L54z",
+      "5hmb519hd8948XWWhjBVR5xYjtcy7eyZgXHqUxHonSb6",
+      "8L2y55D11k63CAftvW7uMM2mBhtMxLoLnivG9uY2bt8j",
+      "gtagyESa99t49VmUqnnfsuowYnigSNKuYXdXWyXWNdd",
+      "4LeQ2gYL7rv4GBhAJu2kwetbQjbZ3cHPsEwJYwE3CGE4",
+      "HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC",
+      "EkjQP4qkcXzHLqdXW8QVE544Gy2gtTNwpf8tHgo6wZRE",
+      "76fnMp8FrmWRivX8rwSkydYPmm4ZtduPtAqr46aK4Ctn"
+    ]
+  },
+  {
+    "symbol": "01001000",
+    "mint": "4ysWSPRkmqY6Y99SN86D2MBHXrvnR2358SaGb47Fpump",
+    "group": "weaker",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "999989611600559",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [
+      {
+        "wallet": "CUwJX9pYzLETuxYKNEyiAqXECE4G2D5HMKafyccYkHBK",
+        "timestamp": 1773528462,
+        "amount": 1106798.302427,
+        "txn_type": "SWAP",
+        "fee_payer": "CUwJX9pYzLETuxYKNEyiAqXECE4G2D5HMKafyccYkHBK",
+        "signature": "3JFvmqnCNjvPk3ybHXzrTUwvyciqTmMKEkuVcrfnN1sfdF9oEVoMLVYnYE3HVoueQHHdKmXfKSiJqQpFXn63FKu5"
+      },
+      {
+        "wallet": "ARu4n5mFdZogZAravu7CcizaojWnS6oqka37gdLT5SZn",
+        "timestamp": 1773528524,
+        "amount": 217656.361769,
+        "txn_type": "SWAP",
+        "fee_payer": "9aLNzsvJGQAm8x2GweZC39MVwsw6dpVCBHCi6CsJjLtV",
+        "signature": "5Hjo1E2y2WXjRLrxG8XVMrJriVhgmURGKDD8WSvUENPeiKhTrw3sMkUgNzXef9gMXtsmNiGcJxVNybgLujoKZuFn"
+      },
+      {
+        "wallet": "9aLNzsvJGQAm8x2GweZC39MVwsw6dpVCBHCi6CsJjLtV",
+        "timestamp": 1773528524,
+        "amount": 217656.361769,
+        "txn_type": "SWAP",
+        "fee_payer": "9aLNzsvJGQAm8x2GweZC39MVwsw6dpVCBHCi6CsJjLtV",
+        "signature": "5Hjo1E2y2WXjRLrxG8XVMrJriVhgmURGKDD8WSvUENPeiKhTrw3sMkUgNzXef9gMXtsmNiGcJxVNybgLujoKZuFn"
+      },
+      {
+        "wallet": "4pkCyvj7KjpyYtHCgaxN4dbeyeNa67dtp1JncauU4MFh",
+        "timestamp": 1773528527,
+        "amount": 177300.371158,
+        "txn_type": "SWAP",
+        "fee_payer": "4pkCyvj7KjpyYtHCgaxN4dbeyeNa67dtp1JncauU4MFh",
+        "signature": "4XaRi1Xx498PjSphgXZ43QdComTF7kqssm7vE2wRV6TxHc2PoZQnx8FgurCrn6w3RZ2MzcVucF3jBKZsgWkRmLw"
+      },
+      {
+        "wallet": "FzZ77TM8Ekcb6gyWPmcT9upWkAZKZc5xrYfuFu7pifPn",
+        "timestamp": 1773528558,
+        "amount": 95857.63204,
+        "txn_type": "FULFILL",
+        "fee_payer": "FzZ77TM8Ekcb6gyWPmcT9upWkAZKZc5xrYfuFu7pifPn",
+        "signature": "5pGjBmtcodLjUdTWexcutLP2NceGD4zdfc7XCkPahwfYvocrwHpFVZ1dtBv6VYTs5EGtbysBEC1u1j8noPCe1xtB"
+      },
+      {
+        "wallet": "2NWWo5LDuPFmKcNTmqR5ekireaz7BDH7vjP6V2q18JDK",
+        "timestamp": 1773528558,
+        "amount": 95857.63204,
+        "txn_type": "FULFILL",
+        "fee_payer": "FzZ77TM8Ekcb6gyWPmcT9upWkAZKZc5xrYfuFu7pifPn",
+        "signature": "5pGjBmtcodLjUdTWexcutLP2NceGD4zdfc7XCkPahwfYvocrwHpFVZ1dtBv6VYTs5EGtbysBEC1u1j8noPCe1xtB"
+      },
+      {
+        "wallet": "pSwTTFE92RsRtvMCpb3mjruv5ww2KgBNVPscwdWwbxk",
+        "timestamp": 1773528559,
+        "amount": 28.757289,
+        "txn_type": "SETTLE",
+        "fee_payer": "FzZ77TM8Ekcb6gyWPmcT9upWkAZKZc5xrYfuFu7pifPn",
+        "signature": "2HpP6bNynYFVQZ2BdL5mZ6KFvqaZydyyuafSkGE5cRUVzU68JXShHAufzqHCGkE8gW5iK21VADV6e9EfFi6KDpEV"
+      },
+      {
+        "wallet": "HVxAjSeEvK1ow7qvtFCYhiYnYShre5EkhUdL37qjc9q1",
+        "timestamp": 1773528563,
+        "amount": 392170.832935,
+        "txn_type": "SWAP",
+        "fee_payer": "HVxAjSeEvK1ow7qvtFCYhiYnYShre5EkhUdL37qjc9q1",
+        "signature": "4EWNS6kdHQHPFidQbtcnqskFzgLaqQvDHoEHuicJVPrkcb1abSJ2VP5pxeiMpxe9oCzDnq1QjgvK6WxCLDgszvje"
+      },
+      {
+        "wallet": "ELuMM5yBQc7aeibTSLMerbXp1nhvT2xdmLnP35WGduXH",
+        "timestamp": 1773528597,
+        "amount": 219999.988284,
+        "txn_type": "TRANSFER",
+        "fee_payer": "9aLNzsvJGQAm8x2GweZC39MVwsw6dpVCBHCi6CsJjLtV",
+        "signature": "3dHUQcieTpw7hgt1P25LGfvNBBBSeTFKZUWXShbsSC5gE6A9XTR7GtRpZSyySwpDWf5Aesw7T3bdGHHNgCayxiG"
+      },
+      {
+        "wallet": "CokeAHDWhBf3tVnL9rxiCTRmRrQrvFUjqMfH3VVSyHEq",
+        "timestamp": 1773528600,
+        "amount": 590744.012325,
+        "txn_type": "SWAP",
+        "fee_payer": "CokeAHDWhBf3tVnL9rxiCTRmRrQrvFUjqMfH3VVSyHEq",
+        "signature": "2C53w8STwsLiPXumJgkdW6AQVun21RVCzi8oQf3E7ANyfKLP4zdHpdKYCE4F2ZZWRHN5JmEL2YCD9DR8zVYQtL5g"
+      },
+      {
+        "wallet": "6sAFaCPkdUgC3MG6XRF6ubmVhk6Wx6WsYJWUNj4RwqPJ",
+        "timestamp": 1773528615,
+        "amount": 154859.151666,
+        "txn_type": "SWAP",
+        "fee_payer": "6sAFaCPkdUgC3MG6XRF6ubmVhk6Wx6WsYJWUNj4RwqPJ",
+        "signature": "nRMQF6t9i3yLT6dpkJ4TRkU6DAQqcMENTme47CMCXZX7whmcECvgZ2BsJov9ViT1p2ifxUuZWAUyk3QDE5kFDCy"
+      },
+      {
+        "wallet": "Cw9szuRTq5kEMwkaeheCMEesbVuKbLRjvZW84DuLqFnu",
+        "timestamp": 1773528685,
+        "amount": 208378.308619,
+        "txn_type": "SWAP",
+        "fee_payer": "Cw9szuRTq5kEMwkaeheCMEesbVuKbLRjvZW84DuLqFnu",
+        "signature": "sbHEFL5cHkGPxAUXyKknZdh6v58XuePSQYLssW4QWQKFRBQt9W5mkEdAEyqaW7Ya5ucJF6Hscen7D5mNyj2jVMo"
+      },
+      {
+        "wallet": "86R76zoAq1MBFPEbrigJMsti2HUpcNVUaBGEAJ6K8Pnf",
+        "timestamp": 1773528758,
+        "amount": 635108.183072,
+        "txn_type": "SWAP",
+        "fee_payer": "86R76zoAq1MBFPEbrigJMsti2HUpcNVUaBGEAJ6K8Pnf",
+        "signature": "34JWQPnb7jrCcB5t5JViNpc9D1MTSGYbCYxa29zsT58Tu6S4gnGqkM7HF3Gu1QvvWdRfcex5G6PoHQnKoQyATnQR"
+      },
+      {
+        "wallet": "8psNvWTrdNTiVRNzAgsou9kETXNJm2SXZyaKuJraVRtf",
+        "timestamp": 1773528789,
+        "amount": 1737.344162,
+        "txn_type": "SWAP",
+        "fee_payer": "DRKfVukwTvx7Fgoc41bGqMDjCdBD2S24CmWABRNc2w7n",
+        "signature": "5BBFoGauMdohEruUCJqDGFD3hobBbrX1ZipT2eE9KEuYV1YyD4ft2SUB31ijkXnUHcftphAGW6nZmpyFkAkvyCfw"
+      },
+      {
+        "wallet": "GyocUvNqqGnLSAFYfR7mFHhSUmGju15KXR8AzFq9DwbW",
+        "timestamp": 1773528906,
+        "amount": 1157.717384,
+        "txn_type": "SWAP",
+        "fee_payer": "GyocUvNqqGnLSAFYfR7mFHhSUmGju15KXR8AzFq9DwbW",
+        "signature": "2H1mwUvziSDu6ivpnxWFHdVYGtb2a1SLxmpTxnzYjw64zsGaAMsnbbTysTpgAXJNrbuMSqPV7NYpzLrzgKgTDzKG"
+      },
+      {
+        "wallet": "AC4jKqmFnuD2t7RCE3AtNTPqQy4AJQqGuDxXvQGjDd7Y",
+        "timestamp": 1773528922,
+        "amount": 3982.077468,
+        "txn_type": "SWAP",
+        "fee_payer": "gasTzr94Pmp4Gf8vknQnqxeYxdgwFjbgdJa4msYRpnB",
+        "signature": "cP5uu3X7H58dDcQFDdzCzP1BHi4vEwitgpZN6rA6NbG9urneLW8xMUrRYAifPJgPRxsWHPnTMzMceVX34mk9Gjw"
+      },
+      {
+        "wallet": "FoLQKwUzrAthZxwFy9gnCLB5tQmznZRksWZ3qU6UgGY7",
+        "timestamp": 1773528942,
+        "amount": 366787.05075,
+        "txn_type": "SWAP",
+        "fee_payer": "FoLQKwUzrAthZxwFy9gnCLB5tQmznZRksWZ3qU6UgGY7",
+        "signature": "4U4zkSXnBJmz4McdkEfSaG3j1sdPWoNhHJwork7473wMpKsvQPgTEQogU9j5b6jyo7aNtZdBCMcBQtBwM1cF2scm"
+      },
+      {
+        "wallet": "Hpj1hksBz9zNmcu2XAEeKxvnBAbMCRQDtY3pfKHK9GrZ",
+        "timestamp": 1773528971,
+        "amount": 1273.575985,
+        "txn_type": "SWAP",
+        "fee_payer": "Hpj1hksBz9zNmcu2XAEeKxvnBAbMCRQDtY3pfKHK9GrZ",
+        "signature": "5M1RszrPDh7pU55oxQWZG1JJFw1PxAbLwKEx6GiEPss5oV6ZtPkftxYhUfpCyLYYUFPqAiwKsyGRomQXHtNkPhQt"
+      },
+      {
+        "wallet": "3PwfHq7rLeW6qRmasocMiVNL9vMaVyMJ8z3fGcNmzkSj",
+        "timestamp": 1773529000,
+        "amount": 133217.388902,
+        "txn_type": "SWAP",
+        "fee_payer": "EcDFqoW11Ph3vtryfXPredxfp7Qh9tNpdsddrN9LoYrC",
+        "signature": "37mQGMXYZtG7Qcp7TSaEK44kAvgVZ1mDdeXANQ9nkfHqr8y9E8nrnARCPV6mSJBFw8MtRP2qsesUvSmYmnSt8AGu"
+      },
+      {
+        "wallet": "6AhdjSgda9C6ZSwrzq5WjfGiNoA3AvPbcgybdi5FH7tR",
+        "timestamp": 1773529026,
+        "amount": 1292419.984375,
+        "txn_type": "SWAP",
+        "fee_payer": "6AhdjSgda9C6ZSwrzq5WjfGiNoA3AvPbcgybdi5FH7tR",
+        "signature": "3UyvssUt2fA743ncojJY63Lu2fX8g9TGeg8JA1h7SSXJBrMMwemacPN6tVjeA21sg4HEmcTEFWd3jsiv4hMzxTrP"
+      },
+      {
+        "wallet": "JCwRGUHiBoASu6FwmyPFi8FM7LH4cEue8K6Hsuv1n1re",
+        "timestamp": 1773529041,
+        "amount": 87640.769296,
+        "txn_type": "TRANSFER",
+        "fee_payer": "7rtiKSUDLBm59b1SBmD9oajcP8xE64vAGSMbAN5CXy1q",
+        "signature": "5Aa49e5ad8H5HiLEZjbigeYyVMzQM7iV25VbGYGAesaF4AEmPgE49P9vgWJAthWsEQ8eG4rAszWJrWUWtywPAxhm"
+      }
+    ],
+    "n_early_buyers": 21,
+    "first_10_buyers": [
+      "CUwJX9pYzLETuxYKNEyiAqXECE4G2D5HMKafyccYkHBK",
+      "ARu4n5mFdZogZAravu7CcizaojWnS6oqka37gdLT5SZn",
+      "9aLNzsvJGQAm8x2GweZC39MVwsw6dpVCBHCi6CsJjLtV",
+      "4pkCyvj7KjpyYtHCgaxN4dbeyeNa67dtp1JncauU4MFh",
+      "FzZ77TM8Ekcb6gyWPmcT9upWkAZKZc5xrYfuFu7pifPn",
+      "2NWWo5LDuPFmKcNTmqR5ekireaz7BDH7vjP6V2q18JDK",
+      "pSwTTFE92RsRtvMCpb3mjruv5ww2KgBNVPscwdWwbxk",
+      "HVxAjSeEvK1ow7qvtFCYhiYnYShre5EkhUdL37qjc9q1",
+      "ELuMM5yBQc7aeibTSLMerbXp1nhvT2xdmLnP35WGduXH",
+      "CokeAHDWhBf3tVnL9rxiCTRmRrQrvFUjqMfH3VVSyHEq"
+    ],
+    "first_20_buyers": [
+      "CUwJX9pYzLETuxYKNEyiAqXECE4G2D5HMKafyccYkHBK",
+      "ARu4n5mFdZogZAravu7CcizaojWnS6oqka37gdLT5SZn",
+      "9aLNzsvJGQAm8x2GweZC39MVwsw6dpVCBHCi6CsJjLtV",
+      "4pkCyvj7KjpyYtHCgaxN4dbeyeNa67dtp1JncauU4MFh",
+      "FzZ77TM8Ekcb6gyWPmcT9upWkAZKZc5xrYfuFu7pifPn",
+      "2NWWo5LDuPFmKcNTmqR5ekireaz7BDH7vjP6V2q18JDK",
+      "pSwTTFE92RsRtvMCpb3mjruv5ww2KgBNVPscwdWwbxk",
+      "HVxAjSeEvK1ow7qvtFCYhiYnYShre5EkhUdL37qjc9q1",
+      "ELuMM5yBQc7aeibTSLMerbXp1nhvT2xdmLnP35WGduXH",
+      "CokeAHDWhBf3tVnL9rxiCTRmRrQrvFUjqMfH3VVSyHEq",
+      "6sAFaCPkdUgC3MG6XRF6ubmVhk6Wx6WsYJWUNj4RwqPJ",
+      "Cw9szuRTq5kEMwkaeheCMEesbVuKbLRjvZW84DuLqFnu",
+      "86R76zoAq1MBFPEbrigJMsti2HUpcNVUaBGEAJ6K8Pnf",
+      "8psNvWTrdNTiVRNzAgsou9kETXNJm2SXZyaKuJraVRtf",
+      "GyocUvNqqGnLSAFYfR7mFHhSUmGju15KXR8AzFq9DwbW",
+      "AC4jKqmFnuD2t7RCE3AtNTPqQy4AJQqGuDxXvQGjDd7Y",
+      "FoLQKwUzrAthZxwFy9gnCLB5tQmznZRksWZ3qU6UgGY7",
+      "Hpj1hksBz9zNmcu2XAEeKxvnBAbMCRQDtY3pfKHK9GrZ",
+      "3PwfHq7rLeW6qRmasocMiVNL9vMaVyMJ8z3fGcNmzkSj",
+      "6AhdjSgda9C6ZSwrzq5WjfGiNoA3AvPbcgybdi5FH7tR"
+    ]
+  },
+  {
+    "symbol": "NOTGAY",
+    "mint": "uphcYhzNzLBQQcQdpsbQXTFSNApMuh1Y4Jp6KTYpump",
+    "group": "weaker",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "965365363111508",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [
+      {
+        "wallet": "FvgSN2Gya2qL4nkTdq8asRb3XbuZdXYikqmTyxjvw3Wq",
+        "timestamp": 1773511393,
+        "amount": 178653.166774,
+        "txn_type": "SWAP",
+        "fee_payer": "FvgSN2Gya2qL4nkTdq8asRb3XbuZdXYikqmTyxjvw3Wq",
+        "signature": "2rAHod6VAHnc37syknJhtPB4jNS4FX7GoDLGp3gExXzsHbN9TdvJm4zLPTR6qiSkcqcPjURY4QBrh23zPkRZ7V2t"
+      },
+      {
+        "wallet": "2kuJgNGR966BQdoxg23BMYgphUjZGYz4PyAHsx6TxJR3",
+        "timestamp": 1773511393,
+        "amount": 178653.166774,
+        "txn_type": "SWAP",
+        "fee_payer": "FvgSN2Gya2qL4nkTdq8asRb3XbuZdXYikqmTyxjvw3Wq",
+        "signature": "2rAHod6VAHnc37syknJhtPB4jNS4FX7GoDLGp3gExXzsHbN9TdvJm4zLPTR6qiSkcqcPjURY4QBrh23zPkRZ7V2t"
+      },
+      {
+        "wallet": "Dd4hsmWhwEfkoRh2NxGXmbfYPh474K4yUXuoNmmPYALY",
+        "timestamp": 1773511393,
+        "amount": 178653.166774,
+        "txn_type": "SWAP",
+        "fee_payer": "2kuJgNGR966BQdoxg23BMYgphUjZGYz4PyAHsx6TxJR3",
+        "signature": "T6YnqY4oxeq2pBy6ziXYVjfCsWgZw33mVMGYAhWYFRgFH22AeE5CwXEyhTc2cYWMCYyaDSTs7gSBY8k4KXGneAD"
+      }
+    ],
+    "n_early_buyers": 3,
+    "first_10_buyers": [
+      "FvgSN2Gya2qL4nkTdq8asRb3XbuZdXYikqmTyxjvw3Wq",
+      "2kuJgNGR966BQdoxg23BMYgphUjZGYz4PyAHsx6TxJR3",
+      "Dd4hsmWhwEfkoRh2NxGXmbfYPh474K4yUXuoNmmPYALY"
+    ],
+    "first_20_buyers": [
+      "FvgSN2Gya2qL4nkTdq8asRb3XbuZdXYikqmTyxjvw3Wq",
+      "2kuJgNGR966BQdoxg23BMYgphUjZGYz4PyAHsx6TxJR3",
+      "Dd4hsmWhwEfkoRh2NxGXmbfYPh474K4yUXuoNmmPYALY"
+    ]
+  },
+  {
+    "symbol": "Distorted",
+    "mint": "EPuZ1X6pPzac3ELPsT59LStmgaSr4kBJvaAbL15Fpump",
+    "group": "weaker",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "999988017928344",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [
+      {
+        "wallet": "CCmh7tvVRrCaExBn6Uu3AyDZr5P16WhJnZcLvAMHkec4",
+        "timestamp": 1773543441,
+        "amount": 2.41766,
+        "txn_type": "SWAP",
+        "fee_payer": "34FKjAdVcTax2DHqV2XnbXa9J3zmyKcFuFKWbcmgxjgm",
+        "signature": "5vMvuK7nupTQGqL7x3jycmVcq3yikF3yWHeFnSXMuh9zFZW5CttijWUZzjdLdCjKtvFx2Pi4LB7v8qh1Cp5GNufk"
+      },
+      {
+        "wallet": "3LoAYHuSd7Gh8d7RTFnhvYtiTiefdZ5ByamU42vkzd76",
+        "timestamp": 1773543442,
+        "amount": 89997.096086,
+        "txn_type": "SWAP",
+        "fee_payer": "gasTzr94Pmp4Gf8vknQnqxeYxdgwFjbgdJa4msYRpnB",
+        "signature": "MjRQYWHVzCSPW4Ky2rpekY9b8YzbMeGQipAjT1VVD6emKqvDgCciBFvSmGDxeMAiXSvgfPmrGhuxEimHtxCnHNh"
+      },
+      {
+        "wallet": "CzcJPPz9NYccVsViAUzzzWwKchx191FHgTRfn3cGWV6D",
+        "timestamp": 1773543442,
+        "amount": 89997.096086,
+        "txn_type": "SWAP",
+        "fee_payer": "gasTzr94Pmp4Gf8vknQnqxeYxdgwFjbgdJa4msYRpnB",
+        "signature": "MjRQYWHVzCSPW4Ky2rpekY9b8YzbMeGQipAjT1VVD6emKqvDgCciBFvSmGDxeMAiXSvgfPmrGhuxEimHtxCnHNh"
+      }
+    ],
+    "n_early_buyers": 3,
+    "first_10_buyers": [
+      "CCmh7tvVRrCaExBn6Uu3AyDZr5P16WhJnZcLvAMHkec4",
+      "3LoAYHuSd7Gh8d7RTFnhvYtiTiefdZ5ByamU42vkzd76",
+      "CzcJPPz9NYccVsViAUzzzWwKchx191FHgTRfn3cGWV6D"
+    ],
+    "first_20_buyers": [
+      "CCmh7tvVRrCaExBn6Uu3AyDZr5P16WhJnZcLvAMHkec4",
+      "3LoAYHuSd7Gh8d7RTFnhvYtiTiefdZ5ByamU42vkzd76",
+      "CzcJPPz9NYccVsViAUzzzWwKchx191FHgTRfn3cGWV6D"
+    ]
+  },
+  {
+    "symbol": "butthole",
+    "mint": "DaTGaE6uhCfzz6Eh8hWQwL4yw3AJbXWbfvbeccdXJWED",
+    "group": "weaker",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "999993306475619",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [],
+    "n_early_buyers": 0,
+    "first_10_buyers": [],
+    "first_20_buyers": []
+  },
+  {
+    "symbol": "Life",
+    "mint": "C4yDhKwkikpVGCQWD9BT2SJyHAtRFFnKPDM9Nyshpump",
+    "group": "weaker",
+    "mint_authority": null,
+    "freeze_authority": null,
+    "supply": "999977990826965",
+    "decimals": 6,
+    "total_sigs_found": 50,
+    "parsed_txns": 50,
+    "early_buyers": [
+      {
+        "wallet": "HVuJoW1px34PAEfc9uWUv7Lrh7Ta4uSoPrkztCcdwa21",
+        "timestamp": 1773542400,
+        "amount": 150206.856799,
+        "txn_type": "SWAP",
+        "fee_payer": "7XEo2KxFzxrKQnYibhx6PsPgvKewJHsBsSATEaGbfY4P",
+        "signature": "3REVWcvyVPuZa1asgJqhfG3vp4ZHNs37Agu9vkhokyrSCzyu3raA6DnAqEm9gkhcv89S8LYkZjBLrEFnatLCWi9Z"
+      }
+    ],
+    "n_early_buyers": 1,
+    "first_10_buyers": [
+      "HVuJoW1px34PAEfc9uWUv7Lrh7Ta4uSoPrkztCcdwa21"
+    ],
+    "first_20_buyers": [
+      "HVuJoW1px34PAEfc9uWUv7Lrh7Ta4uSoPrkztCcdwa21"
+    ]
+  }
+]

@@ -59,3 +59,12 @@ See `reports/research/DECISION_TREE_v1.md` for all allowed next moves.
 | Signals | Pullback in uptrend, Breakout from consolidation |
 | Key result | 0/18 scenarios passed. Negative expected value before costs. |
 | Artifacts | reports/new_programs/largecap_swing_stageA_*.md |
+
+### 011 — who_family_pilot_v1
+- **Family:** wallet / deployer / early-buyer
+- **Status:** ARCHIVED — NO-GO
+- **Date:** 2026-03-15
+- **Question:** Does "who launched / who bought early" contain signal?
+- **Result:** Anti-signal (z = -3.12 against hypothesis). Deployer ID blocked. Poor feasibility.
+- **Artifacts:** reports/new_programs/who_family_pilot_v1_*.md
+- **No-Go:** NG-008

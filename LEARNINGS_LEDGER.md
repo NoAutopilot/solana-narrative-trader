@@ -393,3 +393,19 @@ The signal is fundamentally weak. No feature separates future winners from the p
 **Finding:** Neither signal produces positive expected value, even gross (before costs). The pullback signal has a gross mean near zero at +1h and negative at longer horizons. The breakout signal has too few events (N=16) and no edge beyond +1h. Simple technical patterns (SMA-based pullback, range breakout) do not capture exploitable inefficiencies in established Solana DEX tokens.
 
 **Implication:** Time-series technical signals on larger-cap Solana tokens are unlikely to be productive. The remaining untested direction is wallet/deployer/early-buyer signals (Option C from post_v2_options.md), which would require on-chain transaction data rather than price/volume data.
+
+---
+
+### Entry 013 — Wallet Signal Family Is Not a Free Lunch (2026-03-15)
+
+The "who" family (deployer recidivism, early-buyer overlap, smart-money concentration) is often cited as the next frontier after price/feature signals fail. The who_family_pilot_v1 tested this directly and found:
+
+1. **Deployer identification is structurally blocked** for pumpfun tokens. Mint authority is revoked upon graduation, and extracting the original deployer requires custom transaction parsing infrastructure.
+
+2. **Early-buyer overlap is anti-correlated with performance.** Stronger tokens showed zero first-10 buyer overlap (z = -3.12 vs null). This suggests that indiscriminate buying (same wallets buying everything) is associated with weaker outcomes, not stronger ones.
+
+3. **Concentration metrics are uninformative.** No meaningful difference between winner and loser groups.
+
+4. **The Helius Enhanced API misses many pumpfun-era transactions**, making early buyer extraction unreliable without custom indexing.
+
+**Lesson:** Do not assume that "more exotic data = more signal." The wallet family requires heavy infrastructure investment with no prior evidence of payoff. The pilot produced the clearest negative result of any program to date.

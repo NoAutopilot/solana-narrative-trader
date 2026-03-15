@@ -240,3 +240,19 @@ See `reports/synthesis/post_v2_options.md` for details.
 **Decision:** Close Large-Cap Swing program at Stage A. Do not proceed to Stage B.
 
 **Remaining path:** Option A (stop) or Option C (wallet/deployer/early-buyer).
+
+---
+
+## Section 9 — Who Family Pilot v1 (2026-03-15)
+
+**Entry:** Post feature-tape-v2 and large-cap-swing closure, the wallet/deployer/early-buyer family was the last remaining candidate from post_v2_options.md.
+
+**Design:** Adversarial feasibility pilot. 20 tokens (10 stronger, 10 weaker by +1h return) from frozen 96-fire artifact. On-chain lookup for deployer wallets and first 10–20 buyers via Helius RPC.
+
+**Result:** NO-GO.
+- Deployer identification: BLOCKED (pumpfun mint authority revoked)
+- Early-buyer overlap: Anti-signal (z = -3.12, stronger < null)
+- Concentration: No difference
+- Data feasibility: Poor (55% extraction rate, asymmetric)
+
+**Decision:** Close the wallet signal family. All three post-v2 options have been evaluated. No viable research line remains.

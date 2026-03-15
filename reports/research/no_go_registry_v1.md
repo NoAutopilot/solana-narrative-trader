@@ -209,3 +209,19 @@ No feature-horizon combination passed all eight promotion gates (G1-G8) in the d
 | Scenarios passing | 0 |
 | Root cause | Both signals produce negative expected value before costs. No edge exists in this universe/signal/horizon combination. |
 | Disposition | Closed at Stage A. No Stage B. |
+
+---
+
+## NG-008 — Wallet / Deployer / Early-Buyer Signal Family
+
+| Field | Value |
+|-------|-------|
+| Program | who_family_pilot_v1 |
+| Experiment | 011 |
+| Date closed | 2026-03-15 |
+| Verdict | NO-GO |
+| Kill reason | Anti-signal on primary hypothesis (z = -3.12); deployer identification blocked for pumpfun tokens; poor data feasibility |
+| Best result | Stronger tokens showed LESS early-buyer overlap than random (z = -3.12, p = 100%) |
+| Sample | 20 tokens (10 stronger, 10 weaker) from frozen 96-fire artifact |
+| Data gaps | 0/20 deployer wallets identified; only 11/20 tokens yielded early buyer data |
+| Recommendation | Do not pursue. No evidence of signal; structural data blockers. |

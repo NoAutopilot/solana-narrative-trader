@@ -1,0 +1,30 @@
+T1 SHORTABLE TOXIC-STATE PILOT — FINAL VERDICT
+Date: 2026-03-15 17:13
+Design: v1 | Data: Yahoo Finance + OKX funding rates
+Primary toxic definition: strict
+OVERALL VERDICT: FAIL
+Structures passing: 1/3
+Shortable universe: 23 tokens
+Primary trades: 41
+SOL total return (test period): -52.05%
+
+S1: FAIL
+  mean=0.0117  median=-0.1062  %pos=46.34%
+  advantage_over_random=0.0127  random_mean=-0.0010
+  sp_positive=3/3  fund_high_mean=0.0143
+  FAIL REASONS: advantage_over_random=0.0127<0.03
+  FLAGS: FLAG:top3tok=1.28
+
+S2: FAIL
+  mean=0.0322  median=-0.0065  %pos=48.78%
+  advantage_over_random=0.0278  random_mean=0.0044
+  sp_positive=2/3  fund_high_mean=0.0346
+  FAIL REASONS: advantage_over_random=0.0278<0.03
+  FLAGS: FLAG:top3tok=0.64
+
+S3: PASS
+  mean=0.0513  median=0.2402  %pos=51.22%
+  advantage_over_random=0.0384  random_mean=0.0129
+  sp_positive=3/3  fund_high_mean=0.0536
+  FLAGS: FLAG:top3tok=0.69
+
